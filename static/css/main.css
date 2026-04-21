@@ -1,0 +1,104 @@
+/* Общие настройки для всей страницы */
+* {
+    box-sizing: border-box; /* Чтобы padding не увеличивал ширину элементов */
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background: #121212; /* Глубокий темный фон */
+    color: #e0e0e0;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* Контейнер формы */
+.auth-container {
+    background: #1e1e1e;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    width: 100%;
+    max-width: 400px; /* Ширина формы */
+    text-align: center;
+    border: 1px solid #333;
+}
+
+h1 {
+    margin-bottom: 25px;
+    color: #fff;
+    font-size: 24px;
+    letter-spacing: 1px;
+}
+
+/* Группировка полей ввода */
+.auth-form {
+    display: flex;
+    flex-direction: column; /* Ставим элементы друг под другом */
+    gap: 15px; /* Равномерный отступ между полями */
+}
+
+/* Стили полей ввода */
+input {
+    background: #2b2b2b;
+    border: 1px solid #444;
+    border-radius: 6px;
+    padding: 12px 15px;
+    color: #fff;
+    font-size: 16px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    width: 100%;
+}
+
+input:focus {
+    outline: none;
+    border-color: #4a90e2; /* Синяя подсветка при клике */
+    box-shadow: 0 0 8px rgba(74, 144, 226, 0.3);
+}
+
+/* Стили кнопки */
+button {
+    background: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 14px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    margin-top: 10px;
+}
+
+button:hover {
+    background: #357abd;
+}
+
+button:active {
+    transform: scale(0.98); /* Эффект нажатия */
+}
+
+/* Ссылка переключения режима */
+#toggleMode {
+    margin-top: 20px;
+    font-size: 14px;
+    color: #999;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+#toggleMode:hover {
+    color: #4a90e2;
+    text-decoration: underline;
+}
+
+/* Ошибки */
+#authError {
+    margin-top: 15px;
+    font-size: 14px;
+    color: #ff6b6b;
+    min-height: 18px;
+}
