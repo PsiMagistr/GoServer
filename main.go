@@ -25,6 +25,7 @@ func main() {
 	http.Handle("/api/me", auth.AuthMiddleware(http.HandlerFunc(handlers.MeHandler)))
 	http.HandleFunc("/api/register", handlers.RegisterHandler)
 	http.HandleFunc("/api/login", handlers.LoginHandler)
+	http.HandleFunc("/api/refresh", handlers.RefreshHandler)
 	port := ":8080"
 	fmt.Println("Listening on " + port)
 	err := http.ListenAndServe(port, nil)

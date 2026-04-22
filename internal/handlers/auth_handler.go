@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -110,11 +111,32 @@ func RefreshHandler(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(req)
 	if err != nil {
 		http.Error(w, "Неправильный запрос рефреш-токена", http.StatusBadRequest)
+		return
 	}
-	userID, err := database.GetUserByRefreshToken(req.RefreshToken)
+	user, err := database.GetUserByRefreshToken(req.RefreshToken)
 	if err != nil {
 		http.Error(w, "Сессия истекла, войдите заново", http.StatusUnauthorized)
 		return
 	}
-
+	_ = database.DeleteRefreshToken(req.RefreshToken)
+	newAccessToken, err := auth.GenerateToken(user.ID, user.Username)
+	if err != nil {
+		http.Error(w, "Ошибка генерации аксес-токена", http.StatusInternalServerError)
+		return
+	}
+	newRefreshToken, err := auth.GenerateRefreshToken()
+	if err != nil {
+		http.Error(w, "Ошибка генерации рефреш-токена", http.StatusInternalServerError)
+		return
+	}
+	err = database.SaveRefreshToken(user.ID, newRefreshToken, 7*24*time.Hour)
+	if err != nil {
+		http.Error(w, "Ошибка сохранения сессии", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]string{
+		"token":         newAccessToken,
+		"refresh_token": newRefreshToken,
+	})
 }
