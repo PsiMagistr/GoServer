@@ -25,3 +25,13 @@ func GetUserByEmail(email string) (*models.User, error) {
 	}
 	return &u, nil
 }
+
+func GetUserById(id int) (*models.User, error) {
+	query := `SELECT id, username, email, password FROM users WHERE id = ?`
+	u := models.User{}
+	err := DB.Get(&u, query, id)
+	if err != nil {
+		return nil, err
+	}
+	return &u, nil
+}

@@ -100,3 +100,21 @@ func MeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	_, _ = fmt.Fprintf(w, `{"id": %d, "username": "%s", "status": "online"}`, claims.UserID, claims.Username)
 }
+
+// Рефрещш-токен, проверка.
+func RefreshHandler(w http.ResponseWriter, r *http.Request) {
+	type rq struct {
+		RefreshToken string `json:"refresh_token"`
+	}
+	req := &rq{}
+	err := json.NewDecoder(r.Body).Decode(req)
+	if err != nil {
+		http.Error(w, "Неправильный запрос рефреш-токена", http.StatusBadRequest)
+	}
+	userID, err := database.GetUserByRefreshToken(req.RefreshToken)
+	if err != nil {
+		http.Error(w, "Сессия истекла, войдите заново", http.StatusUnauthorized)
+		return
+	}
+
+}

@@ -1,33 +1,39 @@
 package database
 
 import (
+	"GoServer/internal/models"
 	"fmt"
 	"time"
 )
 
 func SaveRefreshToken(userID int, token string, duration time.Duration) error {
 	expiresAt := time.Now().Add(duration)
-	query := `INSERT INTO refresh_tokens (userID, token, expires_at) VALUES (?, ?, ?)`
+	query := `INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES (?, ?, ?)`
 	_, err := DB.Exec(query, userID, token, expiresAt)
 	return err
 }
 
-func GetUserByRefreshToken(token string) (int, error) {
+func GetUserByRefreshToken(token string) (*models.User, error) {
 	type result struct {
-		UserID    int       `db:"user_id"`
+		models.User
 		ExpiresAt time.Time `db:"expires_at"`
 	}
-	res := result{}
-	query := `SELECT user_id, expires_at FROM refresh_tokens WHERE token = ? LIMIT 1`
-	err := DB.Get(&res, query, token)
+	res := &result{}
+	query := `
+	SELECT u.id, u.username, u.email, rt.expires_at
+    FROM users AS u
+	JOIN refresh_tokens AS rt
+	ON u.id = rt.user_id
+	WHERE rt.token = ?
+	LIMIT 1`
+	err := DB.Get(res, query, token)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 	if time.Now().After(res.ExpiresAt) {
-		//_ = DeleteRefreshToken(token)
-		return 0, fmt.Errorf("token expired")
+		return nil, fmt.Errorf("refresh token expired")
 	}
-	return res.UserID, nil
+	return &res.User, nil
 }
 
 func DeleteRefreshToken(token string) error {
