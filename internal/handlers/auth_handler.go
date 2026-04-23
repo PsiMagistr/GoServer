@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -56,7 +55,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(map[string]string{"message": "Регистрация успешна!"})
 }
 
-//LoginHandler
+// LoginHandler
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
@@ -72,7 +71,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("Пришли данные логина: %+v\n", req)
 	user, err := database.GetUserByEmail(req.Email)
 	if err != nil {
-		http.Error(w, "Неверный логин или пароль.", http.StatusBadRequest)
+		http.Error(w, "Неверный логин или пароль.", http.StatusUnauthorized)
 		return
 	}
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password))
@@ -80,20 +79,18 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Неверный логин или пароль.", http.StatusBadRequest)
 		return
 	}
-	token, err := auth.GenerateToken(user.ID, user.Username)
+	tokens, err := auth.GetTokenPair(user.ID, user.Username)
 	if err != nil {
-		fmt.Println("JWT Error:", err)
-		http.Error(w, "Ошибка создания сессии.", http.StatusConflict)
+		http.Error(w, "Ошибка сервера", http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	response := map[string]interface{}{
-		"id":       user.ID,
-		"username": user.Username,
-		"email":    user.Email,
-		"token":    token,
-	}
-	_ = json.NewEncoder(w).Encode(response)
+	_ = json.NewEncoder(w).Encode(map[string]any{
+		"token":         tokens.AccessToken,
+		"refresh_token": tokens.RefreshToken,
+		"id":            user.ID,
+		"username":      user.Username,
+	})
 }
 
 func MeHandler(w http.ResponseWriter, r *http.Request) {
@@ -119,24 +116,16 @@ func RefreshHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	_ = database.DeleteRefreshToken(req.RefreshToken)
-	newAccessToken, err := auth.GenerateToken(user.ID, user.Username)
+	tokens, err := auth.GetTokenPair(user.ID, user.Username)
 	if err != nil {
-		http.Error(w, "Ошибка генерации аксес-токена", http.StatusInternalServerError)
-		return
-	}
-	newRefreshToken, err := auth.GenerateRefreshToken()
-	if err != nil {
-		http.Error(w, "Ошибка генерации рефреш-токена", http.StatusInternalServerError)
-		return
-	}
-	err = database.SaveRefreshToken(user.ID, newRefreshToken, 7*24*time.Hour)
-	if err != nil {
-		http.Error(w, "Ошибка сохранения сессии", http.StatusInternalServerError)
+		http.Error(w, "Ошибка сервера", http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]string{
-		"token":         newAccessToken,
-		"refresh_token": newRefreshToken,
+	_ = json.NewEncoder(w).Encode(map[string]any{
+		"token":         tokens.AccessToken,
+		"refresh_token": tokens.RefreshToken,
+		"id":            user.ID,
+		"username":      user.Username,
 	})
 }
