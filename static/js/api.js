@@ -18,7 +18,7 @@ export async function apiCall(url, method = "GET", body = null){
         const refreshed = await refresh()
         if(refreshed){
             const newToken = localStorage.getItem("game_token");
-            config.headers['Authorization'] = `Bearer${newToken}`;
+            config.headers['Authorization'] = `Bearer ${newToken}`;
             return await fetch(url, config);
         }
         else{

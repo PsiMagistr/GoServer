@@ -1,5 +1,7 @@
 import { regTemplate } from './templates/registration.js';
 import { loginTemplate } from './templates/login.js';
+import {apiCall} from "./api.js";
+
 export function initAuth(onSuccess) {
     const app = document.getElementById('app');
     let state = {
@@ -23,7 +25,7 @@ export function initAuth(onSuccess) {
     };
 
     const handleSubmit = async (callback) => {
-        const getConfig = (params)=>{
+        const getConfigData = (params)=>{
             const body = {}
             for(let param of params){
                 const elem = document.querySelector(`#${param}`)
@@ -34,39 +36,49 @@ export function initAuth(onSuccess) {
                     throw new Error("Неверное значение идентификатора поля формы.")
                 }
             }
-            return {
-                method:"POST",
-                headers:{"Content-Type":"application/json"},
-                body:JSON.stringify(body),
+            return body
+        }
+        /////
+        try{
+            if(state.isLoginMode){//Вход.
+                const body = getConfigData(["email","password"]);
+                const response = await fetch("api/login", {
+                    method:"POST",
+                    headers:{"Content-Type":"application/json"},
+                    body:JSON.stringify(body),
+                });
+                if(response.ok){
+                    const data = await response.json();
+                    localStorage.setItem("game_token", data.token)
+                    localStorage.setItem("refresh_token", data.refresh_token)
+                    console.log("Успешный вход, оба токена сохранены.");
+                    callback(data.username);
+                }
+                else{
+                    state.error = await response.text();
+                    render();
+                }
+
+            }
+            else{// Регистрация.
+                const body = getConfigData(["username","email","password","confirm_password"]);
+                const response = await apiCall("/api/register", "POST", body);
+                if(response.ok){
+                    state.isLoginMode = true;
+                    state.error = "";
+                    render();
+                }
+                else{
+                    state.error = await response.text();
+                    render();
+                }
             }
         }
-        if(state.isLoginMode){
-            const config = getConfig(["email","password"])
-            const response = await fetch("/api/login", config)
-            if(response.ok){
-                const message = await response.json();
-                console.log(message)
-                localStorage.setItem('game_token', message.token)
-                callback(message.username);
-            }
-            else{
-                state.error = await response.text();
-                render()
-            }
+        catch(e){
+            state.error = "Ошибка: " + e.message;
+            render();
         }
-        else{// регистрация.
-           const config = getConfig(["username","email","password","confirm_password"])
-           const response = await fetch("/api/register", config)
-           if(response.ok){
-              const message = await response.json();
-              state.isLoginMode = true
-              render();
-           }
-           else{
-               state.error = await response.text();
-               render();
-           }
-        }
-    };
+
+    }
     render(); // Первый запуск
 }

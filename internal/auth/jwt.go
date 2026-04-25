@@ -24,7 +24,7 @@ type TokenPair struct {
 }
 
 func GenerateToken(userID int, username string) (string, error) {
-	expirationTime := time.Now().Add(10 * time.Minute)
+	expirationTime := time.Now().Add(1 * time.Minute)
 	claims := &Claims{
 		UserID:   userID,
 		Username: username,
@@ -58,7 +58,7 @@ func GetTokenPair(UserID int, username string) (*TokenPair, error) {
 	if err != nil {
 		return nil, fmt.Errorf("ошибка генерации рефреш-токена: %w", err)
 	}
-	err = database.SaveRefreshToken(UserID, refreshToken, 7*24*time.Hour)
+	err = database.SaveRefreshToken(UserID, refreshToken, 10*time.Minute)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка сохранения refresh токена: %w", err)
 	}

@@ -1,5 +1,6 @@
 import { initAuth } from './auth.js';
 import { initGame } from './game.js';
+import {apiCall} from "./api.js";
 
 /**
  * Главная точка входа в приложение
@@ -28,12 +29,7 @@ async function main() {
 
     try {
         // ИСПОЛЬЗУЕМ ЧИСТЫЙ ПУТЬ БЕЗ СЛЭША В КОНЦЕ
-        const response = await fetch("/api/me", {
-            method: "GET",
-            headers: {
-                "Authorization": `Bearer ${token}`
-            }
-        });
+        const response = await apiCall("api/me")
 
         if (response.ok) {
             const userData = await response.json();
