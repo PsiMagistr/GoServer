@@ -1,11 +1,12 @@
 package handlers
 
 import (
-	"GoServer/internal/auth"
-	"GoServer/internal/database"
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"GoServer/internal/auth"
+	"GoServer/internal/database"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -39,6 +40,11 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+	if r.Body == nil {
+		http.Error(w, "Body is empty", http.StatusMethodNotAllowed)
+		return
+	}
+	defer r.Body.Close()
 	var req RegisterRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	fmt.Printf("Пришли данные регистрации: %+v\n", req)
@@ -74,6 +80,11 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+	if r.Body == nil {
+		http.Error(w, "Body is empty", http.StatusMethodNotAllowed)
+		return
+	}
+	defer r.Body.Close()
 	var req LoginRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
