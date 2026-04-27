@@ -26,3 +26,10 @@ func GetCharacterByUserID(userID int) (*models.Character, error) {
 	}
 	return char, nil
 }
+
+func GetPlayersInLocation(locationID string) ([]models.Character, error) {
+	var players []models.Character
+	query := `SELECT id, name, level, avatar_id, gender FROM characters WHERE location_id = ?`
+	err := DB.Select(&players, query, locationID)
+	return players, err
+}
