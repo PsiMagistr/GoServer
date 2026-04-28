@@ -16,11 +16,7 @@ export async function apiCall(url, method = "GET", body = null) {
         if (refreshed.ok) {
             // Если рефреш прошел, повторяем исходный запрос
             return await fetch(url, config);
-        } else {
-            // Если и рефреш сдох — на выход
-            window.location.reload();
-        }
-        return response
+        }        
     }
     return response
 }

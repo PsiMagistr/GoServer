@@ -39,7 +39,7 @@ func InitDB() error {
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );`
 	createCharacterTableQuery := `
-	CREATE TABLE IF NOT EXISTS caracters (
+	CREATE TABLE IF NOT EXISTS characters (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		user_id INTEGER UNIQUE NOT NULL,
 		name VARCHAR (255) NOT NULL,

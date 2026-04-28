@@ -19,14 +19,7 @@ const onSuccess = (username)=>{
 
 async function main() {
     console.log("Приложение запущено. Проверка авторизации...");
-    const token = localStorage.getItem("game_token");
-
-    if (!token) {
-        console.log("Токена нет в localStorage");
-        initAuth(onSuccess);
-        return;
-    }
-
+      
     try {
         // ИСПОЛЬЗУЕМ ЧИСТЫЙ ПУТЬ БЕЗ СЛЭША В КОНЦЕ
         const response = await apiCall("api/me")
@@ -34,10 +27,9 @@ async function main() {
         if (response.ok) {
             const userData = await response.json();
             console.log("Авторизация подтверждена для:", userData.username);
-            onSuccess(userData.username);
+            onSuccess(userData.username);           
         } else {
-            console.log("Сервер отклонил токен. Статус:", response.status);
-            localStorage.removeItem('game_token');
+            console.log("Сервер отклонил токен. Статус:", response.status);           
             initAuth(onSuccess);
         }
     } catch (e) {

@@ -16,7 +16,7 @@ func CreateCharacter(char *models.Character) error {
 
 func GetCharacterByUserID(userID int) (*models.Character, error) {
 	char := &models.Character{}
-	query := "SELECT * FROM caracter WHERE user_id = ?"
+	query := "SELECT * FROM characters WHERE user_id = ?"
 	err := DB.Get(char, query, userID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
