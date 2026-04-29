@@ -1,5 +1,5 @@
 import { initAuth } from './auth.js';
-import { initGame } from './game.js';
+import { initGame, showCreateCharachter } from './game.js';
 import {apiCall} from "./api.js";
 
 /**
@@ -7,11 +7,21 @@ import {apiCall} from "./api.js";
  */
 
 
-const onSuccess = (username)=>{
+const onSuccess = async (username)=>{
     console.log(`Пользователь ${username} вошел. Запускаем игру...`);
+    const response = await apiCall("/api/character/me","GET");
+    if(response.ok){
+        const data = await response.json();
+        console.log(data.id)
+        initGame(username);
+    }
+    else{
+        const data = await response.json();
+        showCreateCharachter()    
+    }   
     // 2. После успешного входа инициализируем игровой движок
     // Передаем имя пользователя в игру, чтобы отобразить его на экране
-    initGame(username);
+    
 
     // Здесь в будущем мы добавим создание WebSocket соединения
     // setupNetwork(username);

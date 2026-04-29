@@ -1,12 +1,13 @@
 package main
 
 import (
-	"GoServer/internal/auth"
-	"GoServer/internal/database"
-	"GoServer/internal/handlers"
 	"fmt"
 	"log"
 	"net/http"
+
+	"GoServer/internal/auth"
+	"GoServer/internal/database"
+	"GoServer/internal/handlers"
 )
 
 func main() {
@@ -21,8 +22,9 @@ func main() {
 	}()
 	fs := http.FileServer(http.Dir("static"))
 	http.Handle("/", fs)
-	//http.Handle("/api/me/", auth.AuthMiddleware(http.HandlerFunc(handlers.MeHandler)))
+	// http.Handle("/api/me/", auth.AuthMiddleware(http.HandlerFunc(handlers.MeHandler)))
 	http.Handle("/api/me", auth.AuthMiddleware(http.HandlerFunc(handlers.MeHandler)))
+	http.Handle("/api/character/me", auth.AuthMiddleware(http.HandlerFunc(handlers.CheckCharacterHandler)))
 	http.HandleFunc("/api/register", handlers.RegisterHandler)
 	http.HandleFunc("/api/login", handlers.LoginHandler)
 	http.HandleFunc("/api/refresh", handlers.RefreshHandler)

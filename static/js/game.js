@@ -1,6 +1,10 @@
+let gameLoopId = null
 export function initGame(username) {
+    if(gameLoopId){
+        cancelAnimationFrame(gameLoopId)
+        console.log("Старый цикл остановлен.")       
+    }
     const app = document.getElementById('app');
-
     app.innerHTML = `
         <div class="game-ui">
             <p>Игрок: <b>${username}</b></p>
@@ -18,7 +22,16 @@ export function initGame(username) {
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.fillStyle = 'lime';
         ctx.fillRect(280, 180, 40, 40); // Наш "игрок"
-        requestAnimationFrame(draw);
+        gameLoopId = requestAnimationFrame(draw);
     }
     draw();
 }
+
+export function showCreateCharachter(){
+    const app = document.getElementById('app');
+    app.innerHTML = `
+        <div>
+           <h1>Тут будет форма создания персонажа.</h1>
+        </div>
+    `;    
+} 
