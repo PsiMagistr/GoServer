@@ -1,17 +1,14 @@
-let gameLoopId = null
+let gameLoopId = null;
+import { CreateCharacterTemplate } from "./templates/create_character.js";
+import { gameTemplate } from "./templates/game.js";
+
 export function initGame(username) {
     if(gameLoopId){
         cancelAnimationFrame(gameLoopId)
-        console.log("Старый цикл остановлен.")       
+        console.log("Старый цикл остановлен.");       
     }
     const app = document.getElementById('app');
-    app.innerHTML = `
-        <div class="game-ui">
-            <p>Игрок: <b>${username}</b></p>
-            <canvas id="gameCanvas" width="600" height="400"></canvas>
-            <div id="gameLog">Вы вошли в игру.</div>
-        </div>
-    `;
+    app.innerHTML = gameTemplate(username);
 
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
@@ -27,11 +24,4 @@ export function initGame(username) {
     draw();
 }
 
-export function showCreateCharachter(){
-    const app = document.getElementById('app');
-    app.innerHTML = `
-        <div>
-           <h1>Тут будет форма создания персонажа.</h1>
-        </div>
-    `;    
-} 
+ 

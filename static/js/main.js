@@ -1,5 +1,6 @@
 import { initAuth } from './auth.js';
-import { initGame, showCreateCharachter } from './game.js';
+import {initGame} from './game.js';
+import {showCreateCharacter} from './char_creation.js';
 import {apiCall} from "./api.js";
 
 /**
@@ -17,7 +18,7 @@ const onSuccess = async (username)=>{
     }
     else{
         const data = await response.json();
-        showCreateCharachter()    
+        showCreateCharacter();              
     }   
     // 2. После успешного входа инициализируем игровой движок
     // Передаем имя пользователя в игру, чтобы отобразить его на экране
