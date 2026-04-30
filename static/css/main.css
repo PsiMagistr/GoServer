@@ -1,104 +1,200 @@
-/* Общие настройки для всей страницы */
+/* --- Глобальные настройки --- */
 * {
-    box-sizing: border-box; /* Чтобы padding не увеличивал ширину элементов */
+    box-sizing: border-box;
     margin: 0;
     padding: 0;
 }
 
 body {
-    background: #121212; /* Глубокий темный фон */
-    color: #e0e0e0;
-    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background: #0a0a0a;
+    color: #b0b0b0;
+    font-family: 'Segoe UI', Roboto, sans-serif;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    min-height: 100vh;
+    padding: 20px;
 }
 
-/* Контейнер формы */
-.auth-container {
-    background: #1e1e1e;
-    padding: 40px;
-    border-radius: 12px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-    width: 100%;
-    max-width: 400px; /* Ширина формы */
-    text-align: center;
-    border: 1px solid #333;
-}
-
-h1 {
+/* --- Заголовки --- */
+h1, h2 {
+    color: #d4af37;
     margin-bottom: 25px;
-    color: #fff;
-    font-size: 24px;
-    letter-spacing: 1px;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    font-weight: 300;
+    font-size: 1.4rem;
 }
 
-/* Группировка полей ввода */
-.auth-form {
-    display: flex;
-    flex-direction: column; /* Ставим элементы друг под другом */
-    gap: 15px; /* Равномерный отступ между полями */
-}
-
-/* Стили полей ввода */
+/* --- Поля ввода (УМЕНЬШИЛ высоту до стандартной) --- */
 input {
-    background: #2b2b2b;
-    border: 1px solid #444;
-    border-radius: 6px;
-    padding: 12px 15px;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 4px;
+    padding: 10px 15px; /* Аккуратный стандартный размер */
     color: #fff;
-    font-size: 16px;
-    transition: border-color 0.3s, box-shadow 0.3s;
+    font-size: 15px;
     width: 100%;
+    transition: 0.3s;
 }
 
 input:focus {
     outline: none;
-    border-color: #4a90e2; /* Синяя подсветка при клике */
-    box-shadow: 0 0 8px rgba(74, 144, 226, 0.3);
+    border-color: #8a6d3b;
+    background: #222;
 }
 
-/* Стили кнопки */
+/* --- Базовый стиль кнопок --- */
 button {
-    background: #4a90e2;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    padding: 14px;
-    font-size: 16px;
-    font-weight: bold;
     cursor: pointer;
-    transition: background 0.2s, transform 0.1s;
-    margin-top: 10px;
+    text-transform: uppercase;
+    transition: all 0.2s ease-in-out;
+    border-radius: 4px;
+    padding:5px
 }
 
-button:hover {
-    background: #357abd;
+.active {
+    background-color: #f1c40f;
 }
 
-button:active {
-    transform: scale(0.98); /* Эффект нажатия */
+/* --- Контейнер создания персонажа --- */
+.creation-container {
+    background: #141414;
+    padding: 40px;
+    border-radius: 12px;
+    text-align: center;
+    border: 1px solid red;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.9);
+    width: 460px; /* Фиксированная ширина контейнера было 500*/
 }
 
-/* Ссылка переключения режима */
-#toggleMode {
-    margin-top: 20px;
-    font-size: 14px;
-    color: #999;
+/* Центрируем и ограничиваем поле имени */
+.form-group {
+    max-width: 320px;
+    margin: 0 auto 25px;
+}
+
+/* --- СЕКЦИЯ ВЫБОРА ПОЛА (ГАРАНТИРОВАННЫЕ РАЗМЕРЫ) --- */
+.gender-selection {
+    display: flex;
+    justify-content: center;
+    gap: 20px; /* Отступ между кнопками */
+    margin: 30px 0;
+}
+
+.gender-selection button {
+    /* Жёстко задаем ширину и высоту, чтобы браузер их не сжимал */
+    width: 180px;
+    height: 65px;
+    
+    background: #1d1d1d;
+    color: #555;
+    border: 1px solid #333;
+    
+    /* Идеальное центрирование текста внутри кнопки */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    /* Стили текста */
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 3px; /* Буквы не слипаются */
+}
+
+.gender-selection button:hover {
+    border-color: #555;
+    color: #888;
+}
+
+.gender-selection button.active {
+    background: #2b251a; 
+    color: #d4af37;
+    border-color: #d4af37;
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.1);
+}
+
+/* --- СЕТКА АВАТАРОК --- */
+.avatar-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 100px);
+    gap: 12px;
+    justify-content: center;
+    padding: 20px;
+    background: #1a1a1a;
+    border-radius: 8px;
+    border: 1px solid #252525;
+    width: fit-content;
+    margin: 0 auto 20px auto; /* Кнопка близко к сетке */
+}
+
+.avatar-item {
+    width: 100px;
+    height: 100px;
+    border: 2px solid #2a2a2a;
+    border-radius: 4px;
+    overflow: hidden;
     cursor: pointer;
-    transition: color 0.2s;
+    background: #000;
+    transition: 0.2s;
 }
 
-#toggleMode:hover {
-    color: #4a90e2;
-    text-decoration: underline;
+.avatar-item:hover { border-color: #d4af37; }
+
+.avatar-item.selected {
+    border-color: #d4af37;
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+    transform: scale(1.05);
 }
 
-/* Ошибки */
-#authError {
-    margin-top: 15px;
-    font-size: 14px;
-    color: #ff6b6b;
+.avatar-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    filter: brightness(0.7) contrast(1.1);
+    transition: 0.3s;
+}
+
+.avatar-item.selected img {
+    filter: brightness(1.1) contrast(1.1);
+}
+
+/* --- Ошибки --- */
+#charError {
+    color: #a94442;
+    font-size: 13px;
+    margin-bottom: 15px;
     min-height: 18px;
 }
+
+/* --- ФИНАЛЬНАЯ КНОПКА --- */
+.main-btn {
+    background: #d4af37;
+    color: #111;
+    border: none;
+    padding: 18px 0;
+    font-size: 16px;
+    font-weight: 700;
+    width: 100%;
+    max-width: 320px; /* Чтобы не была на весь экран */
+    letter-spacing: 2px;
+}
+
+.main-btn:hover {
+    background: #f1c40f;
+}
+
+/* --- Стили для Авторизации (не трогаем!) --- */
+.auth-container {
+    background: #141414;
+    padding: 40px;
+    border-radius: 12px;
+    width: 400px;
+    text-align: center;
+    border: 1px solid #222;
+}
+
+.auth-form { display: flex; flex-direction: column; gap: 15px; }
+.auth-form button { background: #d4af37; color: #111; padding: 15px; border: none; font-weight: 700; }
+#toggleMode { margin-top: 25px; color: #555; cursor: pointer; font-size: 12px; }
