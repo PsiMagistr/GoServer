@@ -9,17 +9,24 @@ import {apiCall} from "./api.js";
 
 
 const onSuccess = async (username)=>{
-    console.log(`Пользователь ${username} вошел. Запускаем игру...`);
-    const response = await apiCall("/api/character/me","GET");
-    if(response.ok){
-        const data = await response.json();
-        console.log(data.id)
-        initGame(username);
+    try{
+        console.log(`Пользователь ${username} вошел. Запускаем игру...`);
+        const response = await apiCall("/api/character/me","GET");
+        if(response.ok){
+            const data = await response.json();            
+            initGame(username);
+        }
+        else if(response.status == 404){       
+            showCreateCharacter();
+            console.log("Аккаунт не имеет персонажа. Создайте его.");              
+        }
+        else{
+           console.error("Неизвестная ошибка")
+        }   
+    }catch(e){
+          console.error("Критическая ошибка (сеть):", e);    
     }
-    else{
-        const data = await response.json();
-        showCreateCharacter();              
-    }   
+    
     // 2. После успешного входа инициализируем игровой движок
     // Передаем имя пользователя в игру, чтобы отобразить его на экране
     

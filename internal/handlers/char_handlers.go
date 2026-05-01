@@ -24,7 +24,5 @@ func CheckCharacterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(map[string]interface{}{
-		"id": claims.UserID,
-	})
+	_ = json.NewEncoder(w).Encode(char)
 }

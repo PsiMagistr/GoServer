@@ -25,8 +25,7 @@ export function initAuth(onSuccess) {
         app.innerHTML = template;
     };
 
-    const handleSubmit = async (callback) => {
-        
+    const handleSubmit = async (callback) => {        
         /////
         try{
             if(state.isLoginMode){//Вход.
