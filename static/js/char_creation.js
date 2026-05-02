@@ -26,8 +26,18 @@ export function showCreateCharacter(){
             state.gender = 'female';            
             render();
         },
-        createConfirmBtn(){
-            syncInputToState();    
+        async createConfirmBtn(){
+            syncInputToState();           
+            const response = await apiCall("/api/character/create", "POST", {
+                name:"Вася"
+            })
+            if(response.ok){
+                const data = await response.json()
+                console.log(data.message)
+            }
+            else{
+                
+            }    
         }        
     }   
     app.onclick = async (event) => {

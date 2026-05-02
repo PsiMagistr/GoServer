@@ -31,7 +31,7 @@ export function initAuth(onSuccess) {
             if(state.isLoginMode){//Вход.
                 const configData = getConfigData(["email", "password"]);
                 const user = await authService.login(configData.email, configData.password);
-                onSuccess(user.username);
+                onSuccess(user.username); // Вход в аккаунт.
             }
             else{// Регистрация.
                 const userData = getConfigData(['username', 'email', 'password', 'confirm_password']);

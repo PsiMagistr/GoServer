@@ -41,7 +41,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if r.Body == nil {
-		http.Error(w, "Body is empty", http.StatusMethodNotAllowed)
+		http.Error(w, "Body is empty", http.StatusBadRequest)
 		return
 	}
 	defer r.Body.Close()
