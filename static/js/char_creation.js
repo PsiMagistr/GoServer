@@ -1,5 +1,6 @@
 import { CreateCharacterTemplate } from "./templates/create_character.js";
 import { apiCall } from "./api.js";
+import { characterService } from "./services/characterService.js";
 export function showCreateCharacter(){
     const app = document.getElementById('app');
     const state = {
@@ -27,24 +28,24 @@ export function showCreateCharacter(){
             render();
         },
         async createConfirmBtn(){
-            syncInputToState();           
-            const response = await apiCall("/api/character/create", "POST", {
-                name:"Вася"
-            })
-            if(response.ok){
-                const data = await response.json()
-                console.log(data.message)
+            try{
+                syncInputToState();
+                await characterService.create(/*Тут будут данные из state и еще кое что */);                
             }
-            else{
-                
-            }    
+            catch(e){
+                const errMessage = `Ошибка сети: ${e}`
+                console.log(errMessage);
+                state.error = errMessage;
+                render();
+            }                      
+            
         }        
     }   
     app.onclick = async (event) => {
          const avatarItem = event.target.closest('.avatar-item');
          const id = event.target.id;                               
          if(commands[id]){
-            commands[id]();
+            await commands[id]();
          }
          else if(avatarItem){
             syncInputToState();
