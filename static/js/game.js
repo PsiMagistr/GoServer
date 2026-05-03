@@ -2,17 +2,15 @@ let gameLoopId = null;
 import { CreateCharacterTemplate } from "./templates/create_character.js";
 import { gameTemplate } from "./templates/game.js";
 
-export function initGame(username) {
+export function initGame(char) {
     if(gameLoopId){
         cancelAnimationFrame(gameLoopId)
         console.log("Старый цикл остановлен.");       
     }
     const app = document.getElementById('app');
-    app.innerHTML = gameTemplate(username);
-
+    app.innerHTML = gameTemplate(char);
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
-
     // Простейший цикл отрисовки
     function draw() {
         ctx.fillStyle = 'black';
@@ -22,6 +20,8 @@ export function initGame(username) {
         gameLoopId = requestAnimationFrame(draw);
     }
     draw();
+    console.log("Наш персонаж.")
+    console.log(char)
 }
 
  

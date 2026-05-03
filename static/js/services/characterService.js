@@ -7,7 +7,8 @@ export const characterService = {
                 console.log("Персонаж сохранен!")
                 console.log(data)
                 return;
-            }
-            throw new Error(await response.text())                
+            }            
+            throw new Error(await response.text());          
+                            
     }
 }

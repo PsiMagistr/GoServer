@@ -47,12 +47,11 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	var req RegisterRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
-	fmt.Printf("Пришли данные регистрации: %+v\n", req)
 	if err != nil {
 		http.Error(w, "Ошибка в формате данных.", http.StatusBadRequest)
 		return
 	}
-
+	fmt.Printf("Пришли данные регистрации: %+v\n", req)
 	if req.ConfirmPassword != req.Password {
 		http.Error(w, "Пароли не совпадают!", http.StatusBadRequest)
 		return

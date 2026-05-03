@@ -30,13 +30,17 @@ export function showCreateCharacter(){
         async createConfirmBtn(){
             try{
                 syncInputToState();
-                await characterService.create(/*Тут будут данные из state и еще кое что */);                
+                const data = {
+                    name:state.name,
+                    gender:state.gender,
+                    avatar_id:String(state.selectedAvatar),
+                };
+                const response = await characterService.create(data);
+                window.location.reload(true)                               
             }
-            catch(e){
-                const errMessage = `Ошибка сети: ${e}`
-                console.log(errMessage);
-                state.error = errMessage;
-                render();
+            catch(e){               
+                state.error = e.message;                
+                render(); 
             }                      
             
         }        
