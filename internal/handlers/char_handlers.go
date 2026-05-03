@@ -5,15 +5,17 @@ import (
 	"fmt"
 	"net/http"
 
+	"GoServer/internal/utils"
+
 	"GoServer/internal/auth"
 	"GoServer/internal/database"
 	"GoServer/internal/models"
 )
 
 type CreateCharacterRequest struct {
-	Name   string `json:"name"`
-	Gender string `json:"gender"`
-	Avatar string `json:"avatar_id"`
+	Name     string `json:"name"`
+	Gender   string `json:"gender"`
+	AvatarID string `json:"avatar_id"`
 }
 
 func CheckCharacterHandler(w http.ResponseWriter, r *http.Request) {
@@ -52,7 +54,6 @@ func CreateCharacterHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Ошибка в формате данных.", http.StatusBadRequest)
 		return
 	}
-	///////////////////
 	_, _ = fmt.Printf("Пришли данные создания персонажа. %+v\n", req)
 	// Забираем контекст.
 	claims := r.Context().Value(auth.UserContextKey).(*auth.Claims)
@@ -60,9 +61,15 @@ func CreateCharacterHandler(w http.ResponseWriter, r *http.Request) {
 		UserID:   claims.UserID,
 		Name:     req.Name,
 		Gender:   req.Gender,
-		AvatarID: req.Avatar,
+		AvatarID: req.AvatarID,
 	}
-	err = database.CreateCharacter(character)
+
+	char, err := utils.ValidateCharacter(character)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	err = database.CreateCharacter(char)
 	if err != nil {
 		http.Error(w, "Имя персонажа занято.", http.StatusConflict)
 		return
