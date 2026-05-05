@@ -12,6 +12,7 @@ import (
 
 	"GoServer/internal/auth"
 	"GoServer/internal/database"
+	"GoServer/internal/game"
 	"GoServer/internal/handlers"
 )
 
@@ -19,6 +20,7 @@ func main() {
 	if err := database.InitDB(); err != nil {
 		log.Fatal("Произошла ошибка ", err)
 	}
+	gameHub := game.NewHub()
 	defer func() {
 		err := database.DB.Close()
 		if err != nil {
@@ -34,6 +36,7 @@ func main() {
 	mux.HandleFunc("/api/register", handlers.RegisterHandler)
 	mux.HandleFunc("/api/login", handlers.LoginHandler)
 	mux.HandleFunc("/api/refresh", handlers.RefreshHandler)
+	mux.Handle("/ws", auth.AuthMiddleware(handlers.WSHandler(gameHub)))
 	var MyServer Server = NewHTTPServer("localhost:8080", mux)
 	go func() {
 		err := MyServer.Run()

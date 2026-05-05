@@ -8,6 +8,29 @@ export function initGame(char) {
         console.log("Старый цикл остановлен.");       
     }
     const app = document.getElementById('app');
+    const socket = new WebSocket(`ws://${window.location.host}/ws`);
+    socket.onopen = () => {
+        console.log("Связь с сервером установлена!");
+        // Теперь сервер знает, что "Виктория" в сети
+    };
+
+    socket.onmessage = (event) => {
+        // Сюда будут прилетать сообщения от сервера
+        const msg = JSON.parse(event.data);
+        console.log("Получено от сервера:", msg);
+    };
+
+    socket.onclose = (event) => {
+        console.log("Соединение разорвано", event.reason);
+        alert("Потеряно соединение с сервером");
+    };
+
+    socket.onerror = (error) => {
+        console.error("Ошибка сокета:", error);
+    };
+    // Сохраним сокет в глобальную переменную или передадим в движок,
+    // чтобы можно было отправлять сообщения позже (например, при ударе)
+    window.gameSocket = socket; 
     app.innerHTML = gameTemplate(char);
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');

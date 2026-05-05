@@ -13,7 +13,8 @@ const UserContextKey contextKey = "user"
 
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Header.Get("X-Requested-With") == "" {
+		iswebsocket := r.Header.Get("Upgrade") == "websocket"
+		if !iswebsocket && r.Header.Get("X-Requested-With") == "" {
 			http.Error(w, "Forbidden", http.StatusForbidden)
 			return
 		}
