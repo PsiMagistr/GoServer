@@ -21,6 +21,7 @@ func main() {
 		log.Fatal("Произошла ошибка ", err)
 	}
 	gameHub := game.NewHub()
+	go gameHub.Run()
 	defer func() {
 		err := database.DB.Close()
 		if err != nil {

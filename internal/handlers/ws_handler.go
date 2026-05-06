@@ -44,7 +44,7 @@ func WSHandler(hub *game.Hub) http.HandlerFunc {
 			Character: char,
 			Send:      make(chan interface{}, 256),
 		}
-		hub.Register(client)
+		hub.Register <- client
 		go client.WritePump()
 		go client.ReadPump(hub)
 	}

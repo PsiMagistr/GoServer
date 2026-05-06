@@ -103,7 +103,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	tokens, err := auth.GetTokenPair(user.ID, user.Username)
 	if err != nil {
-		http.Error(w, "Ошибка сервера", http.StatusInternalServerError)
+		http.Error(w, "Ошибка сервера"+err.Error(), http.StatusInternalServerError)
 		return
 	}
 	accessCookie := GetCookieParams("access_token", tokens.AccessToken, 365*24*3600)
