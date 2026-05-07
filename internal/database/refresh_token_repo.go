@@ -1,12 +1,13 @@
 package database
 
 import (
-	"GoServer/internal/models"
 	"fmt"
 	"time"
+
+	"GoServer/internal/models"
 )
 
-func SaveRefreshToken(userID int, token string, duration time.Duration) error {
+func SaveRefreshToken(userID int64, token string, duration time.Duration) error {
 	expiresAt := time.Now().Add(duration)
 	query := `INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES (?, ?, ?)`
 	_, err := DB.Exec(query, userID, token, expiresAt)

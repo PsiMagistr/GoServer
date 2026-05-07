@@ -1,11 +1,12 @@
 package auth
 
 import (
-	"GoServer/internal/database"
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
 	"time"
+
+	"GoServer/internal/database"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -13,7 +14,7 @@ import (
 var jwtSecret = []byte("my_super_secret_rpg_key_12345")
 
 type Claims struct {
-	UserID   int    `json:"user_id"`
+	UserID   int64  `json:"user_id"`
 	Username string `json:"username"`
 	jwt.RegisteredClaims
 }
@@ -23,7 +24,7 @@ type TokenPair struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
-func GenerateToken(userID int, username string) (string, error) {
+func GenerateToken(userID int64, username string) (string, error) {
 	expirationTime := time.Now().Add(1 * time.Minute)
 	claims := &Claims{
 		UserID:   userID,
@@ -49,7 +50,7 @@ func GenerateRefreshToken() (string, error) {
 	return hex.EncodeToString(b), nil
 }
 
-func GetTokenPair(UserID int, username string) (*TokenPair, error) {
+func GetTokenPair(UserID int64, username string) (*TokenPair, error) {
 	accessToken, err := GenerateToken(UserID, username)
 	if err != nil {
 		return nil, fmt.Errorf("Ошибка генерации аксесс-токена: %w", err)

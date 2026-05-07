@@ -21,19 +21,18 @@ func InitDB() error {
 	}
 	createUserTableQuery := `
 		CREATE TABLE IF NOT EXISTS users (
-			id INT PRIMARY KEY AUTO_INCREMENT,
+			id BIGINT PRIMARY KEY AUTO_INCREMENT,
 			username VARCHAR(255) UNIQUE NOT NULL,
 			email VARCHAR(255) UNIQUE NOT NULL,
 			password VARCHAR(255) NOT NULL,
-			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-			
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP			
 		)ENGINE=InnoDB;`
 	// Таблица рефрештокенов.
 
 	refreshTokensTableOuery := `
 	CREATE TABLE IF NOT EXISTS refresh_tokens (
-        id INT PRIMARY KEY AUTO_INCREMENT,
-        user_id INT NOT NULL,
+        id BIGINT PRIMARY KEY AUTO_INCREMENT,
+        user_id BIGINT NOT NULL,
         token TEXT NOT NULL UNIQUE,
         expires_at DATETIME NOT NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -42,8 +41,8 @@ func InitDB() error {
 
 	createCharacterTableQuery := `
 	CREATE TABLE IF NOT EXISTS characters (
-		id INT PRIMARY KEY AUTO_INCREMENT,
-		user_id INT UNIQUE NOT NULL,
+		id BIGINT PRIMARY KEY AUTO_INCREMENT,
+		user_id BIGINT UNIQUE NOT NULL,
 		name VARCHAR(255) UNIQUE NOT NULL,
 		gender VARCHAR(10) NOT NULL,
 		avatar_id VARCHAR(50) NOT NULL,

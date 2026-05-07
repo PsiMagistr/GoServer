@@ -17,12 +17,24 @@ export function initGame(char) {
     socket.onmessage = (event) => {
         // Сюда будут прилетать сообщения от сервера
         const msg = JSON.parse(event.data);
-        console.log("Получено от сервера:", msg);
+        if(msg.type === "room_presence"){
+            console.log("Игроки в комнате:")
+            if(!msg.players) return;
+            for(const player of msg.players){
+                console.log(player.name);
+            }
+        }
+        else if(msg.type === "player_joined"){
+            console.log(`К нам присоединился(лась) ${msg.player.name}`);
+        }
+        else if(msg.type === "player_left"){
+           console.log(`Нас покинул(ла) ${msg.player.name}`);
+        }
+        //console.log("Получено от сервера:", msg);
     };
 
     socket.onclose = (event) => {
-        console.log("Соединение разорвано", event.reason);
-        alert("Потеряно соединение с сервером");
+        console.log("Соединение разорвано", event.reason);        
     };
 
     socket.onerror = (error) => {

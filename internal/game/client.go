@@ -20,7 +20,7 @@ type Client struct {
 	Send      chan interface{}
 }
 
-func (c *Client) WritePump() {
+func (c *Client) WritePump() { // Читаем сообщения от сервера и пишем в браузер.
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
 		ticker.Stop()
@@ -41,7 +41,6 @@ func (c *Client) WritePump() {
 		case <-ticker.C:
 			_ = c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
 			err := c.Conn.WriteMessage(websocket.PingMessage, nil)
-			// fmt.Println("Сердце")
 			if err != nil {
 				return
 			}
@@ -49,7 +48,7 @@ func (c *Client) WritePump() {
 	}
 }
 
-func (c *Client) ReadPump(h *Hub) {
+func (c *Client) ReadPump(h *Hub) { // Читаем сообщения от браузера и отправляем на сервер.
 	c.Conn.SetReadLimit(512) // Максимальный размер сообщения от игрока (защита от спама)
 	_ = c.Conn.SetReadDeadline(time.Now().Add(pongWait))
 	c.Conn.SetPongHandler(func(string) error {
