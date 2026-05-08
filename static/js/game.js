@@ -18,8 +18,7 @@ export function initGame(char) {
         // Сюда будут прилетать сообщения от сервера
         const msg = JSON.parse(event.data);
         if(msg.type === "room_presence"){
-            console.log("Игроки в комнате:")
-            if(!msg.players) return;
+            console.log("Старые игроки в комнате:");            
             for(const player of msg.players){
                 console.log(player.name);
             }

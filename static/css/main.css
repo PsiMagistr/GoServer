@@ -198,3 +198,125 @@ button {
 .auth-form { display: flex; flex-direction: column; gap: 15px; }
 .auth-form button { background: #d4af37; color: #111; padding: 15px; border: none; font-weight: 700; }
 #toggleMode { margin-top: 25px; color: #555; cursor: pointer; font-size: 12px; }
+
+
+/* Основной макет игры */
+.game-layout {
+    display: flex;
+    gap: 20px;
+    width: 950px; /* Сумма ширины панели (250) + канваса (600) + отступы */
+    height: 650px;
+    align-items: flex-start;
+}
+
+/* Боковая панель */
+.side-panel {
+    width: 250px;
+    background: #161616;
+    border: 1px solid #252525;
+    border-radius: 8px;
+    padding: 15px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow-y: auto;
+}
+
+.panel-section h3 {
+    color: #d4af37;
+    font-size: 14px;
+    text-transform: uppercase;
+    border-bottom: 1px solid #333;
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+    letter-spacing: 1px;
+}
+
+.game-list {
+    list-style: none;
+}
+
+.game-list li {
+    padding: 5px 8px;
+    font-size: 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: 0.2s;
+    color: #ccc;
+}
+
+.game-list li:hover {
+    background: #222;
+    color: #fff;
+}
+
+.game-list li.empty {
+    color: #555;
+    font-style: italic;
+    cursor: default;
+}
+
+/* Центральная область */
+.main-screen {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.char-header {
+    margin-bottom: 5px;
+    font-size: 14px;
+    color: #888;
+}
+
+/* Чат */
+.chat-area {
+    background: #161616;
+    border: 1px solid #252525;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    height: 200px;
+}
+
+.chat-messages {
+    flex: 1;
+    padding: 10px;
+    overflow-y: auto;
+    font-size: 13px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.chat-messages .sys-msg { color: #8a6d3b; font-style: italic; }
+.chat-messages .player-msg { color: #d4af37; font-weight: bold; }
+.chat-messages .text-msg { color: #e0e0e0; }
+
+.chat-input-group {
+    display: flex;
+    border-top: 1px solid #252525;
+    padding: 5px;
+}
+
+.chat-input-group input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    padding: 8px;
+    font-size: 14px;
+    color: #fff;
+}
+
+.chat-input-group input:focus {
+    box-shadow: none;
+    background: #1a1a1a;
+}
+
+.chat-input-group button {
+    background: #333;
+    padding: 5px 20px;
+    font-size: 12px;
+}

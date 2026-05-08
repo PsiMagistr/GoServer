@@ -25,9 +25,11 @@ func NewHub() *Hub {
 func (h *Hub) Run() {
 	for {
 		select {
-		case client := <-h.Register:
+		case client := <-h.Register: // Регистрация.
 			h.mu.Lock()
-			var neighbors []map[string]interface{}
+			// var neighbors []map[string]interface{}
+			h.Clients[client.Character.ID] = client
+			neighbors := make([]map[string]interface{}, 0)
 			for _, other := range h.Clients {
 				if other.Character.LocationID == client.Character.LocationID {
 					neighbors = append(neighbors, map[string]interface{}{
@@ -39,13 +41,14 @@ func (h *Hub) Run() {
 					})
 				}
 			}
-			h.Clients[client.Character.ID] = client
 			h.mu.Unlock()
 			client.Send <- map[string]interface{}{ // Отправляем список тех кто уже был в комнате.
 				"type":    "room_presence",
 				"players": neighbors,
 			}
-			h.BroadcastToRoom(client.Character.LocationID, map[string]interface{}{
+			exeptID := client.Character.ID
+			lockID := client.Character.LocationID
+			h.BroadcastToRoomExcept(lockID, exeptID, map[string]interface{}{
 				"type": "player_joined",
 				"player": map[string]interface{}{
 					"id":        client.Character.ID,
@@ -62,8 +65,8 @@ func (h *Hub) Run() {
 				fmt.Printf("Персонаж %s не в сети. \n", h.Clients[id].Character.Name)
 				locID := client.Character.LocationID
 				name := client.Character.Name
-				close(h.Clients[id].Send)
 				delete(h.Clients, id)
+				close(client.Send)
 				h.mu.Unlock()
 				h.BroadcastToRoom(locID, map[string]interface{}{
 					"type": "player_left",
@@ -94,13 +97,26 @@ func (h *Hub) BroadcastToRoom(locationID string, message interface{}) {
 	}
 }
 
+func (h *Hub) BroadcastToRoomExcept(locationID string, exeptID int64, message interface{}) {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	for _, client := range h.Clients {
+		if client.Character.LocationID == locationID && client.Character.ID != exeptID {
+			select {
+			case client.Send <- message:
+			default:
+			}
+		}
+	}
+}
+
 func (h *Hub) BroadcastToAll(message interface{}) {
 	h.mu.RLock()
+	defer h.mu.RUnlock()
 	for _, client := range h.Clients {
 		select {
 		case client.Send <- message:
 		default:
 		}
 	}
-	h.mu.RUnlock()
 }
