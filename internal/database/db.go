@@ -33,11 +33,12 @@ func InitDB() error {
 	CREATE TABLE IF NOT EXISTS refresh_tokens (
         id BIGINT PRIMARY KEY AUTO_INCREMENT,
         user_id BIGINT NOT NULL,
-        token TEXT NOT NULL UNIQUE,
+        token VARCHAR(255) NOT NULL, -- Заменили TEXT на VARCHAR(255)
         expires_at DATETIME NOT NULL,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE (token), -- Явно указываем уникальность для VARCHAR
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-)ENGINE=InnoDB;`
+) ENGINE=InnoDB;`
 
 	createCharacterTableQuery := `
 	CREATE TABLE IF NOT EXISTS characters (

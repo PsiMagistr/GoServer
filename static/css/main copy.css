@@ -1,0 +1,475 @@
+/*
+Error 1467 (HY000): Failed to read auto-increment value from storage engine
+
+*/
+
+
+/* --- Сброс и базовые настройки --- */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* МАГИЯ ЦЕНТРИРОВАНИЯ: Body как главный контейнер */
+body {
+    background: #050505; /* Очень темный фон мира */
+    color: #ccc;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    
+    /* Центрирование по вертикали и горизонтали */
+    display: flex;
+    justify-content: center; /* Горизонталь */
+    align-items: center;     /* Вертикаль */
+    
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden; /* Чтобы не было полос прокрутки у самого браузера */
+}
+
+/* ОСНОВНОЙ КОНТЕЙНЕР ИГРЫ */
+.game-layout {
+    display: flex;
+    /* Базовый размер под старые стандарты, но с возможностью роста */
+    width: 950px; 
+    height: 700px;
+    
+    background: #111;
+    border: 1px solid #222;
+    box-shadow: 0 0 50px rgba(0,0,0,1); /* Тень для глубины */
+    position: relative;
+}
+
+/* ЛЕВАЯ ПАНЕЛЬ (Списки) */
+.side-panel {
+    width: 180px;
+    flex-shrink: 0;
+    background: #161616;
+    border-right: 1px solid #222;
+    display: flex;
+    flex-direction: column;
+    padding: 12px;
+}
+
+.panel-section {
+    margin-bottom: 20px;
+}
+
+.panel-section h3 {
+    color: #8a6d3b;
+    font-size: 11px;
+    text-transform: uppercase;
+    border-bottom: 1px solid #333;
+    padding-bottom: 4px;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+}
+
+.game-list {
+    list-style: none;
+}
+
+.game-list li {
+    font-size: 12px;
+    padding: 3px 5px;
+    color: #999;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.game-list li:hover {
+    color: #d4af37;
+    background: #1d1d1d;
+}
+
+/* ЦЕНТРАЛЬНАЯ ЗОНА (Экран и Чат) */
+.main-screen {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    min-width: 0; /* Предотвращает раздувание flex-элемента */
+}
+
+/* Верхняя полоска инфо */
+.top-bar-simple {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 12px;
+    background: #1a1a1a;
+    font-size: 13px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    border: 1px solid #222;
+}
+
+.char-name-label b { color: #d4af37; }
+.location-label i { color: #888; font-style: normal; }
+
+/* Контейнер для Канваса */
+.canvas-container {
+    background: #000;
+    border: 1px solid #333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+#gameCanvas {
+    display: block;
+    background: #000;
+}
+
+/* ЧАТ */
+.chat-section {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    margin-top: 10px;
+    background: #0a0a0a;
+    border: 1px solid #222;
+    min-height: 100px;
+}
+
+.chat-window {
+    flex-grow: 1;
+    padding: 10px;
+    overflow-y: auto;
+    font-size: 13px;
+    color: #aaa;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.chat-controls {
+    display: flex;
+    border-top: 1px solid #222;
+    background: #161616;
+}
+
+.chat-controls input {
+    flex-grow: 1;
+    background: transparent;
+    border: none;
+    padding: 12px;
+    color: #fff;
+    outline: none;
+    font-size: 13px;
+}
+
+/* КНОПКА С ЭФФЕКТОМ ВДАВЛИВАНИЯ */
+#chat-send-btn {
+    background: #222;
+    border: none;
+    border-left: 1px solid #333;
+    color: #d4af37;
+    padding: 0 25px;
+    font-weight: bold;
+    font-size: 11px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.05s ease; /* Очень быстрый отклик */
+    outline: none;
+    position: relative;
+    top: 0;
+}
+
+#chat-send-btn:hover {
+    background: #2a2a2a;
+    color: #f1c40f;
+}
+
+/* Эффект при нажатии */
+#chat-send-btn:active {
+    background: #111;
+    top: 2px; /* Смещение вниз */
+    box-shadow: inset 0 3px 8px rgba(0,0,0,0.9); /* Внутренняя тень */
+}
+
+/* Дополнительные стили для форм (авторизация/создание) */
+.auth-container, .creation-container {
+    background: #161616;
+    padding: 40px;
+    border-radius: 8px;
+    border: 1px solid #222;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+}
+
+input {
+    background: #0d0d0d; /* Почти черный для контраста */
+    border: 1px solid #333;
+    border-left: 3px solid #444; /* Небольшой акцент слева */
+    border-radius: 4px;
+    
+    /* Увеличенная высота и отступы */
+    height: 54px; 
+    padding: 0 20px;
+    
+    color: #fff;
+    font-size: 16px;
+    font-family: inherit;
+    
+    /* Плавные переходы */
+    transition: all 0.3s ease;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.5); /* Внутренняя тень для глубины */
+}
+
+input:focus {
+    outline: none;
+    border-color: #d4af37;
+    border-left-color: #d4af37;
+    background: #121212;
+    /* Золотистое свечение при наборе текста */
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.5), 0 0 12px rgba(212, 175, 55, 0.15);
+}
+
+/* Красивое оформление подсказок (Placeholders) */
+input::placeholder {
+    color: #555;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* --- КОНТЕЙНЕР АВТОРИЗАЦИИ --- */
+.auth-container {
+    width: 420px; /* Немного расширил для баланса с высокими инпутами */
+    background: #161616;
+    padding: 50px 40px; /* Больше отступов сверху и снизу */
+    border-radius: 12px;
+    border: 1px solid #252525;
+    text-align: center;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.9);
+}
+
+.auth-container h1 {
+    color: #d4af37;
+    margin-bottom: 35px;
+    text-transform: uppercase;
+    letter-spacing: 5px; /* Больше разрядки для пафоса */
+    font-size: 1.6rem;
+    font-weight: 300;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px; /* Увеличил расстояние между полями */
+}
+
+/* --- КНОПКА ВХОДА / РЕГИСТРАЦИИ --- */
+#submitBtn {
+    background: linear-gradient(180deg, #d4af37 0%, #b8952d 100%); /* Градиент для объема */
+    color: #000;
+    border: none;
+    height: 56px; /* Вровень с инпутами */
+    border-radius: 4px;
+    
+    font-size: 15px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    
+    margin-top: 15px;
+    cursor: pointer;
+    position: relative;
+    top: 0;
+    transition: all 0.1s ease;
+    box-shadow: 0 4px 0 #7a5e1a; /* Эффект толщины кнопки */
+}
+
+#submitBtn:hover {
+    background: linear-gradient(180deg, #f1c40f 0%, #d4af37 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 5px 0 #7a5e1a;
+}
+
+/* Эффект реального нажатия (физическая вдавленность) */
+#submitBtn:active {
+    top: 4px; /* Кнопка "падает" на высоту своей тени */
+    background: #b8952d;
+    box-shadow: 0 0 0 #7a5e1a; /* Тень исчезает */
+    filter: brightness(0.9);
+}
+
+/* --- ССЫЛКА ПЕРЕКЛЮЧЕНИЯ --- */
+#toggleMode {
+    margin-top: 30px;
+    color: #666;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+#toggleMode:hover {
+    color: #d4af37;
+}
+
+/* --- ОШИБКИ --- */
+.error-msg {
+    color: #ff6b6b;
+    font-size: 13px;
+    margin-top: 20px;
+    min-height: 20px;
+    background: rgba(255, 0, 0, 0.05); /* Легкая красная подложка */
+    padding: 5px;
+    border-radius: 4px;
+}
+
+/* --- Контейнер создания персонажа --- */
+.creation-container {
+    background: #161616;
+    padding: 40px;
+    border-radius: 12px;
+    border: 1px solid #252525;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+    /* Рассчитываем ширину: (150px * 3) + отступы + падинги */
+    width: 100%;
+    max-width: 580px; 
+}
+
+.creation-container h2 {
+    color: #d4af37;
+    margin-bottom: 25px;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    font-weight: 300;
+}
+
+/* Поле имени */
+.form-group {
+    max-width: 350px;
+    margin: 0 auto 30px;
+}
+
+/* --- Переключатели пола --- */
+.gender-toggle {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.gender-toggle button {
+    flex: 1;
+    max-width: 160px;
+    height: 50px;
+    background: #1d1d1d;
+    color: #666;
+    border: 1px solid #333;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    position: relative;
+    top: 0;
+}
+
+.gender-toggle button.active {
+    background: #2b251a;
+    color: #d4af37;
+    border-color: #d4af37;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+}
+
+/* Эффект нажатия для кнопок пола */
+.gender-toggle button:active {
+    top: 2px;
+}
+
+/* --- СЕТКА АВАТАРОК 3x3 --- */
+.avatar-grid {
+    display: grid;
+    /* 3 колонки ровно по 150 пикселей */
+    grid-template-columns: repeat(3, 150px); 
+    gap: 15px;
+    justify-content: center;
+    padding: 20px;
+    background: #1a1a1a;
+    border-radius: 8px;
+    border: 1px solid #222;
+    margin: 0 auto 20px auto;
+    width: fit-content; /* Сжимаем фон под размер сетки */
+}
+
+.avatar-item {
+    width: 150px;
+    height: 150px;
+    border: 3px solid #2a2a2a;
+    border-radius: 6px;
+    overflow: hidden;
+    cursor: pointer;
+    background: #000;
+    transition: all 0.2s ease;
+}
+
+.avatar-item:hover {
+    border-color: #444;
+}
+
+/* Подсветка выбранной аватарки */
+.avatar-item.selected {
+    border-color: #d4af37;
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.4);
+    transform: scale(1.03);
+}
+
+.avatar-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    filter: brightness(0.8);
+    transition: 0.3s;
+}
+
+.avatar-item.selected img {
+    filter: brightness(1.1);
+}
+
+/* --- КНОПКА ВОЙТИ В МИР --- */
+.btn-hero {
+    background: #d4af37;
+    color: #111;
+    border: none;
+    padding: 20px 0;
+    font-size: 16px;
+    font-weight: 800;
+    width: 100%;
+    max-width: 400px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    position: relative;
+    top: 0;
+    transition: all 0.1s ease;
+    box-shadow: 0 4px 0 #7a5e1a; /* Эффект толщины */
+}
+
+.btn-hero:hover {
+    background: #f1c40f;
+    box-shadow: 0 5px 0 #7a5e1a;
+}
+
+.btn-hero:active {
+    top: 4px;
+    box-shadow: 0 0 0 #7a5e1a;
+}
+
+/* Ошибки */
+.error-msg {
+    color: #ff6b6b;
+    font-size: 13px;
+    margin: 10px 0;
+    min-height: 20px;
+    font-style: italic;
+}

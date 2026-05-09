@@ -1,5 +1,5 @@
 import { initAuth } from './auth.js';
-import {initGame} from './game.js';
+import {initGame} from './game/game.js';
 import {showCreateCharacter} from './char_creation.js';
 import {apiCall} from "./api.js";
 

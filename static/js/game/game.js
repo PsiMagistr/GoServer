@@ -1,6 +1,7 @@
 let gameLoopId = null;
-import { CreateCharacterTemplate } from "./templates/create_character.js";
-import { gameTemplate } from "./templates/game.js";
+import { socket_events } from "./socket_events.js";
+import { CreateCharacterTemplate } from "../templates/create_character.js";
+import { gameTemplate } from "../templates/game.js";
 
 export function initGame(char) {
     if(gameLoopId){
@@ -16,21 +17,20 @@ export function initGame(char) {
 
     socket.onmessage = (event) => {
         // Сюда будут прилетать сообщения от сервера
-        const msg = JSON.parse(event.data);
-        if(msg.type === "room_presence"){
-            console.log("Старые игроки в комнате:");            
-            for(const player of msg.players){
-                console.log(player.name);
+        try{
+            const msg = JSON.parse(event.data);
+            if(socket_events[msg.type]){
+                socket_events[msg.type](msg);    
+            }
+            else {
+                console.warn("Неизвестный тип сообщения:", msg.type);
             }
         }
-        else if(msg.type === "player_joined"){
-            console.log(`К нам присоединился(лась) ${msg.player.name}`);
-        }
-        else if(msg.type === "player_left"){
-           console.log(`Нас покинул(ла) ${msg.player.name}`);
-        }
-        //console.log("Получено от сервера:", msg);
-    };
+        catch(e){
+            onsole.error("Ошибка парсинга JSON:", e);
+        }     
+        
+    }
 
     socket.onclose = (event) => {
         console.log("Соединение разорвано", event.reason);        
