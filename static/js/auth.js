@@ -1,8 +1,7 @@
 import { regTemplate } from './templates/registration.js';
 import { loginTemplate } from './templates/login.js';
-import {getConfigData} from './utils/utils_functions.js';
+import {utils} from './utils/utils_functions.js';
 import { authService } from './services/authService.js';
-
 export function initAuth(onSuccess) {
     const app = document.getElementById('app');
     let state = {
@@ -29,16 +28,33 @@ export function initAuth(onSuccess) {
         /////
         try{
             if(state.isLoginMode){//Вход.
-                const configData = getConfigData(["email", "password"]);
-                const user = await authService.login(configData.email, configData.password);
+                console.log("ENTER2")
+                const params = {
+                    email:"#email",
+                    password:"#password",
+                }
+                const configData = utils.getElementsBySelectors(params);
+                const user = await authService.login(
+                    configData.email.value,
+                    configData.password.value
+                );
                 onSuccess(user.username); // Вход в аккаунт.
             }
             else{// Регистрация.
-                const userData = getConfigData(['username', 'email', 'password', 'confirm_password']);
-                    await authService.register(userData);
-                    state.isLoginMode = true;
-                    state.error = "";
-                    render();               
+                 const params = {
+                    username:"#username",
+                    email:"#email",                   
+                    password:"#password",
+                    confirm_password:"#confirm_password",
+                }
+                const userData = utils.getElementsBySelectors(params); 
+                console.log("===========")
+                const schema = utils.getValuesBySchema(userData)
+                console.log(schema)            
+                await authService.register(schema)                 
+                state.isLoginMode = true;
+                state.error = "";
+                render();              
                 
             }
         }

@@ -3,6 +3,7 @@ import { socket_events } from "./socket_events.js";
 import { CreateCharacterTemplate } from "../templates/create_character.js";
 import { gameTemplate } from "../templates/game.js";
 
+
 export function initGame(char) {
     if(gameLoopId){
         cancelAnimationFrame(gameLoopId)
@@ -20,20 +21,21 @@ export function initGame(char) {
         try{
             const msg = JSON.parse(event.data);
             if(socket_events[msg.type]){
-                socket_events[msg.type](msg);    
+                socket_events[msg.type](msg);                    
             }
             else {
                 console.warn("Неизвестный тип сообщения:", msg.type);
             }
         }
         catch(e){
-            onsole.error("Ошибка парсинга JSON:", e);
+            console.error("Ошибка парсинга JSON:", e);
         }     
         
     }
 
     socket.onclose = (event) => {
-        console.log("Соединение разорвано", event.reason);        
+        console.log("Соединение разорвано", event.reason);
+        alert("Соединение разорвано.");        
     };
 
     socket.onerror = (error) => {

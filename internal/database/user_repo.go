@@ -35,3 +35,9 @@ func GetUserById(id int) (*models.User, error) {
 	}
 	return &u, nil
 }
+
+func DeleteAllRefreshTokensByUserID(userID int64) error {
+	query := `DELETE FROM refresh_tokens WHERE user_id = ?`
+	_, err := DB.Exec(query, userID)
+	return err
+}

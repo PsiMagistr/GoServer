@@ -84,6 +84,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer r.Body.Close()
+
 	var req LoginRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
@@ -91,6 +92,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fmt.Printf("Пришли данные логина: %+v\n", req)
+
 	user, err := database.GetUserByEmail(req.Email)
 	if err != nil {
 		http.Error(w, "Неверный логин или пароль.", http.StatusUnauthorized)
@@ -101,11 +103,17 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Неверный логин или пароль.", http.StatusBadRequest)
 		return
 	}
+	err = database.DeleteAllRefreshTokensByUserID(user.ID)
+	if err != nil {
+		fmt.Printf("Ошибка при очистке старых токенов: %v", err)
+		// Можно не прерывать выполнение, если это не критично
+	}
 	tokens, err := auth.GetTokenPair(user.ID, user.Username)
 	if err != nil {
 		http.Error(w, "Ошибка сервера"+err.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	accessCookie := GetCookieParams("access_token", tokens.AccessToken, 365*24*3600)
 	refreshCookie := GetCookieParams("refresh_token", tokens.RefreshToken, 365*24*3600)
 

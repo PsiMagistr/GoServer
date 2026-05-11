@@ -9,7 +9,7 @@ type Hub struct {
 	mu         sync.RWMutex
 	Clients    map[int64]*Client
 	Register   chan *Client
-	Unregister chan int64
+	Unregister chan *Client
 	Broadcast  chan interface{}
 }
 
@@ -17,7 +17,7 @@ func NewHub() *Hub {
 	return &Hub{
 		Clients:    make(map[int64]*Client),
 		Register:   make(chan *Client),
-		Unregister: make(chan int64),
+		Unregister: make(chan *Client),
 		Broadcast:  make(chan interface{}),
 	}
 }
@@ -26,61 +26,77 @@ func (h *Hub) Run() {
 	for {
 		select {
 		case client := <-h.Register: // Регистрация.
-			h.mu.Lock()
-			// var neighbors []map[string]interface{}
-			h.Clients[client.Character.ID] = client
-			neighbors := make([]map[string]interface{}, 0)
-			for _, other := range h.Clients {
-				if other.Character.LocationID == client.Character.LocationID {
-					neighbors = append(neighbors, map[string]interface{}{
-						"id":        other.Character.ID,
-						"name":      other.Character.Name,
-						"avatar_id": other.Character.AvatarID,
-						"level":     other.Character.Level,
-						"gender":    other.Character.Gender,
-					})
-				}
-			}
-			h.mu.Unlock()
-			client.Send <- map[string]interface{}{ // Отправляем список тех кто уже был в комнате.
-				"type":    "room_presence",
-				"players": neighbors,
-			}
-			exeptID := client.Character.ID
-			lockID := client.Character.LocationID
-			h.BroadcastToRoomExcept(lockID, exeptID, map[string]interface{}{
-				"type": "player_joined",
-				"player": map[string]interface{}{
-					"id":        client.Character.ID,
-					"name":      client.Character.Name,
-					"avatar_id": client.Character.AvatarID,
-					"gender":    client.Character.Gender,
-					"level":     client.Character.Level,
-				},
-			})
-			fmt.Printf("Персонаж %s онлайн. \n", client.Character.Name)
-		case id := <-h.Unregister:
-			h.mu.Lock()
-			if client, ok := h.Clients[id]; ok {
-				fmt.Printf("Персонаж %s не в сети. \n", h.Clients[id].Character.Name)
-				locID := client.Character.LocationID
-				name := client.Character.Name
-				delete(h.Clients, id)
-				close(client.Send)
-				h.mu.Unlock()
-				h.BroadcastToRoom(locID, map[string]interface{}{
-					"type": "player_left",
-					"player": map[string]interface{}{
-						"name": name,
-					},
-				})
-
-			} else {
-				h.mu.Unlock()
-			}
+			h.handleRegister(client)
+		case client := <-h.Unregister:
+			h.handleUnregister(client)
 		case message := <-h.Broadcast:
 			h.BroadcastToAll(message)
 		}
+	}
+}
+
+////////handlers
+
+func (h *Hub) handleRegister(client *Client) {
+	h.mu.Lock()
+	if oldClient, ok := h.Clients[client.Character.ID]; ok {
+		oldClient.Conn.Close()
+		fmt.Printf("Персонаж %s зашел из другого места, старая сессия закрыта.\n", client.Character.Name)
+	}
+	h.Clients[client.Character.ID] = client
+	neighbors := make([]map[string]interface{}, 0)
+	for _, other := range h.Clients {
+		if other.Character.LocationID == client.Character.LocationID {
+			neighbors = append(neighbors, map[string]interface{}{
+				"id":        other.Character.ID,
+				"name":      other.Character.Name,
+				"avatar_id": other.Character.AvatarID,
+				"level":     other.Character.Level,
+				"gender":    other.Character.Gender,
+			})
+		}
+	}
+	h.mu.Unlock()
+	client.Send <- map[string]interface{}{ // Отправляем список тех кто уже был в комнате.
+		"type":    "room_presence",
+		"players": neighbors,
+	}
+	exeptID := client.Character.ID
+	lockID := client.Character.LocationID
+	h.BroadcastToRoomExcept(lockID, exeptID, map[string]interface{}{
+		"type": "player_joined",
+		"player": map[string]interface{}{
+			"id":        client.Character.ID,
+			"name":      client.Character.Name,
+			"avatar_id": client.Character.AvatarID,
+			"gender":    client.Character.Gender,
+			"level":     client.Character.Level,
+		},
+	})
+	fmt.Printf("Персонаж %s онлайн. \n", client.Character.Name)
+}
+
+func (h *Hub) handleUnregister(client *Client) {
+	h.mu.Lock()
+	currentInMap, ok := h.Clients[client.Character.ID]
+	if ok && currentInMap == client {
+		locID := client.Character.LocationID
+		name := client.Character.Name
+		fmt.Printf("Персонаж %s не в сети. \n", name)
+		delete(h.Clients, client.Character.ID)
+		close(client.Send)
+		h.mu.Unlock()
+		h.BroadcastToRoom(locID, map[string]interface{}{
+			"type": "player_left",
+			"player": map[string]interface{}{
+				"id":   client.Character.ID,
+				"name": name,
+			},
+		})
+	} else {
+		// Если это "призрак" старой сессии, просто отпускаем замок и ничего не делаем
+		h.mu.Unlock()
+		// log.Println("Игнорируем попытку удаления устаревшей сессии")
 	}
 }
 
@@ -92,6 +108,7 @@ func (h *Hub) BroadcastToRoom(locationID string, message interface{}) {
 			select {
 			case client.Send <- message:
 			default:
+				client.Conn.Close()
 			}
 		}
 	}
@@ -105,6 +122,7 @@ func (h *Hub) BroadcastToRoomExcept(locationID string, exeptID int64, message in
 			select {
 			case client.Send <- message:
 			default:
+				client.Conn.Close()
 			}
 		}
 	}
@@ -117,6 +135,21 @@ func (h *Hub) BroadcastToAll(message interface{}) {
 		select {
 		case client.Send <- message:
 		default:
+			client.Conn.Close()
 		}
+	}
+}
+
+func (h *Hub) BroadcastPrivateMessage(charID int64, message interface{}) {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	client, ok := h.Clients[charID]
+	if !ok {
+		return
+	}
+	select {
+	case client.Send <- message:
+	default:
+		client.Conn.Close()
 	}
 }

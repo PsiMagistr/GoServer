@@ -8,6 +8,7 @@ export const gameTemplate = (char) => {
                         <h3>Люди</h3>
                         <ul id="players-list" class="game-list">
                             <li class="empty">Загрузка...</li>
+                            <li class="player-link">Вика</li>
                         </ul>
                     </div>
                     <div class="panel-section">

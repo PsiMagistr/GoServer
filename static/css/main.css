@@ -109,7 +109,10 @@ button {
     display: inline-block;
 }
 
-#toggleMode:hover { color: #f1c40f; }
+#toggleMode:hover { 
+    color: #f1c40f;
+    cursor: pointer;
+}
 
 /* --- КОНТЕЙНЕР СОЗДАНИЯ ПЕРСОНАЖА --- */
 .creation-container {
@@ -187,7 +190,7 @@ button {
 }
 
 .panel-section { margin-bottom: 25px; }
-.panel-section h3 { font-size: 22px; margin-bottom: 10px; border-bottom: 1px solid #222; padding-bottom: 5px; color: #f1c40f; }
+.panel-section h3 { font-size: 15px; margin-bottom: 10px; border-bottom: 1px solid #222; padding-bottom: 5px; color: #f1c40f; }
 
 /* СПИСКИ (Без точек, с ховером) */
 .game-list { list-style: none; padding: 0; margin: 0; }
@@ -202,6 +205,9 @@ button {
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
+
+
 .char-name-label{
     font-size: 20px;
 }
@@ -213,6 +219,14 @@ button {
     background: #1d1d1d;
     color: #f1c40f;
     padding-left: 12px;
+}
+
+.game-list li.player-link{
+    color:#F5DEB3;
+}
+
+.game-list li.player-link:hover{
+     color: #f1c40f;
 }
 
 .game-list li.empty { color: #444; font-style: italic; cursor: default; }
