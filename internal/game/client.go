@@ -61,9 +61,26 @@ func (c *Client) ReadPump(h *Hub) { // Читаем сообщения от бр
 		c.Conn.Close()
 	}()
 	for {
-		_, _, err := c.Conn.ReadMessage()
+		var incoming map[string]interface{}
+		err := c.Conn.ReadJSON(&incoming)
 		if err != nil {
 			break
+		}
+		msgType, ok := incoming["type"].(string)
+		if !ok {
+			continue
+		}
+		if msgType == "chat_msg" {
+			text, _ := incoming["text"].(string)
+			chatPacket := map[string]interface{}{
+				"type":   msgType,
+				"sender": c.Character.Name,
+				"text":   text,
+			}
+			h.RoomBroadcast <- RoomMessage{
+				LocationID: c.Character.LocationID,
+				Payload:    chatPacket,
+			}
 		}
 	}
 }

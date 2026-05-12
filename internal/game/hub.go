@@ -5,20 +5,28 @@ import (
 	"sync"
 )
 
+// Структура для комнатных сообщений
+type RoomMessage struct {
+	LocationID string
+	Payload    interface{}
+}
+
 type Hub struct {
-	mu         sync.RWMutex
-	Clients    map[int64]*Client
-	Register   chan *Client
-	Unregister chan *Client
-	Broadcast  chan interface{}
+	mu            sync.RWMutex
+	Clients       map[int64]*Client
+	Register      chan *Client
+	Unregister    chan *Client
+	Broadcast     chan interface{}
+	RoomBroadcast chan RoomMessage
 }
 
 func NewHub() *Hub {
 	return &Hub{
-		Clients:    make(map[int64]*Client),
-		Register:   make(chan *Client),
-		Unregister: make(chan *Client),
-		Broadcast:  make(chan interface{}),
+		Clients:       make(map[int64]*Client),
+		Register:      make(chan *Client, 64),
+		Unregister:    make(chan *Client, 64),
+		Broadcast:     make(chan interface{}, 256),
+		RoomBroadcast: make(chan RoomMessage, 256),
 	}
 }
 
@@ -29,8 +37,10 @@ func (h *Hub) Run() {
 			h.handleRegister(client)
 		case client := <-h.Unregister:
 			h.handleUnregister(client)
-		case message := <-h.Broadcast:
-			h.BroadcastToAll(message)
+		case globalMessage := <-h.Broadcast:
+			h.BroadcastToAll(globalMessage)
+		case roomMessage := <-h.RoomBroadcast:
+			h.BroadcastToRoom(roomMessage.LocationID, roomMessage.Payload)
 		}
 	}
 }

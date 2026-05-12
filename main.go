@@ -38,7 +38,7 @@ func main() {
 	mux.HandleFunc("/api/login", handlers.LoginHandler)
 	mux.HandleFunc("/api/refresh", handlers.RefreshHandler)
 	mux.Handle("/ws", auth.AuthMiddleware(handlers.WSHandler(gameHub)))
-	var MyServer Server = NewHTTPServer("localhost:8080", mux)
+	var MyServer Server = NewHTTPServer("0.0.0.0:8080", mux)
 	go func() {
 		err := MyServer.Run()
 		if err != nil {

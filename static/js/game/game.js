@@ -1,7 +1,8 @@
 let gameLoopId = null;
-import { socket_events } from "./socket_events.js";
+import { network } from "./network.js";
 import { CreateCharacterTemplate } from "../templates/create_character.js";
 import { gameTemplate } from "../templates/game.js";
+import { utils } from "../utils/utils_functions.js";
 
 
 export function initGame(char) {
@@ -10,47 +11,32 @@ export function initGame(char) {
         console.log("Старый цикл остановлен.");       
     }
     const app = document.getElementById('app');
-    const socket = new WebSocket(`ws://${window.location.host}/ws`);
-    socket.onopen = () => {
-        console.log("Связь с сервером установлена!");
-        // Теперь сервер знает, что "Виктория" в сети
-    };
+    network.connect(); 
+    app.innerHTML = gameTemplate(char);  
+    const UISchema = {
+        canvas:"#gameCanvas",
+        chatInput:"#chat-input",
+        chatBtn:"#chat-send-btn",       
 
-    socket.onmessage = (event) => {
-        // Сюда будут прилетать сообщения от сервера
-        try{
-            const msg = JSON.parse(event.data);
-            if(socket_events[msg.type]){
-                socket_events[msg.type](msg);                    
+    }    
+    const UiElements = utils.getElementsBySelectors(UISchema);
+    const ctx = UiElements.canvas.getContext("2d");
+    const sendMessage = ()=>{
+        const text = UiElements.chatInput.value.trim();
+        if (text != "" && network.socket){
+            const packet = {
+                type:"chat_msg",
+                text:text,
             }
-            else {
-                console.warn("Неизвестный тип сообщения:", msg.type);
-            }
-        }
-        catch(e){
-            console.error("Ошибка парсинга JSON:", e);
-        }     
-        
+            network.send(packet);
+            UiElements.chatInput.value = "";
+        }    
     }
-
-    socket.onclose = (event) => {
-        console.log("Соединение разорвано", event.reason);
-        alert("Соединение разорвано.");        
-    };
-
-    socket.onerror = (error) => {
-        console.error("Ошибка сокета:", error);
-    };
-    // Сохраним сокет в глобальную переменную или передадим в движок,
-    // чтобы можно было отправлять сообщения позже (например, при ударе)
-    window.gameSocket = socket; 
-    app.innerHTML = gameTemplate(char);
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
+    UiElements.chatBtn.onclick = sendMessage;       
     // Простейший цикл отрисовки
     function draw() {
         ctx.fillStyle = 'black';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillRect(0, 0, UiElements.canvas.width, UiElements.canvas.height);
         ctx.fillStyle = 'lime';
         ctx.fillRect(280, 180, 40, 40); // Наш "игрок"
         gameLoopId = requestAnimationFrame(draw);

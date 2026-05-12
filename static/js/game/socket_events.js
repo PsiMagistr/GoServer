@@ -14,4 +14,15 @@ export const socket_events = {
         console.log(`Нас покинул(ла) ${msg.player.name}`);        
         ui.removePlayerFromUI(msg.player.id);
     },
+    chat_msg(msg) {
+        const chatContainer = document.getElementById('chat-messages');
+        if (!chatContainer) return;
+        // Создаем элемент сообщения
+        const div = document.createElement('div');
+        div.className = 'chat-line';
+        div.innerHTML = `<span class="chat-sender">${msg.sender}:</span> <span class="chat-text">${msg.text}</span>`;        
+        chatContainer.appendChild(div);
+        // Авто-прокрутка чата вниз
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
 }
