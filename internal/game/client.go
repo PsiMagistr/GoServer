@@ -1,6 +1,7 @@
 package game
 
 import (
+	"fmt"
 	"time"
 
 	"GoServer/internal/models"
@@ -66,21 +67,13 @@ func (c *Client) ReadPump(h *Hub) { // Читаем сообщения от бр
 		if err != nil {
 			break
 		}
-		msgType, ok := incoming["type"].(string)
-		if !ok {
-			continue
+
+		msgType, _ := incoming["type"].(string)
+		if handler, ok := commands[msgType]; ok {
+			handler(c, h, incoming)
+		} else {
+			fmt.Printf("Неизвестная команда: %s", msgType)
 		}
-		if msgType == "chat_msg" {
-			text, _ := incoming["text"].(string)
-			chatPacket := map[string]interface{}{
-				"type":   msgType,
-				"sender": c.Character.Name,
-				"text":   text,
-			}
-			h.RoomBroadcast <- RoomMessage{
-				LocationID: c.Character.LocationID,
-				Payload:    chatPacket,
-			}
-		}
+
 	}
 }

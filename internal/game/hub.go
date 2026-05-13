@@ -67,10 +67,14 @@ func (h *Hub) handleRegister(client *Client) {
 		}
 	}
 	h.mu.Unlock()
-	client.Send <- map[string]interface{}{ // Отправляем список тех кто уже был в комнате.
+	h.Send(client, map[string]interface{}{
+		"type":   "self_load",
+		"player": client.Character,
+	})
+	h.Send(client, map[string]interface{}{
 		"type":    "room_presence",
 		"players": neighbors,
-	}
+	})
 	exeptID := client.Character.ID
 	lockID := client.Character.LocationID
 	h.BroadcastToRoomExcept(lockID, exeptID, map[string]interface{}{
@@ -157,6 +161,14 @@ func (h *Hub) BroadcastPrivateMessage(charID int64, message interface{}) {
 	if !ok {
 		return
 	}
+	select {
+	case client.Send <- message:
+	default:
+		client.Conn.Close()
+	}
+}
+
+func (h *Hub) Send(client *Client, message interface{}) {
 	select {
 	case client.Send <- message:
 	default:

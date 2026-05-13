@@ -4,6 +4,10 @@ export const socket_events = {
          console.log("Игроки в нашей комнате:");         
          ui.renderPlayerList(msg.players)          
     },
+    self_load(msg){
+         console.log(`Личные данные:`);
+         console.log(msg.player);         
+    },
     player_joined(msg){
         console.log(`К нам присоединился(лась) ${msg.player.name}`);
         ui.addPlayerToUI(msg.player)
@@ -25,4 +29,5 @@ export const socket_events = {
         // Авто-прокрутка чата вниз
         chatContainer.scrollTop = chatContainer.scrollHeight;
     }
+    
 }

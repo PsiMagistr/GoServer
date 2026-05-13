@@ -1,5 +1,6 @@
 let gameLoopId = null;
 import { network } from "./network.js";
+import { engine } from "./engine.js";
 import { CreateCharacterTemplate } from "../templates/create_character.js";
 import { gameTemplate } from "../templates/game.js";
 import { utils } from "../utils/utils_functions.js";
@@ -10,8 +11,7 @@ export function initGame(char) {
         cancelAnimationFrame(gameLoopId)
         console.log("Старый цикл остановлен.");       
     }
-    const app = document.getElementById('app');
-    network.connect(); 
+    const app = document.getElementById('app');    
     app.innerHTML = gameTemplate(char);  
     const UISchema = {
         canvas:"#gameCanvas",
@@ -20,7 +20,8 @@ export function initGame(char) {
 
     }    
     const UiElements = utils.getElementsBySelectors(UISchema);
-    const ctx = UiElements.canvas.getContext("2d");
+    engine.init(UiElements.canvas);
+    network.connect(); 
     const sendMessage = ()=>{
         const text = UiElements.chatInput.value.trim();
         if (text != "" && network.socket){
@@ -32,16 +33,7 @@ export function initGame(char) {
             UiElements.chatInput.value = "";
         }    
     }
-    UiElements.chatBtn.onclick = sendMessage;       
-    // Простейший цикл отрисовки
-    function draw() {
-        ctx.fillStyle = 'black';
-        ctx.fillRect(0, 0, UiElements.canvas.width, UiElements.canvas.height);
-        ctx.fillStyle = 'lime';
-        ctx.fillRect(280, 180, 40, 40); // Наш "игрок"
-        gameLoopId = requestAnimationFrame(draw);
-    }
-    draw();
+    UiElements.chatBtn.onclick = sendMessage;      
     console.log("Наш персонаж.")
     console.log(char)
 }
