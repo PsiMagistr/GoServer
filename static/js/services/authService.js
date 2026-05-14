@@ -15,6 +15,8 @@ export const authService = {
          throw new Error(await response.text());
     },
     async register(body){
+        alert()
+        console.log(body)
         const response = await apiCall("/api/register", "POST", body);
         if (!response.ok) throw new Error(await response.text());
         return await response.json();

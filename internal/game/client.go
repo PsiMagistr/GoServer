@@ -67,7 +67,6 @@ func (c *Client) ReadPump(h *Hub) { // Читаем сообщения от бр
 		if err != nil {
 			break
 		}
-
 		msgType, _ := incoming["type"].(string)
 		if handler, ok := commands[msgType]; ok {
 			handler(c, h, incoming)

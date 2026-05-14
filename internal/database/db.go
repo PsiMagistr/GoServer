@@ -52,7 +52,8 @@ func InitDB() error {
 		hp INT DEFAULT 150,
 		max_mana INT DEFAULT 200,
         mana INT DEFAULT 200,      
-        location_id VARCHAR(100) DEFAULT 'city_room',
+        world_id VARCHAR(100) DEFAULT 'forest_world',
+    	location_id VARCHAR(100) DEFAULT 'start_glade',
 		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE 
 	)ENGINE=InnoDB;`
 

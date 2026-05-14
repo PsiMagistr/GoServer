@@ -4,19 +4,19 @@ import { engine } from "./engine.js";
 import { CreateCharacterTemplate } from "../templates/create_character.js";
 import { gameTemplate } from "../templates/game.js";
 import { utils } from "../utils/utils_functions.js";
+export const gameState = {
+    player:null,
+    isInitialized:false,
+}
 
 
-export function initGame(char) {
-    if(gameLoopId){
-        cancelAnimationFrame(gameLoopId)
-        console.log("Старый цикл остановлен.");       
-    }
+export function initGame(char) {    
     const app = document.getElementById('app');    
     app.innerHTML = gameTemplate(char);  
-    const UISchema = {
+    const UISchema = {        
         canvas:"#gameCanvas",
         chatInput:"#chat-input",
-        chatBtn:"#chat-send-btn",       
+        chatBtn:"#chat-send-btn",
 
     }    
     const UiElements = utils.getElementsBySelectors(UISchema);
@@ -34,8 +34,8 @@ export function initGame(char) {
         }    
     }
     UiElements.chatBtn.onclick = sendMessage;      
-    console.log("Наш персонаж.")
-    console.log(char)
+    //console.log("Наш персонаж.")
+    //console.log(char)
 }
 
  

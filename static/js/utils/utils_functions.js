@@ -31,16 +31,16 @@ export const utils = {
     getValuesBySchema(schema){
         const result = {};
         for(let key in schema){
-            const elem = schema[key]
+            const item = schema[key]
             if(item === null){
-                result[key] == null;
+                result[key] = null;
                 continue;
             }
             if(item instanceof HTMLElement){
-                result[key] = (value in item) ? item.value : null;           
+                result[key] = ("value" in item) ? item.value : null;           
             }
-            else if(typeof elem == "object"){
-                result[key] = this.getValuesBySchema(elem)
+            else if(typeof item == "object"){
+                result[key] = item;
             }            
         }
         return result;

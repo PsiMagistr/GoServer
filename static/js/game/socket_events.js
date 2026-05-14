@@ -1,12 +1,15 @@
 import { ui } from "./ui.js";
+import { gameState } from "./game.js";
 export const socket_events = {
     room_presence(msg){
          console.log("Игроки в нашей комнате:");         
          ui.renderPlayerList(msg.players)          
     },
     self_load(msg){
-         console.log(`Личные данные:`);
-         console.log(msg.player);         
+         if(!gameState.isInitialized){
+            gameState.player = msg.player;
+            gameState.isInitialized = true;
+         }         
     },
     player_joined(msg){
         console.log(`К нам присоединился(лась) ${msg.player.name}`);
