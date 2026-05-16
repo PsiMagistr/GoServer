@@ -67,10 +67,11 @@ func (h *Hub) handleRegister(client *Client) {
 		}
 	}
 	h.mu.Unlock()
+	currentWorld := Universe[client.Character.WorldID]
 	h.Send(client, map[string]interface{}{
 		"type":   "self_load",
 		"player": client.Character,
-		"world":  WorldNodes,
+		"world":  currentWorld,
 	})
 	h.Send(client, map[string]interface{}{
 		"type":    "room_presence",

@@ -10,7 +10,8 @@ export const socket_events = {
         if (!gameState.isInitialized) {
             gameState.world = msg.world;
             console.log("++++++");
-            console.log(msg);
+            console.log(msg);           
+            gameState.world = msg.world;
             gameState.player = msg.player;
             gameState.isInitialized = true;
             const assetsToLoad = {

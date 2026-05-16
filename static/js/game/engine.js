@@ -4,7 +4,7 @@ export const engine = {
     canvas: null,
     ctx: null,
     loopId: null,
-    images:null,
+    images: null,
     init(canvasElement) {
         this.canvas = canvasElement;
         this.ctx = canvasElement.getContext('2d');
@@ -26,36 +26,37 @@ export const engine = {
             this.ctx.fillRect(280, 180, 40, 40);
             return;
         }
-        if(!this.images) return;
+        if (!this.images) return;
         this.drawMap();
         this.drawCityNodes();
-        this.drawPlayer();      
+        this.drawPlayer();
 
     },
     stop() {
         cancelAnimationFrame(this.loopId);
     },
-    drawMap(){
+    drawMap() {
         this.ctx.drawImage(this.images.map, 0, 0, this.canvas.width, this.canvas.height);
     },
-    drawPlayer(){
-         const char = gameState.player;
-         const healthPercent = Math.max(char.hp / char.max_hp);        
-         this.ctx.drawImage(this.images.hero, graphs.x, graphs.y, graphs.w, graphs.h);
-         this.ctx.fillStyle = graphs.barHealBackColor;
-         this.ctx.fillRect(graphs.x, graphs.y + graphs.w + graphs.barGap, graphs.w, graphs.barH);        
-         this.ctx.fillStyle = graphs.barHealColor;
-         this.ctx.fillRect(graphs.x, graphs.y + graphs.w + graphs.barGap, healthPercent * graphs.w, graphs.barH);
+    drawPlayer() {
+        const char = gameState.player;
+        const healthPercent = Math.max(char.hp / char.max_hp);
+        this.ctx.drawImage(this.images.hero, graphs.x, graphs.y, graphs.w, graphs.h);
+        this.ctx.fillStyle = graphs.barHealBackColor;
+        this.ctx.fillRect(graphs.x, graphs.y + graphs.w + graphs.barGap, graphs.w, graphs.barH);
+        this.ctx.fillStyle = graphs.barHealColor;
+        this.ctx.fillRect(graphs.x, graphs.y + graphs.w + graphs.barGap, healthPercent * graphs.w, graphs.barH);
     },
-    drawBar(){
-        
+    drawBar() {
+
     },
-    drawCityNodes(){
-        if(!gameState.world) return;
-        for (const id in gameState.world) {
-            const node = gameState.world[id];
+    drawCityNodes() {
+        const points = gameState.world?.points;
+        if (!points) return;
+        for (const id in points) {
+            const node = points[id];
             const isCurrent = gameState.player.location_id === id;
-            
+
             const x = node.x;
             const y = node.y;
 
@@ -91,7 +92,7 @@ export const engine = {
             this.ctx.fillStyle = "#ffffff";
             this.ctx.font = "12px Arial";
             this.ctx.textAlign = "center";
-            this.ctx.fillText(node.name, x, rectY + 17);            
+            this.ctx.fillText(node.name, x, rectY + 17);
 
         }
     },
@@ -114,7 +115,7 @@ export const engine = {
         for (const key in assetsMap) {
             promises.push(load(assetsMap[key]));
         }
-        const resolvedPromises = await Promise.all(promises);        
+        const resolvedPromises = await Promise.all(promises);
         const library = {}
         keys.forEach((key, index) => {
             library[key] = resolvedPromises[index];

@@ -11,6 +11,6 @@ type Character struct {
 	MaxHP      int    `db:"max_hp" json:"max_hp"`
 	Mana       int    `db:"mana" json:"mana"`
 	MaxMana    int    `db:"max_mana" json:"max_mana"`
-	LocationID string `db:"location_id" json:"location_id"`
 	WorldID    string `db:"world_id" json:"world_id"`
+	LocationID string `db:"location_id" json:"location_id"`
 }
