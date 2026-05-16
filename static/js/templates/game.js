@@ -41,7 +41,7 @@ export const gameTemplate = (char) => {
                         <div id="chat-messages" class="chat-window"></div>
                         <div class="chat-controls">
                             <input type="text" id="chat-input" placeholder="Введите сообщение..." maxlength="120" autocomplete="off">
-                            <button id="chat-send-btn">ОТПРАВИТЬ</button>
+                            <button id="chat-send-btn">Чат</button>
                         </div>
                     </div>
                 </main>

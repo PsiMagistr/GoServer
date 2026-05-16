@@ -47,11 +47,9 @@ export function initAuth(onSuccess) {
                     password:"#password",
                     confirm_password:"#confirm_password",
                 }
-                const userData = utils.getElementsBySelectors(params); 
-                console.log("===========")
-                const schema = utils.getValuesBySchema(userData)
-                console.log(schema)            
-                await authService.register(schema)                 
+                const userData = utils.getElementsBySelectors(params);               
+                const schema = utils.getValuesBySchema(userData);
+                await authService.register(schema);                 
                 state.isLoginMode = true;
                 state.error = "";
                 render();              

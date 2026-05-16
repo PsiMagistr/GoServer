@@ -5,6 +5,7 @@ import { CreateCharacterTemplate } from "../templates/create_character.js";
 import { gameTemplate } from "../templates/game.js";
 import { utils } from "../utils/utils_functions.js";
 export const gameState = {
+    world:null,
     player:null,
     isInitialized:false,
 }

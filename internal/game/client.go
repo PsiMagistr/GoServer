@@ -19,6 +19,7 @@ type Client struct {
 	Conn      *websocket.Conn
 	Character *models.Character
 	Send      chan interface{}
+	IsMoving  bool
 }
 
 func (c *Client) WritePump() { // Читаем сообщения от сервера и пишем в браузер.

@@ -70,6 +70,7 @@ func (h *Hub) handleRegister(client *Client) {
 	h.Send(client, map[string]interface{}{
 		"type":   "self_load",
 		"player": client.Character,
+		"world":  WorldNodes,
 	})
 	h.Send(client, map[string]interface{}{
 		"type":    "room_presence",

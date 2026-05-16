@@ -172,7 +172,7 @@ button {
 /* --- ГЛАВНЫЙ МАКЕТ ИГРЫ --- */
 .game-layout {
     display: flex;
-    width: 780px; 
+    /*width: 780px;*/ 
     min-height: 750px; 
     background: #111;
     border: 1px solid #222;
