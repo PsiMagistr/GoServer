@@ -55,18 +55,29 @@ export const engine = {
         if (!points) return;
         for (const id in points) {
             const node = points[id];
-            const isCurrent = gameState.player.location_id === id;
-
+            this.drawPointer(node, id);
+        }
+    },
+    drawPointer(node, id){
+        const isCurrent = gameState.player.location_id === id;
+            const isHovered = gameState.hoveredNodeId === id;
+            let color = "#FFDEAD";
+            let backgroundTableColor = "rgba(22, 22, 22, 0.9)";
+            if(isCurrent){
+                color = "#DC143C";
+            }
+            else if(isHovered){
+                color = "#90EE90";
+                backgroundTableColor = "#696969";
+            }
             const x = node.x;
             const y = node.y;
-
             // 1. Рисуем кружок (основание)
             this.ctx.beginPath();
-            this.ctx.arc(x, y, 6, 0, Math.PI * 2);
-            this.ctx.fillStyle = isCurrent ? "#DC143C" : "#708090"; // Зеленый если мы тут, иначе золото
+            this.ctx.arc(x, y, 8, 0, Math.PI * 2);
+            this.ctx.fillStyle = color;
             this.ctx.fill();
             this.ctx.closePath();
-
             // 2. Рисуем палочку (шест указателя)
             this.ctx.beginPath();
             this.ctx.moveTo(x, y);
@@ -74,27 +85,22 @@ export const engine = {
             this.ctx.strokeStyle = "#8a6d3b"; // Цвет дерева/меди
             this.ctx.lineWidth = 2;
             this.ctx.stroke();
-
             // 3. Рисуем прямоугольник (табличка)
             const textWidth = this.ctx.measureText(node.name).width;
             const rectW = textWidth + 20;
             const rectH = 25;
             const rectX = x - rectW / 2;
             const rectY = y - 55;
-
-            this.ctx.fillStyle = "rgba(22, 22, 22, 0.9)"; // Темный фон таблички
+            this.ctx.fillStyle = backgroundTableColor; // Темный фон таблички
             this.ctx.strokeStyle = "#d4af37";
             this.ctx.lineWidth = 1;
             this.ctx.fillRect(rectX, rectY, rectW, rectH);
             this.ctx.strokeRect(rectX, rectY, rectW, rectH);
-
             // 4. Текст (название локации)
             this.ctx.fillStyle = "#ffffff";
             this.ctx.font = "12px Arial";
             this.ctx.textAlign = "center";
             this.ctx.fillText(node.name, x, rectY + 17);
-
-        }
     },
     async loaderAssets(assetsMap) {
         const keys = Object.keys(assetsMap);

@@ -73,6 +73,26 @@ var Universe = map[string]World{
 				Name: "Лавка",
 				X:    406, Y: 272,
 			},
+			"bestiary": {
+				ID:   "bestiary",
+				Name: "Тренировочная",
+				X:    193, Y: 99,
+			},
+			"academy": {
+				ID:   "academy",
+				Name: "Академия",
+				X:    284, Y: 241,
+			},
+			"portal": {
+				ID:   "portal",
+				Name: "Портал",
+				X:    449, Y: 125,
+			},
+			"armory": {
+				ID:   "armory",
+				Name: "Оружейная",
+				X:    323, Y: 101,
+			},
 		},
 	},
 }
