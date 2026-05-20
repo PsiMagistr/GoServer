@@ -300,3 +300,74 @@ button {
 
 .sys-msg { color: #8a6d3b; font-style: italic; }
 .error-msg { color: #ff6b6b; font-size: 13px; margin-top: 5px; }
+
+#move-overlay {
+    /* Скрыт по умолчанию. Логика JS будет менять на flex */
+    display: none; 
+    
+    /* Фиксируем на весь экран */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    
+    /* Слои: должен быть выше всех остальных элементов */
+    z-index: 10000;
+    
+    /* Цвета и эффекты */
+    background: rgba(0, 0, 0, 0.85); /* Глубокий черный с прозрачностью */
+    backdrop-filter: blur(4px);      /* Размытие игрового мира на заднем фоне */
+    
+    /* Центрирование контента */
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    
+    /* Запрещаем выделение текста во время ожидания */
+    user-select: none;
+}
+
+/* Блок с текстом "Идем в..." */
+#move-overlay p {
+    color: #b0b0b0;
+    font-size: 1.2rem;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    margin-bottom: 10px;
+}
+
+/* Название локации */
+#move-overlay .target-name {
+    color: #d4af37; /* Наше фирменное золото */
+    font-weight: bold;
+    text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+}
+
+/* Большие тикающие цифры */
+#move-overlay .timer-count {
+    font-size: 80px;
+    font-weight: 300;
+    color: #ffffff;
+    font-family: 'Courier New', Courier, monospace; /* Моноширинный шрифт для стабильности цифр */
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+    
+    /* Анимация пульсации */
+    animation: pulse-timer 1s infinite;
+}
+
+/* Необязательный элемент: декоративная полоска под цифрами */
+#move-overlay::after {
+    content: '';
+    width: 200px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #d4af37, transparent);
+    margin-top: 20px;
+}
+
+/* Анимация, чтобы цифры мягко "бились" как сердце */
+@keyframes pulse-timer {
+    0% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.05); opacity: 1; }
+    100% { transform: scale(1); opacity: 0.8; }
+}

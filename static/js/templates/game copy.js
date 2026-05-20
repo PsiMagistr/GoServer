@@ -32,14 +32,11 @@ export const gameTemplate = (char) => {
                         <span class="char-name-label">Герой: <b>${char.name}</b></span>
                         <span class="location-label">Локация: <b>${char.location_id || 'Начало'}</b></span>
                     </div>
-                    <div class="canvas-container">
-                        <div id="move-overlay">
-                            <p>Идем в <span class="target-name"></span>...</p>
-                            <span class="timer-count">0</span>
-                        </div>
+
+                    <!--<div class="canvas-container">
                         <canvas id="gameCanvas" width="600" height="400"></canvas>
-                    </div>
-                    
+                    </div>-->
+
                     <div class="chat-section">
                         <div id="chat-messages" class="chat-window"></div>
                         <div class="chat-controls">

@@ -46,6 +46,39 @@ export const socket_events = {
         chatContainer.appendChild(div);
         // Авто-прокрутка чата вниз
         chatContainer.scrollTop = chatContainer.scrollHeight;
+    },
+
+    move_starting(msg){        
+        gameState.isMoving = true;        
+        // Показываем оверлей (создадим его в шаблоне)
+        const overlay = document.getElementById('move-overlay');
+        if (overlay) {
+            overlay.style.display = 'flex';
+            overlay.querySelector('.target-name').innerText = msg.target_name;
+            
+            let secondsLeft = msg.duration;
+            const timerEl = overlay.querySelector('.timer-count');
+            timerEl.innerText = secondsLeft;
+
+            // Локальный таймер для плавности
+            //clearInterval(moveInterval);
+            let moveInterval = setInterval(() => {
+                secondsLeft--;
+                if (secondsLeft >= 0) timerEl.innerText = secondsLeft;
+                if (secondsLeft <= 0) clearInterval(moveInterval);
+            }, 1000);           
+        }
+    },
+
+    move_complete(msg){
+        gameState.isMoving = false;
+        gameState.player.location_id = msg.location_id;
+        
+        // Скрываем оверлей
+        const overlay = document.getElementById('move-overlay');
+        if (overlay) overlay.style.display = 'none';        
+        console.log("Вы прибыли в", msg.location_id);
     }
+    
 
 }

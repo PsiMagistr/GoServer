@@ -54,18 +54,7 @@ func (h *Hub) handleRegister(client *Client) {
 		fmt.Printf("Персонаж %s зашел из другого места, старая сессия закрыта.\n", client.Character.Name)
 	}
 	h.Clients[client.Character.ID] = client
-	neighbors := make([]map[string]interface{}, 0)
-	for _, other := range h.Clients {
-		if other.Character.LocationID == client.Character.LocationID {
-			neighbors = append(neighbors, map[string]interface{}{
-				"id":        other.Character.ID,
-				"name":      other.Character.Name,
-				"avatar_id": other.Character.AvatarID,
-				"level":     other.Character.Level,
-				"gender":    other.Character.Gender,
-			})
-		}
-	}
+	neighbors := h.getNeighbors(client.Character.LocationID)
 	h.mu.Unlock()
 	currentWorld := Universe[client.Character.WorldID]
 	h.Send(client, map[string]interface{}{
@@ -176,4 +165,30 @@ func (h *Hub) Send(client *Client, message interface{}) {
 	default:
 		client.Conn.Close()
 	}
+}
+
+func (h *Hub) getNeighbors(locationID string) []map[string]interface{} {
+	neighbors := make([]map[string]interface{}, 0)
+	for _, other := range h.Clients {
+		if other.Character.LocationID == locationID {
+			neighbors = append(neighbors, map[string]interface{}{
+				"id":        other.Character.ID,
+				"name":      other.Character.Name,
+				"avatar_id": other.Character.AvatarID,
+				"level":     other.Character.Level,
+				"gender":    other.Character.Gender,
+			})
+		}
+	}
+	return neighbors
+}
+
+func (h *Hub) ResyncRoomPresents(c *Client) {
+	h.mu.RLock()
+	neighbors := h.getNeighbors(c.Character.LocationID)
+	h.mu.RUnlock()
+	h.Send(c, map[string]interface{}{
+		"type":    "room_presence",
+		"players": neighbors,
+	})
 }

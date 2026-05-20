@@ -54,7 +54,12 @@ export const interaction = {
             const dx = event.offsetX - node.x;
             const dy = event.offsetY - node.y;
             if (Math.sqrt(dx * dx + dy * dy) < radius) {
-                alert("3333");
+                const packet = {
+                    type:"move",
+                    target_id: node.id,
+                }
+                network.send(packet);
+                
                 break;
             }
         }

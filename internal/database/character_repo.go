@@ -33,3 +33,9 @@ func GetPlayersInLocation(locationID string) ([]models.Character, error) {
 	err := DB.Select(&players, query, locationID)
 	return players, err
 }
+
+func UpdateCharacterLocation(charID int64, locationID string) error {
+	query := `UPDATE characters SET location_id = ? WHERE id = ?`
+	_, err := DB.Exec(query, locationID, charID)
+	return err
+}
