@@ -2,7 +2,9 @@ package game
 
 import (
 	"fmt"
+	"math"
 	"sync"
+	"time"
 )
 
 // Структура для комнатных сообщений
@@ -11,9 +13,16 @@ type RoomMessage struct {
 	Payload    interface{}
 }
 
+type MoveData struct {
+	DestinationID string
+	ArrivalTime   time.Time
+	TargetName    string
+}
+
 type Hub struct {
 	mu            sync.RWMutex
 	Clients       map[int64]*Client
+	movingPlayers map[int64]*MoveData
 	Register      chan *Client
 	Unregister    chan *Client
 	Broadcast     chan interface{}
@@ -23,6 +32,7 @@ type Hub struct {
 func NewHub() *Hub {
 	return &Hub{
 		Clients:       make(map[int64]*Client),
+		movingPlayers: make(map[int64]*MoveData),
 		Register:      make(chan *Client, 64),
 		Unregister:    make(chan *Client, 64),
 		Broadcast:     make(chan interface{}, 256),
@@ -54,6 +64,7 @@ func (h *Hub) handleRegister(client *Client) {
 		fmt.Printf("Персонаж %s зашел из другого места, старая сессия закрыта.\n", client.Character.Name)
 	}
 	h.Clients[client.Character.ID] = client
+	moveInfo, isMoving := h.movingPlayers[client.Character.ID]
 	neighbors := h.getNeighbors(client.Character.LocationID)
 	h.mu.Unlock()
 	currentWorld := Universe[client.Character.WorldID]
@@ -79,6 +90,17 @@ func (h *Hub) handleRegister(client *Client) {
 		},
 	})
 	fmt.Printf("Персонаж %s онлайн. \n", client.Character.Name)
+	if isMoving {
+		secondsLeft := time.Until(moveInfo.ArrivalTime).Seconds()
+		timeLeft := int(math.Ceil(secondsLeft))
+		if timeLeft > 0 {
+			h.Send(client, map[string]interface{}{
+				"type":        "move_starting",
+				"target_name": moveInfo.TargetName,
+				"duration":    timeLeft,
+			})
+		}
+	}
 }
 
 func (h *Hub) handleUnregister(client *Client) {
@@ -191,4 +213,11 @@ func (h *Hub) ResyncRoomPresents(c *Client) {
 		"type":    "room_presence",
 		"players": neighbors,
 	})
+}
+
+func (h *Hub) isMoving(charID int64) bool {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	_, moving := h.movingPlayers[charID]
+	return moving
 }

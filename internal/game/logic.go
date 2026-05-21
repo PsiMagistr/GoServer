@@ -36,7 +36,7 @@ func handleChat(c *Client, h *Hub, data map[string]interface{}) {
 }
 
 func handleMoveRequest(c *Client, h *Hub, data map[string]interface{}) {
-	if c.IsMoving {
+	if h.isMoving(c.Character.ID) {
 		return
 	}
 	targetID, ok := data["target_id"].(string)
@@ -51,46 +51,54 @@ func handleMoveRequest(c *Client, h *Hub, data map[string]interface{}) {
 	if !exists || targetID == c.Character.LocationID {
 		return
 	}
-
-	c.IsMoving = true
-	moveDuration := 5
+	duration := 10 * time.Second
+	charID := c.Character.ID
+	h.mu.Lock()
+	h.movingPlayers[c.Character.ID] = &MoveData{
+		DestinationID: targetID,
+		ArrivalTime:   time.Now().Add(duration),
+		TargetName:    targetNode.Name,
+	}
+	h.mu.Unlock()
 
 	h.Send(c, map[string]interface{}{
 		"type":        "move_starting",
 		"target_name": targetNode.Name,
-		"duration":    moveDuration,
+		"duration":    duration.Seconds(),
 	})
 
 	go func() {
-		time.Sleep(time.Duration(moveDuration) * time.Second)
+		time.Sleep(duration)
+		h.mu.Lock()
+		delete(h.movingPlayers, charID)
+		h.mu.Unlock()
 		h.mu.RLock()
-		_, online := h.Clients[c.Character.ID]
+		activeClient, online := h.Clients[charID]
 		h.mu.RUnlock()
-		if !online {
-			return
-		}
-		oldLockID := c.Character.LocationID
-		c.Character.LocationID = targetID
-		c.IsMoving = false
-		err := database.UpdateCharacterLocation(c.Character.ID, targetID)
+		err := database.UpdateCharacterLocation(charID, targetID)
 		if err != nil {
 			fmt.Printf("Ошибка сохранения локации: %v", err)
 		}
-		h.Send(c, map[string]interface{}{
+		if !online {
+			return
+		}
+		oldLockID := activeClient.Character.LocationID
+		activeClient.Character.LocationID = targetID
+		h.Send(activeClient, map[string]interface{}{
 			"type":        "move_complete",
 			"location_id": targetID,
 		})
 		h.BroadcastToRoomExcept(oldLockID, c.Character.ID, map[string]interface{}{
 			"type": "player_left",
 			"player": map[string]interface{}{
-				"id":   c.Character.ID,
-				"name": c.Character.Name,
+				"id":   activeClient.Character.ID,
+				"name": activeClient.Character.Name,
 			},
 		})
-		h.BroadcastToRoomExcept(targetID, c.Character.ID, map[string]interface{}{
+		h.BroadcastToRoomExcept(targetID, activeClient.Character.ID, map[string]interface{}{
 			"type":   "player_joined",
-			"player": c.Character,
+			"player": activeClient.Character,
 		})
-		h.ResyncRoomPresents(c)
+		h.ResyncRoomPresents(activeClient)
 	}()
 }
