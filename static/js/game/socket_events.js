@@ -8,11 +8,13 @@ export const socket_events = {
     },
     async self_load(msg) {
         if (!gameState.isInitialized) {
-            gameState.world = msg.world;
-            console.log("++++++");
-            console.log(msg);           
+            console.log("*******")
+            //console.log(msg.world.points["academy"])
+            const location = document.querySelector("#location_label");           
+            gameState.world = msg.world;                       
             gameState.world = msg.world;
             gameState.player = msg.player;
+            location.textContent = `Локация: ${gameState.world.points[gameState.player.location_id].name}`
             gameState.isInitialized = true;
             const assetsToLoad = {
                 map: `/assets/maps/${gameState.player.world_id}.png`,
@@ -73,7 +75,8 @@ export const socket_events = {
     move_complete(msg){
         gameState.isMoving = false;
         gameState.player.location_id = msg.location_id;
-        
+        const location = document.querySelector("#location_label");
+        location.textContent = `Локация: ${gameState.world.points[gameState.player.location_id].name}`;
         // Скрываем оверлей
         const overlay = document.getElementById('move-overlay');
         if (overlay) overlay.style.display = 'none';        

@@ -54,12 +54,15 @@ export const interaction = {
             const dx = event.offsetX - node.x;
             const dy = event.offsetY - node.y;
             if (Math.sqrt(dx * dx + dy * dy) < radius) {
+                console.log(gameState.player)
+                if(node.id === gameState.player.location_id) return
+                const goToQuestion = confirm(`Вы хотите перейти в ${node.name}`)                
+                if(!goToQuestion) return
                 const packet = {
                     type:"move",
                     target_id: node.id,
-                }
-                network.send(packet);
-                
+                }               
+                network.send(packet);   
                 break;
             }
         }

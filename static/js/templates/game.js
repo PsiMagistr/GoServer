@@ -29,8 +29,8 @@ export const gameTemplate = (char) => {
                 <!-- Основная зона -->
                 <main class="main-screen">
                     <div class="top-bar-simple">
-                        <span class="char-name-label">Герой: <b>${char.name}</b></span>
-                        <span class="location-label">Локация: <b>${char.location_id || 'Начало'}</b></span>
+                        <span id = "char_name_label" class="char-name-label">Герой: <b>${char.name}</b></span>
+                        <span id = "location_label" class="location-label">Локация: <b>${char.location_id || 'Начало'}</b></span>
                     </div>
                     <div class="canvas-container">
                         <div id="move-overlay">
