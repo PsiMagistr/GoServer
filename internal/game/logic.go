@@ -2,6 +2,7 @@ package game
 
 import (
 	"fmt"
+	"math"
 	"strings"
 	"time"
 
@@ -47,11 +48,16 @@ func handleMoveRequest(c *Client, h *Hub, data map[string]interface{}) {
 	world, exists := Universe[c.Character.WorldID]
 
 	targetNode, exists := world.Points[targetID]
+	sourceNode := world.Points[c.Character.LocationID]
 
 	if !exists || targetID == c.Character.LocationID {
 		return
 	}
-	duration := 10 * time.Second
+	dx := float64(targetNode.X - sourceNode.X)
+	dy := float64(targetNode.Y - sourceNode.Y)
+	result := math.Ceil(math.Sqrt(dx*dx+dy*dy) / 10)
+
+	duration := time.Duration(result) * time.Second
 	charID := c.Character.ID
 	h.mu.Lock()
 	h.movingPlayers[c.Character.ID] = &MoveData{
@@ -99,6 +105,6 @@ func handleMoveRequest(c *Client, h *Hub, data map[string]interface{}) {
 			"type":   "player_joined",
 			"player": activeClient.Character,
 		})
-		h.ResyncRoomPresents(activeClient)
+		h.ResyncRoomPresence(activeClient)
 	}()
 }

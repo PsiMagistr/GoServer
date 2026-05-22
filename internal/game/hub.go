@@ -205,7 +205,7 @@ func (h *Hub) getNeighbors(locationID string) []map[string]interface{} {
 	return neighbors
 }
 
-func (h *Hub) ResyncRoomPresents(c *Client) {
+func (h *Hub) ResyncRoomPresence(c *Client) {
 	h.mu.RLock()
 	neighbors := h.getNeighbors(c.Character.LocationID)
 	h.mu.RUnlock()
