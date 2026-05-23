@@ -76,6 +76,7 @@ func (h *Hub) handleRegister(client *Client) {
 	h.Send(client, map[string]interface{}{
 		"type":    "room_presence",
 		"players": neighbors,
+		"worlds":  currentWorld.Points[client.Character.LocationID].Worlds,
 	})
 	exeptID := client.Character.ID
 	lockID := client.Character.LocationID
@@ -209,9 +210,11 @@ func (h *Hub) ResyncRoomPresence(c *Client) {
 	h.mu.RLock()
 	neighbors := h.getNeighbors(c.Character.LocationID)
 	h.mu.RUnlock()
+	currentWorld := Universe[c.Character.WorldID]
 	h.Send(c, map[string]interface{}{
 		"type":    "room_presence",
 		"players": neighbors,
+		"worlds":  currentWorld.Points[c.Character.LocationID].Worlds,
 	})
 }
 

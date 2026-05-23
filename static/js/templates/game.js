@@ -7,8 +7,7 @@ export const gameTemplate = (char) => {
                     <div class="panel-section">
                         <h3>Люди</h3>
                         <ul id="players-list" class="game-list">
-                            <li class="empty">Загрузка...</li>
-                            <li class="player-link">Вика</li>
+                            <li class="empty">Пусто</li>                            
                         </ul>
                     </div>
                     <div class="panel-section">
@@ -18,10 +17,35 @@ export const gameTemplate = (char) => {
                         </ul>
                     </div>
                     <div class="panel-section">
-                        <h3>Навигация</h3>
+                        <h3>Здания</h3>
                         <ul id="buildings-list" class="game-list">
-                            <li class="location-link" data-loc="tavern">Таверна</li>
-                            <li class="location-link" data-loc="arena">Арена</li>
+                            <li class="empty">Пусто</li>
+                        </ul>
+                    </div>
+                    <div class="panel-section">
+                        <h3>Персонажи</h3>
+                        <ul id="npc-list" class="game-list">
+                            <li class="empty">Пусто</li>
+                            <li class="empty">Пусто</li>
+                            <li class="empty">Пусто</li>
+                            <li class="empty">Пусто</li>
+                            <li class="empty">Пусто</li>
+                            <li class="empty">Пусто</li>
+                            <li class="empty">Пусто</li>
+                            <li class="empty">Пусто</li>                         
+                        </ul>
+                    </div>
+                    <div class="panel-section">
+                        <h3>Миры</h3>
+                        <ul id="worlds-list" class="game-list">
+                            <li class="empty">Пусто</li>
+                            <li class="empty">Пусто</li>
+                            <li class="empty">Пусто</li>
+                            <li class="empty">Пусто</li>
+                            <li class="empty">Пусто</li>
+                            <li class="empty">Пусто</li>
+                            <li class="empty">Пусто</li>
+                            <li class="empty">Пусто</li>                            
                         </ul>
                     </div>
                 </aside>

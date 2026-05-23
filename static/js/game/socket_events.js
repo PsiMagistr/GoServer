@@ -4,7 +4,7 @@ import { engine } from "./engine.js";
 export const socket_events = {
     room_presence(msg) {
         console.log("Игроки в нашей комнате:");
-        ui.renderPlayerList(msg.players)
+        ui.renderPlayerList(msg.worlds, msg.players)
     },
     async self_load(msg) {
         if (!gameState.isInitialized) {

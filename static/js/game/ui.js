@@ -1,13 +1,15 @@
 import { utils } from "../utils/utils_functions.js";
 
 export const ui = {
-    renderPlayerList(players){
+    renderPlayerList(worlds, players){
     const uiElements = utils.getElementsBySelectors({ list: "#players-list" });
         if (!uiElements.list) return;
         uiElements.list.innerHTML = "";
         for(let player of players){
             this.addPlayerToUI(player);
-        }    
+        } 
+        console.log("54554545")
+        console.log(worlds)   
     },
     addPlayerToUI(player){
             const uiElements = utils.getElementsBySelectors({ list: "#players-list" });
