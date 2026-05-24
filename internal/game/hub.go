@@ -9,6 +9,7 @@ import (
 
 // Структура для комнатных сообщений
 type RoomMessage struct {
+	WorldID    string
 	LocationID string
 	Payload    interface{}
 }
@@ -50,7 +51,7 @@ func (h *Hub) Run() {
 		case globalMessage := <-h.Broadcast:
 			h.BroadcastToAll(globalMessage)
 		case roomMessage := <-h.RoomBroadcast:
-			h.BroadcastToRoom(roomMessage.LocationID, roomMessage.Payload)
+			h.BroadcastToRoom(roomMessage.WorldID, roomMessage.LocationID, roomMessage.Payload)
 		}
 	}
 }
@@ -65,7 +66,7 @@ func (h *Hub) handleRegister(client *Client) {
 	}
 	h.Clients[client.Character.ID] = client
 	moveInfo, isMoving := h.movingPlayers[client.Character.ID]
-	neighbors := h.getNeighbors(client.Character.LocationID)
+	neighbors := h.getNeighbors(client.Character.WorldID, client.Character.LocationID)
 	h.mu.Unlock()
 	currentWorld := Universe[client.Character.WorldID]
 	h.Send(client, map[string]interface{}{
@@ -80,7 +81,8 @@ func (h *Hub) handleRegister(client *Client) {
 	})
 	exeptID := client.Character.ID
 	lockID := client.Character.LocationID
-	h.BroadcastToRoomExcept(lockID, exeptID, map[string]interface{}{
+	worldID := client.Character.WorldID
+	h.BroadcastToRoomExcept(worldID, lockID, exeptID, map[string]interface{}{
 		"type": "player_joined",
 		"player": map[string]interface{}{
 			"id":        client.Character.ID,
@@ -109,12 +111,13 @@ func (h *Hub) handleUnregister(client *Client) {
 	currentInMap, ok := h.Clients[client.Character.ID]
 	if ok && currentInMap == client {
 		locID := client.Character.LocationID
+		worldID := client.Character.WorldID
 		name := client.Character.Name
 		fmt.Printf("Персонаж %s не в сети. \n", name)
 		delete(h.Clients, client.Character.ID)
 		close(client.Send)
 		h.mu.Unlock()
-		h.BroadcastToRoom(locID, map[string]interface{}{
+		h.BroadcastToRoom(worldID, locID, map[string]interface{}{
 			"type": "player_left",
 			"player": map[string]interface{}{
 				"id":   client.Character.ID,
@@ -128,11 +131,11 @@ func (h *Hub) handleUnregister(client *Client) {
 	}
 }
 
-func (h *Hub) BroadcastToRoom(locationID string, message interface{}) {
+func (h *Hub) BroadcastToRoom(worldID string, locationID string, message interface{}) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 	for _, client := range h.Clients {
-		if client.Character.LocationID == locationID {
+		if client.Character.WorldID == worldID && client.Character.LocationID == locationID {
 			select {
 			case client.Send <- message:
 			default:
@@ -142,11 +145,11 @@ func (h *Hub) BroadcastToRoom(locationID string, message interface{}) {
 	}
 }
 
-func (h *Hub) BroadcastToRoomExcept(locationID string, exeptID int64, message interface{}) {
+func (h *Hub) BroadcastToRoomExcept(worldID string, locationID string, exeptID int64, message interface{}) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 	for _, client := range h.Clients {
-		if client.Character.LocationID == locationID && client.Character.ID != exeptID {
+		if client.Character.WorldID == worldID && client.Character.LocationID == locationID && client.Character.ID != exeptID {
 			select {
 			case client.Send <- message:
 			default:
@@ -190,10 +193,10 @@ func (h *Hub) Send(client *Client, message interface{}) {
 	}
 }
 
-func (h *Hub) getNeighbors(locationID string) []map[string]interface{} {
+func (h *Hub) getNeighbors(worldID string, locationID string) []map[string]interface{} {
 	neighbors := make([]map[string]interface{}, 0)
 	for _, other := range h.Clients {
-		if other.Character.LocationID == locationID {
+		if other.Character.WorldID == worldID && other.Character.LocationID == locationID {
 			neighbors = append(neighbors, map[string]interface{}{
 				"id":        other.Character.ID,
 				"name":      other.Character.Name,
@@ -208,7 +211,7 @@ func (h *Hub) getNeighbors(locationID string) []map[string]interface{} {
 
 func (h *Hub) ResyncRoomPresence(c *Client) {
 	h.mu.RLock()
-	neighbors := h.getNeighbors(c.Character.LocationID)
+	neighbors := h.getNeighbors(c.Character.WorldID, c.Character.LocationID)
 	h.mu.RUnlock()
 	currentWorld := Universe[c.Character.WorldID]
 	h.Send(c, map[string]interface{}{

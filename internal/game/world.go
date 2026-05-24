@@ -89,7 +89,7 @@ var Universe = map[string]World{
 			"portal": {
 				ID:   "portal",
 				Name: "Портал",
-				X:    449, Y: 125,
+				X:    406, Y: 135,
 				Worlds: []Element{{ID: "main_city", Name: "Благословенный край"}},
 			},
 		},

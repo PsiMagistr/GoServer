@@ -360,3 +360,62 @@ button {
     50% { transform: scale(1.05); opacity: 1; }
     100% { transform: scale(1); opacity: 0.8; }
 }
+
+/**/
+.world-link {
+    position: relative;
+    margin: 8px 5px;
+    padding: 10px 15px !important; /* Увеличиваем область клика */
+    background: linear-gradient(90deg, #1a1a1a 0%, #252525 100%);
+    border: 1px solid #333;
+    border-left: 4px solid #5d4037; /* Темная медь в спокойном состоянии */
+    color: #aaa;
+    font-weight: bold;
+    border-radius: 0 4px 4px 0;
+    transition: all 0.3s ease;
+    list-style-type: none;
+}
+
+/* Эффект при наведении */
+.world-link:hover {
+    background: linear-gradient(90deg, #1e1e1e 0%, #2a2318 100%);
+    border-color: #d4af37;
+    border-left: 4px solid #f1c40f; /* Яркое золото при наведении */
+    color: #fff;
+    transform: translateX(5px); /* Легкий сдвиг вправо */
+    box-shadow: -5px 0 15px rgba(212, 175, 55, 0.2);
+}
+
+/* Магическая иконка перед названием (через псевдоэлемент) */
+.world-link::before {
+    content: "🌀"; /* Иконка портала */
+    margin-right: 10px;
+    font-size: 12px;
+    opacity: 0.6;
+    transition: transform 0.5s ease;
+    display: inline-block;
+}
+
+.world-link:hover::before {
+    opacity: 1;
+    transform: rotate(180deg); /* Крутим портал при наведении */
+}
+
+/* Если список пуст */
+#worlds-list .empty {
+    padding: 10px;
+    color: #444;
+    font-size: 12px;
+    text-align: center;
+    border: 1px dashed #222;
+}
+
+/* Анимация появления для новых миров */
+@keyframes portalFadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.world-link {
+    animation: portalFadeIn 0.4s ease-out forwards;
+}

@@ -31,6 +31,7 @@ func handleChat(c *Client, h *Hub, data map[string]interface{}) {
 		"text":   text,
 	}
 	h.RoomBroadcast <- RoomMessage{
+		WorldID:    c.Character.WorldID,
 		LocationID: c.Character.LocationID,
 		Payload:    chatPacket,
 	}
@@ -59,6 +60,7 @@ func handleMoveRequest(c *Client, h *Hub, data map[string]interface{}) {
 
 	duration := time.Duration(result) * time.Second
 	charID := c.Character.ID
+	worldID := c.Character.WorldID
 	h.mu.Lock()
 	h.movingPlayers[c.Character.ID] = &MoveData{
 		DestinationID: targetID,
@@ -94,14 +96,14 @@ func handleMoveRequest(c *Client, h *Hub, data map[string]interface{}) {
 			"type":        "move_complete",
 			"location_id": targetID,
 		})
-		h.BroadcastToRoomExcept(oldLockID, c.Character.ID, map[string]interface{}{
+		h.BroadcastToRoomExcept(worldID, oldLockID, c.Character.ID, map[string]interface{}{
 			"type": "player_left",
 			"player": map[string]interface{}{
 				"id":   activeClient.Character.ID,
 				"name": activeClient.Character.Name,
 			},
 		})
-		h.BroadcastToRoomExcept(targetID, activeClient.Character.ID, map[string]interface{}{
+		h.BroadcastToRoomExcept(worldID, targetID, activeClient.Character.ID, map[string]interface{}{
 			"type":   "player_joined",
 			"player": activeClient.Character,
 		})

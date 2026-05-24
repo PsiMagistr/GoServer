@@ -4,12 +4,25 @@ import { engine } from "./engine.js";
 export const socket_events = {
     room_presence(msg) {
         console.log("Игроки в нашей комнате:");
-        ui.renderPlayerList(msg.worlds, msg.players)
+        //ui.renderPlayerList(msg.worlds, msg.players)
+        ui.renderList(
+            '#players-list',
+            msg.players,
+            "player",
+            'player-link',
+            (p)=>`${p.name}`,
+        );
+        ui.renderList(
+            "#worlds-list",
+            msg.worlds,
+            "world",
+            "world-link",
+            (w) => `Портал в ${w.name}`,
+        )
     },
     async self_load(msg) {
         if (!gameState.isInitialized) {
-            console.log("*******")
-            //console.log(msg.world.points["academy"])
+            console.log("*******")            
             const location = document.querySelector("#location_label");           
             gameState.world = msg.world;                       
             gameState.world = msg.world;
@@ -29,14 +42,19 @@ export const socket_events = {
         }
     },
     player_joined(msg) {
-        console.log(`К нам присоединился(лась) ${msg.player.name}`);
-        ui.addPlayerToUI(msg.player)
+        ui.addItemToList(
+            "#players-list", 
+            msg.player, 
+            "player", 
+            "player-link", 
+            (p) => `${p.name}`
+        );
     },
     player_left(msg) {
         console.log("+++++++++")
         console.log(msg.player)
         console.log(`Нас покинул(ла) ${msg.player.name}`);
-        ui.removePlayerFromUI(msg.player.id);
+        ui.removeItemFromUI("player", msg.player.id);
     },
     chat_msg(msg) {
         const chatContainer = document.getElementById('chat-messages');
