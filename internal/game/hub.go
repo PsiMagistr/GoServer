@@ -58,7 +58,7 @@ func (h *Hub) Run() {
 
 ////////handlers
 
-func (h *Hub) handleRegister(client *Client) {
+/*func (h *Hub) handleRegister(client *Client) {
 	h.mu.Lock()
 	if oldClient, ok := h.Clients[client.Character.ID]; ok {
 		oldClient.Conn.Close()
@@ -96,6 +96,64 @@ func (h *Hub) handleRegister(client *Client) {
 	if isMoving {
 		secondsLeft := time.Until(moveInfo.ArrivalTime).Seconds()
 		timeLeft := int(math.Ceil(secondsLeft))
+		if timeLeft > 0 {
+			h.Send(client, map[string]interface{}{
+				"type":        "move_starting",
+				"target_name": moveInfo.TargetName,
+				"duration":    timeLeft,
+			})
+		}
+	}
+}*/
+
+func (h *Hub) handleRegister(client *Client) {
+	h.mu.Lock()
+	// 1. Кикаем старую сессию (защита от мульти-вкладок)
+	if oldClient, ok := h.Clients[client.Character.ID]; ok {
+		oldClient.Conn.Close()
+		fmt.Printf("Персонаж %s зашел из другого места, старая сессия закрыта.\n", client.Character.Name)
+	}
+
+	// Регистрация в карте онлайна
+	h.Clients[client.Character.ID] = client
+	// 2. Сбор данных для атомарного пакета
+	moveInfo, isMoving := h.movingPlayers[client.Character.ID]
+	neighbors := h.getNeighbors(client.Character.WorldID, client.Character.LocationID)
+	currentWorld := Universe[client.Character.WorldID]
+	currentNode := currentWorld.Points[client.Character.LocationID]
+	h.mu.Unlock()
+
+	// 3. ОТПРАВЛЯЕМ ЕДИНЫЙ ПАКЕТ СИНХРОНИЗАЦИИ
+	// Теперь фронтенд получит всё: кто он, где он, кто рядом и какие порталы доступны
+	h.Send(client, map[string]interface{}{
+		"type":        "world_sync",
+		"player":      client.Character,   // Данные персонажа (HP, мана, статы)
+		"world":       currentWorld,       // Данные мира (точки для канваса)
+		"players":     neighbors,          // Список людей в комнате
+		"worlds":      currentNode.Worlds, // Доступные переходы (порталы)
+		"world_id":    client.Character.WorldID,
+		"location_id": client.Character.LocationID,
+	})
+
+	// 4. Оповещаем соседей (это всё еще отдельный пакет для ДРУГИХ игроков)
+	h.BroadcastToRoomExcept(client.Character.WorldID, client.Character.LocationID, client.Character.ID, map[string]interface{}{
+		"type": "player_joined",
+		"player": map[string]interface{}{
+			"id":        client.Character.ID,
+			"name":      client.Character.Name,
+			"avatar_id": client.Character.AvatarID,
+			"level":     client.Character.Level,
+			"gender":    client.Character.Gender,
+		},
+	})
+
+	fmt.Printf("Персонаж %s онлайн.\n", client.Character.Name)
+
+	// 5. ВОССТАНОВЛЕНИЕ ТАЙМЕРА (если игрок в пути)
+	// Это сообщение летит СЛЕДОМ за world_sync, чтобы JS сначала нарисовал мир,
+	// а потом поверх него "накинул" оверлей перемещения.
+	if isMoving {
+		timeLeft := int(math.Ceil(time.Until(moveInfo.ArrivalTime).Seconds()))
 		if timeLeft > 0 {
 			h.Send(client, map[string]interface{}{
 				"type":        "move_starting",

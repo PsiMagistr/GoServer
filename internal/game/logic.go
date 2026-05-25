@@ -12,8 +12,9 @@ import (
 type CommandHandler func(c *Client, h *Hub, data map[string]interface{})
 
 var commands = map[string]CommandHandler{
-	"chat_msg": handleChat,
-	"move":     handleMoveRequest,
+	"chat_msg":       handleChat,
+	"move":           handleMoveRequest,
+	"portal_request": handlePortalMoveRequest,
 }
 
 func handleChat(c *Client, h *Hub, data map[string]interface{}) {
@@ -96,6 +97,15 @@ func handleMoveRequest(c *Client, h *Hub, data map[string]interface{}) {
 			"type":        "move_complete",
 			"location_id": targetID,
 		})
+		/*h.Send(activeClient, map[string]interface{}{
+			"type":        "world_sync",
+			"location_id": activeClient.Character.LocationID,
+			"world_id":    activeClient.Character.WorldID,
+			"player":      activeClient.Character,                   // Данные персонажа
+			"world":       Universe[activeClient.Character.WorldID], // Данные карты
+			"players":     h.getNeighbors(activeClient.Character.WorldID, activeClient.Character.LocationID),
+		})*/
+
 		h.BroadcastToRoomExcept(worldID, oldLockID, c.Character.ID, map[string]interface{}{
 			"type": "player_left",
 			"player": map[string]interface{}{
@@ -108,5 +118,86 @@ func handleMoveRequest(c *Client, h *Hub, data map[string]interface{}) {
 			"player": activeClient.Character,
 		})
 		h.ResyncRoomPresence(activeClient)
+	}()
+}
+
+// Путешествуем по мирам.
+func handlePortalMoveRequest(c *Client, h *Hub, data map[string]interface{}) {
+	if h.isMoving(c.Character.ID) {
+		fmt.Println("Игрок в движении")
+		return
+	}
+	targetWorldID, ok := data["world_id"].(string)
+	if !ok {
+		fmt.Println("Переданные данные неверны")
+		return
+	}
+	targetWorld, exists := Universe[targetWorldID]
+
+	if !exists {
+		fmt.Println("Данные о мире неверны")
+		return
+	}
+	currentWorld := Universe[c.Character.WorldID]
+	currentNode := currentWorld.Points[c.Character.LocationID]
+	canTeleport := false
+	for _, el := range currentNode.Worlds {
+		if el.ID == targetWorldID {
+			canTeleport = true
+		}
+	}
+	if !canTeleport {
+		fmt.Printf("Игрок %s пытался войти в портал незаконно\n", c.Character.Name)
+		return
+	}
+	const portalDuration = 5 * time.Second
+	charID := c.Character.ID
+	h.mu.Lock()
+	h.movingPlayers[charID] = &MoveData{
+		DestinationID: "portal",
+		TargetName:    targetWorld.Name,
+		ArrivalTime:   time.Now().Add(portalDuration),
+	}
+	h.mu.Unlock()
+	h.Send(c, map[string]interface{}{
+		"type":        "move_starting",
+		"target_name": targetWorld.Name,
+		"duration":    int(portalDuration.Seconds()),
+	})
+	go func() {
+		time.Sleep(portalDuration)
+		h.mu.Lock()
+		delete(h.movingPlayers, charID)
+		h.mu.Unlock()
+		_ = database.UpdateCharacterWorld(charID, targetWorldID, "portal")
+		h.mu.RLock()
+		activeClient, online := h.Clients[charID]
+		h.mu.RUnlock()
+		if online {
+			oldLocID := activeClient.Character.LocationID
+			activeClient.Character.WorldID = targetWorldID
+			activeClient.Character.LocationID = "portal"
+			fmt.Println("dsdsdsdsds ", targetWorld)
+			newWorld := Universe[targetWorldID]
+			arrivalNode := newWorld.Points["portal"]
+			h.Send(activeClient, map[string]interface{}{
+				"type":        "world_sync",
+				"location_id": "portal",
+				"world_id":    targetWorldID,
+				"player":      activeClient.Character,  // Данные персонажа
+				"world":       Universe[targetWorldID], // Данные карты
+				"players":     h.getNeighbors(targetWorldID, activeClient.Character.LocationID),
+				"worlds":      arrivalNode.Worlds,
+			})
+			h.BroadcastToRoomExcept(currentWorld.ID, oldLocID, charID, map[string]interface{}{
+				"type":   "player_left",
+				"player": map[string]interface{}{"id": charID, "name": activeClient.Character.Name},
+			})
+			h.BroadcastToRoomExcept(targetWorldID, "portal", charID, map[string]interface{}{
+				"type":   "player_joined",
+				"player": activeClient.Character,
+			})
+
+		}
 	}()
 }

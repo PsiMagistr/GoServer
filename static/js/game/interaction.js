@@ -20,6 +20,10 @@ export const interaction = {
             this.sendMessage();
             return;
         }
+        const worldLink = target.closest(".world-link");
+        if(worldLink){
+            this.handlePortalClick(worldLink)
+        }
     },
     handleMouseMove(event) {
         const points = gameState.world?.points;
@@ -78,5 +82,23 @@ export const interaction = {
             network.send(packet);
             chatInput.value = "";
         }        
-    }
+    },
+    handlePortalClick(element){
+        if(gameState.isMoving){
+            alert("Вы уже в пути")
+            return
+        }
+        const worldId = element.dataset.id; // Берем ID из data-world-id
+        //console.log("eweweeeeewe")
+        //console.log(element)
+        const worldName = "totlhaim";/*element.innerText.replace('🌀', '').trim();*/
+        if (confirm(`Вы уверены, что хотите покинуть этот мир и отправиться в "${worldName}"? (Переход займет 200 сек)`)) {
+            console.log("Запрос на телепортацию в:", worldId);
+            const packet = {
+                    type:"portal_request",
+                    world_id: worldId, 
+            }
+            network.send(packet);
+        }
+    },
 }

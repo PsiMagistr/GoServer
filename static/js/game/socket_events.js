@@ -3,8 +3,7 @@ import { gameState } from "./game.js";
 import { engine } from "./engine.js";
 export const socket_events = {
     room_presence(msg) {
-        console.log("Игроки в нашей комнате:");
-        //ui.renderPlayerList(msg.worlds, msg.players)
+        console.log("Игроки в нашей комнате:");        
         ui.renderList(
             '#players-list',
             msg.players,
@@ -20,27 +19,45 @@ export const socket_events = {
             (w) => `Портал в ${w.name}`,
         )
     },
-    async self_load(msg) {
-        if (!gameState.isInitialized) {
-            console.log("*******")            
-            const location = document.querySelector("#location_label");           
-            gameState.world = msg.world;                       
-            gameState.world = msg.world;
-            gameState.player = msg.player;
-            location.textContent = `Локация: ${gameState.world.points[gameState.player.location_id].name}`
-            gameState.isInitialized = true;
-            const assetsToLoad = {
-                map: `/assets/maps/${gameState.player.world_id}.png`,
-                hero: `/assets/avatars/${gameState.player.gender}/${gameState.player.avatar_id}.png`
-            }
-            try{
-                 engine.images = await engine.loaderAssets(assetsToLoad);
-            }
-            catch(error){
-                 console.error("Критическая ошибка:", error);
-            }           
+    async world_sync(msg) {       
+        console.log("Глобальная синхронизация мира...");        
+        gameState.isMoving = false;
+        gameState.player = msg.player;
+        gameState.world = msg.world;        
+        // Сбрасываем флаг, чтобы форсировать загрузку новой карты
+        gameState.isInitialized = false;
+        // 2. Сразу обновляем список игроков (передаем массив соседей)
+        ui.renderList(
+            '#players-list',
+            msg.players,
+            "player",
+            'player-link',
+            (p)=>`${p.name}`,
+        );
+        ui.renderList(
+            "#worlds-list",
+             msg.worlds,
+            "world",
+            "world-link",
+            (w) => `Портал в ${w.name}`,
+        )
+        // 3. Запускаем загрузку ресурсов
+        const assetsToLoad = {
+            map: `/assets/maps/${msg.world_id}.png`,
+            hero: `/assets/avatars/${msg.player.gender}/${msg.player.avatar_id}.png`
+        };
+
+        try {
+            engine.images = await engine.loaderAssets(assetsToLoad);
+            engine.init(document.getElementById('gameCanvas'));
+            gameState.isInitialized = true;            
+            // Скрываем оверлей только КОГДА ВСЁ ЗАГРУЗИЛОСЬ
+            document.getElementById('move-overlay').style.display = 'none';
+        } catch (e) {
+            console.error("Ошибка синхронизации:", e);
         }
     },
+        
     player_joined(msg) {
         ui.addItemToList(
             "#players-list", 
@@ -91,7 +108,12 @@ export const socket_events = {
     },
 
     move_complete(msg){
-        gameState.isMoving = false;
+        console.log("move_complit") 
+        if (msg.world_id && msg.world_id !== gameState.player.world_id) {
+            console.log(`Смена мира: ${gameState.player.world_id} -> ${msg.world_id}`);        
+            gameState.player.world_id = msg.world_id;     
+            gameState.isInitialized = false;           
+        }
         gameState.player.location_id = msg.location_id;
         const location = document.querySelector("#location_label");
         location.textContent = `Локация: ${gameState.world.points[gameState.player.location_id].name}`;
@@ -99,7 +121,7 @@ export const socket_events = {
         const overlay = document.getElementById('move-overlay');
         if (overlay) overlay.style.display = 'none';        
         console.log("Вы прибыли в", msg.location_id);
-    }
-    
+        gameState.isMoving = false;
+    },
 
 }

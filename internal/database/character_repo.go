@@ -39,3 +39,9 @@ func UpdateCharacterLocation(charID int64, locationID string) error {
 	_, err := DB.Exec(query, locationID, charID)
 	return err
 }
+
+func UpdateCharacterWorld(charID int64, worldID string, locationID string) error {
+	query := `UPDATE characters SET world_id = ?, location_id = ? WHERE id = ?`
+	_, err := DB.Exec(query, worldID, locationID, charID)
+	return err
+}
