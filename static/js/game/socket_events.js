@@ -1,47 +1,82 @@
 import { ui } from "./ui.js";
 import { gameState } from "./game.js";
 import { engine } from "./engine.js";
-export const socket_events = {
-    room_presence(msg) {
-        console.log("Игроки в нашей комнате:");        
-        ui.renderList(
-            '#players-list',
-            msg.players,
-            "player",
-            'player-link',
-            (p)=>`${p.name}`,
-        );
-        ui.renderList(
-            "#worlds-list",
-            msg.worlds,
-            "world",
-            "world-link",
-            (w) => `Портал в ${w.name}`,
-        )
-    },
-    async world_sync(msg) {       
-        console.log("Глобальная синхронизация мира...");        
-        gameState.isMoving = false;
+
+// Глобальная переменная для управления таймером внутри этого файла
+let moveInterval = null;
+
+const stopTimer = () => {
+    if (moveInterval) {
+        clearInterval(moveInterval);
+        moveInterval = null;
+    }
+}
+
+ 
+
+const clearMoveTimer = () => {
+    if (moveInterval) {
+        clearInterval(moveInterval);
+        moveInterval = null;
+    }
+};
+
+const changeLabel = (msg)=>{
+    const locLabel = document.querySelector("#location_label");
+    if (locLabel && gameState.world) {
+        const node = gameState.world.points[msg.location_id];
+        locLabel.textContent = `Мир: ${gameState.world.name} Локация: ${node ? node.name : msg.location_id}`;
+    }
+}
+
+export const socket_events = {   
+    async world_sync(msg) {
+        console.log("Глобальная синхронизация мира...");
+        
+        // 1. Синхронизируем состояние
         gameState.player = msg.player;
-        gameState.world = msg.world;        
-        // Сбрасываем флаг, чтобы форсировать загрузку новой карты
+        gameState.world = msg.world;
         gameState.isInitialized = false;
-        // 2. Сразу обновляем список игроков (передаем массив соседей)
-        ui.renderList(
-            '#players-list',
-            msg.players,
-            "player",
-            'player-link',
-            (p)=>`${p.name}`,
-        );
-        ui.renderList(
-            "#worlds-list",
-             msg.worlds,
-            "world",
-            "world-link",
-            (w) => `Портал в ${w.name}`,
-        )
-        // 3. Запускаем загрузку ресурсов
+
+        // 2. Обновляем списки
+        ui.renderList('#players-list', msg.players, "player", 'player-link', (p) => p.name);
+        ui.renderList("#worlds-list", msg.worlds, "world", "world-link", (w) => `<span>${w.name}</span>`);
+
+        // 3. ЛОГИКА ОВЕРЛЕЯ (Показываем или скрываем сразу, не дожидаясь загрузки картинок)
+        const overlay = document.getElementById('move-overlay');
+        
+        if (msg.is_moving && msg.duration > 0) {
+            gameState.isMoving = true;
+            stopTimer()
+            if (overlay) {
+                overlay.style.display = 'flex';
+                // Подставляем красивые названия, которые Go прислал в world_sync
+                overlay.querySelector('.target-name').innerText = `${msg.world_name}, ${msg.location_name}`;                
+                let timeLeft = msg.duration;
+                const timerEl = overlay.querySelector('.timer-count');
+                timerEl.innerText = timeLeft;
+
+                // Запускаем локальный отсчет для плавности
+                moveInterval = setInterval(() => {
+                    timeLeft--;
+                    if (timeLeft >= 0) {
+                        timerEl.innerText = timeLeft;
+                    } else {
+                        timerEl.innerText = "Прибытие...";
+                        stopTimer();
+                    }
+                }, 1000);
+            }
+        } else {
+            // Если не движемся — гарантированно прячем
+            if (overlay) overlay.style.display = 'none';
+            gameState.isMoving = false;            
+            stopTimer(); 
+            /////////////////////////          
+            changeLabel(msg);
+        }
+
+        // 4. ЗАГРУЗКА РЕСУРСОВ (в фоне)
         const assetsToLoad = {
             map: `/assets/maps/${msg.world_id}.png`,
             hero: `/assets/avatars/${msg.player.gender}/${msg.player.avatar_id}.png`
@@ -50,78 +85,74 @@ export const socket_events = {
         try {
             engine.images = await engine.loaderAssets(assetsToLoad);
             engine.init(document.getElementById('gameCanvas'));
-            gameState.isInitialized = true;            
-            // Скрываем оверлей только КОГДА ВСЁ ЗАГРУЗИЛОСЬ
-            document.getElementById('move-overlay').style.display = 'none';
+            gameState.isInitialized = true;
+            // Здесь мы НЕ прячем оверлей, так как его должен спрятать только move_complete
         } catch (e) {
-            console.error("Ошибка синхронизации:", e);
+            console.error("Ошибка синхронизации ассетов:", e);
         }
     },
+
+
+    // Вызывается при старте любого перемещения (и при реконнекте после world_sync)
+    move_starting(msg) {
+        gameState.isMoving = true;
+        stopTimer();
+
+        const overlay = document.getElementById('move-overlay');
+        if (!overlay) return;
+
+        overlay.style.display = 'flex';
+        overlay.querySelector('.target-name').innerText = `${msg.world_name}, ${msg.location_name}`;
         
-    player_joined(msg) {
-        ui.addItemToList(
-            "#players-list", 
-            msg.player, 
-            "player", 
-            "player-link", 
-            (p) => `${p.name}`
-        );
+        let secondsLeft = Math.floor(msg.duration);
+        const timerEl = overlay.querySelector('.timer-count');
+        timerEl.innerText = secondsLeft;
+
+        moveInterval = setInterval(() => {
+            secondsLeft--;
+            if (secondsLeft >= 0) {
+                timerEl.innerText = secondsLeft;
+            } else {
+                timerEl.innerText = "Прибытие...";
+                stopTimer();
+            }
+        }, 1000);
     },
+
+    move_complete(msg) {
+        stopTimer();
+        gameState.isMoving = false;
+        
+        // Скрываем оверлей
+        const overlay = document.getElementById('move-overlay');
+        if (overlay) overlay.style.display = 'none';
+
+        // Если это был прыжок между мирами, world_sync уже прилетел или прилетит,
+        // но локацию обновим здесь для надежности
+        gameState.player.location_id = msg.location_id;
+        
+        // Обновляем заголовок локации в UI
+       changeLabel(msg)
+       ui.renderList('#players-list', msg.players, "player", 'player-link', (p) => p.name);
+       ui.renderList("#worlds-list", msg.worlds, "world", "world-link", (w) => `<span>${w.name}</span>`);        
+    },
+
     player_left(msg) {
-        console.log("+++++++++")
-        console.log(msg.player)
-        console.log(`Нас покинул(ла) ${msg.player.name}`);
         ui.removeItemFromUI("player", msg.player.id);
     },
+
+    player_joined(msg) {
+        ui.addItemToList("#players-list", msg.player, "player", "player-link", (p) => p.name);
+    },
+
     chat_msg(msg) {
         const chatContainer = document.getElementById('chat-messages');
         if (!chatContainer) return;
-        // Создаем элемент сообщения
         const div = document.createElement('div');
         div.className = 'chat-line';
         div.innerHTML = `<span class="chat-sender">${msg.sender}:</span> <span class="chat-text">${msg.text}</span>`;
         chatContainer.appendChild(div);
-        // Авто-прокрутка чата вниз
         chatContainer.scrollTop = chatContainer.scrollHeight;
-    },
-
-    move_starting(msg){        
-        gameState.isMoving = true;        
-        // Показываем оверлей (создадим его в шаблоне)
-        const overlay = document.getElementById('move-overlay');
-        if (overlay) {
-            overlay.style.display = 'flex';
-            overlay.querySelector('.target-name').innerText = msg.target_name;
-            
-            let secondsLeft = msg.duration;
-            const timerEl = overlay.querySelector('.timer-count');
-            timerEl.innerText = secondsLeft;
-
-            // Локальный таймер для плавности
-            //clearInterval(moveInterval);
-            let moveInterval = setInterval(() => {
-                secondsLeft--;
-                if (secondsLeft >= 0) timerEl.innerText = secondsLeft;
-                if (secondsLeft <= 0) clearInterval(moveInterval);
-            }, 1000);           
-        }
-    },
-
-    move_complete(msg){
-        console.log("move_complit") 
-        if (msg.world_id && msg.world_id !== gameState.player.world_id) {
-            console.log(`Смена мира: ${gameState.player.world_id} -> ${msg.world_id}`);        
-            gameState.player.world_id = msg.world_id;     
-            gameState.isInitialized = false;           
-        }
-        gameState.player.location_id = msg.location_id;
-        const location = document.querySelector("#location_label");
-        location.textContent = `Локация: ${gameState.world.points[gameState.player.location_id].name}`;
-        // Скрываем оверлей
-        const overlay = document.getElementById('move-overlay');
-        if (overlay) overlay.style.display = 'none';        
-        console.log("Вы прибыли в", msg.location_id);
-        gameState.isMoving = false;
-    },
-
+    },    
 }
+

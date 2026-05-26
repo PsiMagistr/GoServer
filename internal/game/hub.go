@@ -15,9 +15,10 @@ type RoomMessage struct {
 }
 
 type MoveData struct {
-	DestinationID string
-	ArrivalTime   time.Time
-	TargetName    string
+	DestinationID      string
+	ArrivalTime        time.Time
+	TargetWorldName    string
+	TargetLocationName string
 }
 
 type Hub struct {
@@ -58,54 +59,6 @@ func (h *Hub) Run() {
 
 ////////handlers
 
-/*func (h *Hub) handleRegister(client *Client) {
-	h.mu.Lock()
-	if oldClient, ok := h.Clients[client.Character.ID]; ok {
-		oldClient.Conn.Close()
-		fmt.Printf("Персонаж %s зашел из другого места, старая сессия закрыта.\n", client.Character.Name)
-	}
-	h.Clients[client.Character.ID] = client
-	moveInfo, isMoving := h.movingPlayers[client.Character.ID]
-	neighbors := h.getNeighbors(client.Character.WorldID, client.Character.LocationID)
-	h.mu.Unlock()
-	currentWorld := Universe[client.Character.WorldID]
-	h.Send(client, map[string]interface{}{
-		"type":   "self_load",
-		"player": client.Character,
-		"world":  currentWorld,
-	})
-	h.Send(client, map[string]interface{}{
-		"type":    "room_presence",
-		"players": neighbors,
-		"worlds":  currentWorld.Points[client.Character.LocationID].Worlds,
-	})
-	exeptID := client.Character.ID
-	lockID := client.Character.LocationID
-	worldID := client.Character.WorldID
-	h.BroadcastToRoomExcept(worldID, lockID, exeptID, map[string]interface{}{
-		"type": "player_joined",
-		"player": map[string]interface{}{
-			"id":        client.Character.ID,
-			"name":      client.Character.Name,
-			"avatar_id": client.Character.AvatarID,
-			"gender":    client.Character.Gender,
-			"level":     client.Character.Level,
-		},
-	})
-	fmt.Printf("Персонаж %s онлайн. \n", client.Character.Name)
-	if isMoving {
-		secondsLeft := time.Until(moveInfo.ArrivalTime).Seconds()
-		timeLeft := int(math.Ceil(secondsLeft))
-		if timeLeft > 0 {
-			h.Send(client, map[string]interface{}{
-				"type":        "move_starting",
-				"target_name": moveInfo.TargetName,
-				"duration":    timeLeft,
-			})
-		}
-	}
-}*/
-
 func (h *Hub) handleRegister(client *Client) {
 	h.mu.Lock()
 	// 1. Кикаем старую сессию (защита от мульти-вкладок)
@@ -113,7 +66,6 @@ func (h *Hub) handleRegister(client *Client) {
 		oldClient.Conn.Close()
 		fmt.Printf("Персонаж %s зашел из другого места, старая сессия закрыта.\n", client.Character.Name)
 	}
-
 	// Регистрация в карте онлайна
 	h.Clients[client.Character.ID] = client
 	// 2. Сбор данных для атомарного пакета
@@ -125,14 +77,26 @@ func (h *Hub) handleRegister(client *Client) {
 
 	// 3. ОТПРАВЛЯЕМ ЕДИНЫЙ ПАКЕТ СИНХРОНИЗАЦИИ
 	// Теперь фронтенд получит всё: кто он, где он, кто рядом и какие порталы доступны
+	var timeLeft int
+	worldName := currentWorld.Name
+	locationName := currentNode.Name
+	if isMoving {
+		timeLeft = int(math.Ceil(time.Until(moveInfo.ArrivalTime).Seconds()))
+		worldName = moveInfo.TargetWorldName
+		locationName = moveInfo.TargetLocationName
+	}
 	h.Send(client, map[string]interface{}{
-		"type":        "world_sync",
-		"player":      client.Character,   // Данные персонажа (HP, мана, статы)
-		"world":       currentWorld,       // Данные мира (точки для канваса)
-		"players":     neighbors,          // Список людей в комнате
-		"worlds":      currentNode.Worlds, // Доступные переходы (порталы)
-		"world_id":    client.Character.WorldID,
-		"location_id": client.Character.LocationID,
+		"type":          "world_sync",
+		"is_moving":     isMoving,
+		"player":        client.Character,   // Данные персонажа (HP, мана, статы)
+		"world":         currentWorld,       // Данные мира (точки для канваса)
+		"players":       neighbors,          // Список людей в комнате
+		"worlds":        currentNode.Worlds, // Доступные переходы (порталы)
+		"duration":      timeLeft,
+		"world_id":      client.Character.WorldID,
+		"location_id":   client.Character.LocationID,
+		"world_name":    worldName,
+		"location_name": locationName,
 	})
 
 	// 4. Оповещаем соседей (это всё еще отдельный пакет для ДРУГИХ игроков)
@@ -146,22 +110,7 @@ func (h *Hub) handleRegister(client *Client) {
 			"gender":    client.Character.Gender,
 		},
 	})
-
 	fmt.Printf("Персонаж %s онлайн.\n", client.Character.Name)
-
-	// 5. ВОССТАНОВЛЕНИЕ ТАЙМЕРА (если игрок в пути)
-	// Это сообщение летит СЛЕДОМ за world_sync, чтобы JS сначала нарисовал мир,
-	// а потом поверх него "накинул" оверлей перемещения.
-	if isMoving {
-		timeLeft := int(math.Ceil(time.Until(moveInfo.ArrivalTime).Seconds()))
-		if timeLeft > 0 {
-			h.Send(client, map[string]interface{}{
-				"type":        "move_starting",
-				"target_name": moveInfo.TargetName,
-				"duration":    timeLeft,
-			})
-		}
-	}
 }
 
 func (h *Hub) handleUnregister(client *Client) {
@@ -267,7 +216,7 @@ func (h *Hub) getNeighbors(worldID string, locationID string) []map[string]inter
 	return neighbors
 }
 
-func (h *Hub) ResyncRoomPresence(c *Client) {
+/*func (h *Hub) ResyncRoomPresence(c *Client) {
 	h.mu.RLock()
 	neighbors := h.getNeighbors(c.Character.WorldID, c.Character.LocationID)
 	h.mu.RUnlock()
@@ -277,9 +226,9 @@ func (h *Hub) ResyncRoomPresence(c *Client) {
 		"players": neighbors,
 		"worlds":  currentWorld.Points[c.Character.LocationID].Worlds,
 	})
-}
+}*/
 
-func (h *Hub) isMoving(charID int64) bool {
+func (h *Hub) IsPlayerMoving(charID int64) bool {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 	_, moving := h.movingPlayers[charID]

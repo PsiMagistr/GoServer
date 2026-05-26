@@ -39,7 +39,7 @@ func handleChat(c *Client, h *Hub, data map[string]interface{}) {
 }
 
 func handleMoveRequest(c *Client, h *Hub, data map[string]interface{}) {
-	if h.isMoving(c.Character.ID) {
+	if h.IsPlayerMoving(c.Character.ID) {
 		return
 	}
 	targetID, ok := data["target_id"].(string)
@@ -64,140 +64,167 @@ func handleMoveRequest(c *Client, h *Hub, data map[string]interface{}) {
 	worldID := c.Character.WorldID
 	h.mu.Lock()
 	h.movingPlayers[c.Character.ID] = &MoveData{
-		DestinationID: targetID,
-		ArrivalTime:   time.Now().Add(duration),
-		TargetName:    targetNode.Name,
+		DestinationID:      targetID,
+		ArrivalTime:        time.Now().Add(duration),
+		TargetWorldName:    world.Name,
+		TargetLocationName: targetNode.Name,
 	}
 	h.mu.Unlock()
 
 	h.Send(c, map[string]interface{}{
-		"type":        "move_starting",
-		"target_name": targetNode.Name,
-		"duration":    duration.Seconds(),
+		"type": "move_starting",
+		/*"target_name":   targetNode.Name,*/
+		"world_name":    world.Name,
+		"location_name": targetNode.Name,
+		"duration":      duration.Seconds(),
 	})
 
 	go func() {
 		time.Sleep(duration)
+
 		h.mu.Lock()
 		delete(h.movingPlayers, charID)
 		h.mu.Unlock()
-		h.mu.RLock()
+
+		// 1. Обновляем базу (это можно делать без мьютекса)
+		_ = database.UpdateCharacterLocation(charID, targetID)
+
+		// 2. Берем замок, чтобы безопасно обновить данные и собрать список
+		h.mu.Lock() // Берем Lock, так как мы будем ИЗМЕНЯТЬ данные персонажа
 		activeClient, online := h.Clients[charID]
-		h.mu.RUnlock()
-		err := database.UpdateCharacterLocation(charID, targetID)
-		if err != nil {
-			fmt.Printf("Ошибка сохранения локации: %v", err)
-		}
+
 		if !online {
+			h.mu.Unlock()
 			return
 		}
+
+		// Сначала официально "переставляем" игрока в новую комнату в памяти
 		oldLockID := activeClient.Character.LocationID
 		activeClient.Character.LocationID = targetID
-		h.Send(activeClient, map[string]interface{}{
-			"type":        "move_complete",
-			"location_id": targetID,
-		})
-		/*h.Send(activeClient, map[string]interface{}{
-			"type":        "world_sync",
-			"location_id": activeClient.Character.LocationID,
-			"world_id":    activeClient.Character.WorldID,
-			"player":      activeClient.Character,                   // Данные персонажа
-			"world":       Universe[activeClient.Character.WorldID], // Данные карты
-			"players":     h.getNeighbors(activeClient.Character.WorldID, activeClient.Character.LocationID),
-		})*/
+		// ТЕПЕРЬ собираем соседей. Теперь игрок сам попадет в этот список!
+		newNeighbors := h.getNeighbors(activeClient.Character.WorldID, targetID)
 
-		h.BroadcastToRoomExcept(worldID, oldLockID, c.Character.ID, map[string]interface{}{
+		// Получаем данные комнаты для списка порталов
+		currentWorld := Universe[activeClient.Character.WorldID]
+		currentNode := currentWorld.Points[targetID]
+		h.mu.Unlock() // Все операции с данными закончены, отпускаем
+
+		// 3. Отправляем пакет прибытия
+		h.Send(activeClient, map[string]interface{}{
+			"type":          "move_complete",
+			"location_id":   targetID,
+			"location_name": currentNode.Name,
+			"players":       newNeighbors,
+			"worlds":        currentNode.Worlds,
+		})
+
+		// 4. Оповещаем остальных
+		h.BroadcastToRoomExcept(worldID, oldLockID, charID, map[string]interface{}{
 			"type": "player_left",
 			"player": map[string]interface{}{
-				"id":   activeClient.Character.ID,
+				"id":   charID,
 				"name": activeClient.Character.Name,
 			},
 		})
-		h.BroadcastToRoomExcept(worldID, targetID, activeClient.Character.ID, map[string]interface{}{
+		h.BroadcastToRoomExcept(worldID, targetID, charID, map[string]interface{}{
 			"type":   "player_joined",
 			"player": activeClient.Character,
 		})
-		h.ResyncRoomPresence(activeClient)
 	}()
 }
 
-// Путешествуем по мирам.
 func handlePortalMoveRequest(c *Client, h *Hub, data map[string]interface{}) {
-	if h.isMoving(c.Character.ID) {
-		fmt.Println("Игрок в движении")
+	if h.IsPlayerMoving(c.Character.ID) {
 		return
 	}
 	targetWorldID, ok := data["world_id"].(string)
 	if !ok {
-		fmt.Println("Переданные данные неверны")
 		return
 	}
-	targetWorld, exists := Universe[targetWorldID]
 
+	targetWorld, exists := Universe[targetWorldID]
 	if !exists {
-		fmt.Println("Данные о мире неверны")
 		return
 	}
+
 	currentWorld := Universe[c.Character.WorldID]
 	currentNode := currentWorld.Points[c.Character.LocationID]
+
+	// Проверяем, есть ли портал в этот мир
 	canTeleport := false
 	for _, el := range currentNode.Worlds {
 		if el.ID == targetWorldID {
 			canTeleport = true
+			break
 		}
 	}
+
 	if !canTeleport {
-		fmt.Printf("Игрок %s пытался войти в портал незаконно\n", c.Character.Name)
+		fmt.Printf("Игрок %s: попытка незаконной телепортации\n", c.Character.Name)
 		return
 	}
-	const portalDuration = 5 * time.Second
+
+	const portalDuration = 10 * time.Second // Твои 200 секунд
 	charID := c.Character.ID
+	oldWorldID := c.Character.WorldID
+	oldLocID := c.Character.LocationID
+
 	h.mu.Lock()
 	h.movingPlayers[charID] = &MoveData{
-		DestinationID: "portal",
-		TargetName:    targetWorld.Name,
-		ArrivalTime:   time.Now().Add(portalDuration),
+		DestinationID:      "portal",
+		TargetWorldName:    targetWorld.Name,
+		TargetLocationName: Universe[targetWorldID].Points["portal"].Name,
+		ArrivalTime:        time.Now().Add(portalDuration),
 	}
 	h.mu.Unlock()
+
+	// Сообщаем о начале долгого перехода
 	h.Send(c, map[string]interface{}{
-		"type":        "move_starting",
-		"target_name": targetWorld.Name,
-		"duration":    int(portalDuration.Seconds()),
+		"type":          "move_starting",
+		"world_name":    targetWorld.Name,
+		"location_name": Universe[targetWorldID].Points["portal"].Name,
+		"duration":      int(portalDuration.Seconds()),
 	})
+
 	go func() {
 		time.Sleep(portalDuration)
+
 		h.mu.Lock()
 		delete(h.movingPlayers, charID)
 		h.mu.Unlock()
+
+		// Обновляем БД
 		_ = database.UpdateCharacterWorld(charID, targetWorldID, "portal")
+
 		h.mu.RLock()
 		activeClient, online := h.Clients[charID]
 		h.mu.RUnlock()
+
 		if online {
-			oldLocID := activeClient.Character.LocationID
 			activeClient.Character.WorldID = targetWorldID
 			activeClient.Character.LocationID = "portal"
-			fmt.Println("dsdsdsdsds ", targetWorld)
-			newWorld := Universe[targetWorldID]
-			arrivalNode := newWorld.Points["portal"]
+
+			// Полная синхронизация для прыгнувшего
 			h.Send(activeClient, map[string]interface{}{
 				"type":        "world_sync",
 				"location_id": "portal",
 				"world_id":    targetWorldID,
-				"player":      activeClient.Character,  // Данные персонажа
-				"world":       Universe[targetWorldID], // Данные карты
-				"players":     h.getNeighbors(targetWorldID, activeClient.Character.LocationID),
-				"worlds":      arrivalNode.Worlds,
+				"player":      activeClient.Character,
+				"world":       Universe[targetWorldID],
+				"players":     h.getNeighbors(targetWorldID, "portal"),
+				"worlds":      Universe[targetWorldID].Points["portal"].Worlds,
 			})
-			h.BroadcastToRoomExcept(currentWorld.ID, oldLocID, charID, map[string]interface{}{
+
+			// Оповещаем старый мир
+			h.BroadcastToRoomExcept(oldWorldID, oldLocID, charID, map[string]interface{}{
 				"type":   "player_left",
 				"player": map[string]interface{}{"id": charID, "name": activeClient.Character.Name},
 			})
+			// Оповещаем новый мир
 			h.BroadcastToRoomExcept(targetWorldID, "portal", charID, map[string]interface{}{
 				"type":   "player_joined",
 				"player": activeClient.Character,
 			})
-
 		}
 	}()
 }

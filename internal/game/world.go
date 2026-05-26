@@ -88,9 +88,15 @@ var Universe = map[string]World{
 		Points: WorldNodes{
 			"portal": {
 				ID:   "portal",
-				Name: "Портал",
+				Name: "Портал Анхат",
 				X:    406, Y: 135,
 				Worlds: []Element{{ID: "main_city", Name: "Благословенный край"}},
+			},
+			"thenan": {
+				ID:   "thenan",
+				Name: "Озеро Тхенан",
+				X:    284, Y: 241,
+				Worlds: []Element{},
 			},
 		},
 	},
