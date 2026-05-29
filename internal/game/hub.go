@@ -234,3 +234,15 @@ func (h *Hub) IsPlayerMoving(charID int64) bool {
 	_, moving := h.movingPlayers[charID]
 	return moving
 }
+
+// Для чата.
+func (h *Hub) GetClientByName(name string) *Client {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	for _, client := range h.Clients {
+		if client.Character.Name == name {
+			return client
+		}
+	}
+	return nil
+}

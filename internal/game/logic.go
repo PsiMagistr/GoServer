@@ -15,6 +15,7 @@ var commands = map[string]CommandHandler{
 	"chat_msg":       handleChat,
 	"move":           handleMoveRequest,
 	"portal_request": handlePortalMoveRequest,
+	"private_chat":   handleWhisperRequest,
 }
 
 func handleChat(c *Client, h *Hub, data map[string]interface{}) {
@@ -72,8 +73,7 @@ func handleMoveRequest(c *Client, h *Hub, data map[string]interface{}) {
 	h.mu.Unlock()
 
 	h.Send(c, map[string]interface{}{
-		"type": "move_starting",
-		/*"target_name":   targetNode.Name,*/
+		"type":          "move_starting",
 		"world_name":    world.Name,
 		"location_name": targetNode.Name,
 		"duration":      duration.Seconds(),
@@ -227,4 +227,42 @@ func handlePortalMoveRequest(c *Client, h *Hub, data map[string]interface{}) {
 			})
 		}
 	}()
+}
+
+// Шепот для приват-чата.
+func handleWhisperRequest(c *Client, h *Hub, data map[string]interface{}) {
+	targetName, _ := data["target_name"].(string)
+	text := data["text"].(string)
+
+	if text == "" || targetName == "" {
+		return
+	}
+	if targetName == c.Character.Name {
+		h.Send(c, map[string]interface{}{
+			"type": "sys_msg",
+			"text": "Вы пытаетесь отправить сообщение самому себе!",
+		})
+		return
+	}
+	if len([]rune(text)) > 150 {
+		text = string([]rune(text)[:150])
+	}
+	targetClient := h.GetClientByName(targetName)
+	if targetClient == nil {
+		h.Send(c, map[string]interface{}{
+			"type": "sys_msg",
+			"text": "Персонаж " + targetName + " не в сети.",
+		})
+		return
+	}
+	h.Send(targetClient, map[string]interface{}{
+		"type": "whisper_received",
+		"from": c.Character.Name,
+		"text": text,
+	})
+	h.Send(c, map[string]interface{}{
+		"type": "whisper_sent",
+		"to":   targetName,
+		"text": text,
+	})
 }

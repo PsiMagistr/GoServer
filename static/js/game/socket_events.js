@@ -31,13 +31,11 @@ const changeLabel = (msg)=>{
 
 export const socket_events = {   
     async world_sync(msg) {
-        console.log("Глобальная синхронизация мира...");
-        
+        console.log("Глобальная синхронизация мира...");        
         // 1. Синхронизируем состояние
         gameState.player = msg.player;
         gameState.world = msg.world;
         gameState.isInitialized = false;
-
         // 2. Обновляем списки
         ui.renderList('#players-list', msg.players, "player", 'player-link', (p) => p.name);
         ui.renderList("#worlds-list", msg.worlds, "world", "world-link", (w) => `<span>${w.name}</span>`);
@@ -153,6 +151,34 @@ export const socket_events = {
         div.innerHTML = `<span class="chat-sender">${msg.sender}:</span> <span class="chat-text">${msg.text}</span>`;
         chatContainer.appendChild(div);
         chatContainer.scrollTop = chatContainer.scrollHeight;
-    },    
+    },
+    sys_msg(msg){
+        console.log(msg);
+        const chatContainer = document.getElementById('chat-messages');
+        if (!chatContainer) return;
+        const div = document.createElement('div');       
+        div.className = 'chat-line';
+        div.innerHTML = `<span class="sys-msg">[СИСТЕМА]:</span><span class="chat-text"> ${msg.text}</span>`;
+        chatContainer.appendChild(div);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    },
+    whisper_received(msg){
+        const chatContainer = document.getElementById('chat-messages');
+        if (!chatContainer) return;
+        const div = document.createElement('div');       
+        div.className = 'chat-line';
+        div.innerHTML = `<span class="chat-receiver">[От ${msg.from}]:</span> <span class="chat-text">${msg.text}</span>`;
+        chatContainer.appendChild(div);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    },
+    whisper_sent(msg){
+        const chatContainer = document.getElementById('chat-messages');
+        if (!chatContainer) return;
+        const div = document.createElement('div');       
+        div.className = 'chat-line';
+        div.innerHTML = `<span class="chat-sender">[К ${msg.to}]:</span> <span class="chat-text">${msg.text}</span>`;
+        chatContainer.appendChild(div);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    },      
 }
 

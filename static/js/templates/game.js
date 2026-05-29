@@ -25,27 +25,13 @@ export const gameTemplate = (char) => {
                     <div class="panel-section">
                         <h3>Персонажи</h3>
                         <ul id="npc-list" class="game-list">
-                            <li class="empty">Пусто</li>
-                            <li class="empty">Пусто</li>
-                            <li class="empty">Пусто</li>
-                            <li class="empty">Пусто</li>
-                            <li class="empty">Пусто</li>
-                            <li class="empty">Пусто</li>
-                            <li class="empty">Пусто</li>
-                            <li class="empty">Пусто</li>                         
+                            <li class="empty">Пусто</li>                                                    
                         </ul>
                     </div>
                     <div class="panel-section">
                         <h3>Миры</h3>
                         <ul id="worlds-list" class="game-list">
-                            <li class="empty">Пусто</li>
-                            <li class="empty">Пусто</li>
-                            <li class="empty">Пусто</li>
-                            <li class="empty">Пусто</li>
-                            <li class="empty">Пусто</li>
-                            <li class="empty">Пусто</li>
-                            <li class="empty">Пусто</li>
-                            <li class="empty">Пусто</li>                            
+                            <li class="empty">Пусто</li>                                                       
                         </ul>
                     </div>
                 </aside>
@@ -64,13 +50,19 @@ export const gameTemplate = (char) => {
                         <canvas id="gameCanvas" width="600" height="400"></canvas>
                     </div>
                     
-                    <div class="chat-section">
-                        <div id="chat-messages" class="chat-window"></div>
-                        <div class="chat-controls">
-                            <input type="text" id="chat-input" placeholder="Введите сообщение..." maxlength="120" autocomplete="off">
-                            <button id="chat-send-btn">Чат</button>
-                        </div>
+                <div class="chat-section">
+                    <div id="chat-messages" class="chat-window"></div>
+                    
+                    <div class="chat-controls">
+                        <!-- Маленькое поле для имени (автоматически заполняется при клике по списку) -->
+                        <input type="text" id="chat-to" placeholder="Всем" title="Имя получателя (оставьте пустым для общего чата)" maxlength="20">
+                        
+                        <!-- Основное поле сообщения -->
+                        <input type="text" id="chat-input" placeholder="Введите сообщение..." maxlength="120" autocomplete="off">
+                        
+                        <button id="chat-send-btn">ОК</button>
                     </div>
+                </div>
                 </main>
             </div>
         </div>

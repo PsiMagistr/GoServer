@@ -267,28 +267,63 @@ button {
 
 .chat-controls {
     display: flex;
-    border-top: 1px solid #222;
+    gap: 4px; /* Уменьшил зазор между полями для компактности */
+    background: #161616;
+    padding: 6px; /* Уменьшил внутренние отступы блока */
+    border-top: 1px solid #252525;
+}
+
+/* Поле для имени получателя (Кому) */
+#chat-to {   
+    width: 100px; /* БЫЛО 80px, СТАЛО 65px - под 5-7 букв */
+    /*min-width: 65px;*/
     background: #1a1a1a;
-}
-
-.chat-controls input {
-    background: transparent;
-    border: none;
-    height: 45px;
-    flex-grow: 1;
-}
-
-#chat-send-btn {
-    background: #252525;
+    border: 1px solid #333;
     color: #d4af37;
-    padding: 0 25px;
-    height: 45px;
-    border-left: 1px solid #222;
+    font-size: 11px; /* Чуть уменьшил шрифт для компактности */
+    padding: 6px 2px;
+    text-align: center;
+    border-radius: 4px;
+    text-overflow: ellipsis; /* Если имя не влезет, оно сократится точками */
+}
+
+/* Основное поле сообщения */
+#chat-input {    
+    flex: 1; 
+    background: #111; /* Сделал чуть темнее для контраста */
+    border: 1px solid #333;
+    color: #eee;
+    padding: 8px 12px;
+    font-size: 13px;
+    border-radius: 4px;
+}
+
+#chat-input:focus {
+    border-color: #444;
+    outline: none;
+}
+
+/* Кнопка ОК/Чат */
+#chat-send-btn {
+    background: #222;
+    border: 1px solid #333;
+    color: #d4af37;
+    padding: 0 12px;
+    font-size: 11px;
+    border-radius: 4px;
 }
 
 #chat-send-btn:hover { background: #d4af37; color: #000; }
 
-.sys-msg { color: #8a6d3b; font-style: italic; }
+.chat-sender{
+    color: aquamarine;
+}
+
+.chat-receiver{
+    color:#F0E68C;
+}
+
+.sys-msg { color: #FFA07A; font-style: italic; }
 
 #move-overlay {
     /* Скрыт по умолчанию. Логика JS будет менять на flex */
@@ -419,3 +454,9 @@ button {
 .world-link {
     animation: portalFadeIn 0.4s ease-out forwards;
 }
+
+.top-bar-simple{
+    padding:5px;
+}
+
+
