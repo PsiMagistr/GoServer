@@ -38,7 +38,7 @@ export const socket_events = {
         gameState.isInitialized = false;
         // 2. Обновляем списки
         ui.renderList('#players-list', msg.players, "player", 'player-link', (p) => p.name);
-        ui.renderList("#worlds-list", msg.worlds, "world", "world-link", (w) => `<span>${w.name}</span>`);
+        ui.renderList("#worlds-list", msg.worlds, "world", "world-link", (w) => w.name);
 
         // 3. ЛОГИКА ОВЕРЛЕЯ (Показываем или скрываем сразу, не дожидаясь загрузки картинок)
         const overlay = document.getElementById('move-overlay');
@@ -132,7 +132,7 @@ export const socket_events = {
         // Обновляем заголовок локации в UI
        changeLabel(msg)
        ui.renderList('#players-list', msg.players, "player", 'player-link', (p) => p.name);
-       ui.renderList("#worlds-list", msg.worlds, "world", "world-link", (w) => `<span>${w.name}</span>`);        
+       ui.renderList("#worlds-list", msg.worlds, "world", "world-link", (w) => w.name);        
     },
 
     player_left(msg) {

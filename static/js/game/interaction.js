@@ -3,6 +3,24 @@ import { gameActions } from "./actions.js";
 import { engine } from "./engine.js";
 const CLICK_RADIUS = 20;
 const CLICK_RADIUS_SQ = CLICK_RADIUS * CLICK_RADIUS;
+const clickers = {
+    "gameCanvas":(obj, event)=>{
+        obj.handleCanvasClick(event);
+    },
+    "chat-send-btn":(obj, event)=>{        
+        obj.sendChat();    
+    },
+}
+const movers = {
+    "gameCanvas":(obj, event)=>{       
+        const node = obj.getNodeAt(event.offsetX, event.offsetY);
+            const found = node ? node.id : null;
+            if (gameState.hoveredNodeId !== found) {
+                gameState.hoveredNodeId = found;
+                event.target.style.cursor = (found && found !== gameState.player.location_id) ? 'pointer' : 'default';
+            }
+    },
+}
 export const interaction = {
     app: null,
     init(appElement) {
@@ -25,27 +43,21 @@ export const interaction = {
         return null;
     },
     handleGlobalClick(event) {
-        const target = event.target;
-        const id = event.target.id;
-        if (id == "gameCanvas") {
-            this.handleCanvasClick(event);
-            return;
+         const target = event.target;                
+        // 1. Проверка через диспетчер (ищем ID у цели или ближайшего родителя)
+        const clickable = target.closest('[id]');       
+        if(clickable && clickers[event.target.id]){
+            clickers[event.target.id](this, event)
+            return    
         }
-        if (id == "chat-send-btn") {
-            this.sendChat()
-            return;
-        }
-        const worldLink = target.closest(".world-link");
+        const worldLink = event.target.closest(".world-link");
         if (worldLink) {
             this.handlePortalClick(worldLink)
         }
     },
-    handleMouseMove(event) {
-        const node = this.getNodeAt(event.offsetX, event.offsetY);        
-        const found = node ? node.id : null;
-        if (gameState.hoveredNodeId !== found) {
-            gameState.hoveredNodeId = found;
-            event.target.style.cursor = found ? 'pointer' : 'default';
+    handleMouseMove(event) {       
+        if (movers[event.target.id]) {
+            movers[event.target.id](this, event);    
         }
     },
     handleGlobalKeyPress(event) {
@@ -53,11 +65,10 @@ export const interaction = {
             this.sendChat()
         }
     },
-
-    handleCanvasClick(event, canvas) {        
+    handleCanvasClick(event) {
         const node = this.getNodeAt(event.offsetX, event.offsetY);
         if (!node || node.id === gameState.player.location_id) return;
-        const goToQuestion = confirm(`Вы хотите перейти в ${node.name}`)
+        const goToQuestion = confirm(`Вы хотите перейти в ${node.name}`);
         if (!goToQuestion) return
         gameActions.moveToNode(node.id);
     },
@@ -82,7 +93,7 @@ export const interaction = {
             return
         }
         const worldId = element.dataset.id; // Берем ID из data-world-id        
-        const worldName = "totlhaim";/*element.innerText.replace('🌀', '').trim();*/
+        const worldName = element.innerText.replace('🌀', '').trim();
         const goToQuestion = confirm(`Вы уверены, что хотите покинуть этот мир и отправиться в "${worldName}"? (Переход займет 200 сек)`)
         if (!goToQuestion) return
         console.log("Запрос на телепортацию в:", worldId);
