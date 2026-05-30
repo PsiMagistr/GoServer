@@ -179,6 +179,11 @@ export const socket_events = {
         div.innerHTML = `<span class="chat-sender">[К ${msg.to}]:</span> <span class="chat-text">${msg.text}</span>`;
         chatContainer.appendChild(div);
         chatContainer.scrollTop = chatContainer.scrollHeight;
-    },      
+    },    
+    player_update(msg){
+        gameState.player.hp = msg.hp;
+        gameState.player.mana = msg.mana;       
+       
+    },
 }
 

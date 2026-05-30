@@ -39,16 +39,38 @@ export const engine = {
         this.ctx.drawImage(this.images.map, 0, 0, this.canvas.width, this.canvas.height);
     },
     drawPlayer() {
-        const char = gameState.player;
-        const healthPercent = Math.max(char.hp / char.max_hp);
-        this.ctx.drawImage(this.images.hero, graphs.x, graphs.y, graphs.w, graphs.h);
-        this.ctx.fillStyle = graphs.barHealBackColor;
-        this.ctx.fillRect(graphs.x, graphs.y + graphs.w + graphs.barGap, graphs.w, graphs.barH);
-        this.ctx.fillStyle = graphs.barHealColor;
-        this.ctx.fillRect(graphs.x, graphs.y + graphs.w + graphs.barGap, healthPercent * graphs.w, graphs.barH);
+        const char = gameState.player;               
+        this.ctx.drawImage(this.images.hero, graphs.x, graphs.y, graphs.w, graphs.h);        
+        const healParams = {           
+            x:graphs.x,
+            y: graphs.y,
+            w:graphs.w,
+            h:graphs.barH,            
+            current:char.hp,
+            max:char.max_hp,
+            backColor:graphs.barHealBackColor,
+            color:graphs.barHealColor,
+        }
+        const manaParams = {           
+            x:graphs.x,
+            y: graphs.y,
+            w:graphs.w,
+            h:graphs.barH,            
+            current:char.mana,
+            max:char.max_mana,
+            backColor:graphs.barHealBackColor,
+            color:graphs.barManaColor,
+        }                        
+        this.drawBar(1, healParams);
+        this.drawBar(2, manaParams);        
     },
-    drawBar() {
-
+    drawBar(counter, {x, y, w, h, current, max, color, backColor}) {
+        const dy = y + w + graphs.barGap + (graphs.barH + graphs.barGap) * (counter - 1);
+        const percent = Math.min(Math.max(current / max, 0), 1)
+        this.ctx.fillStyle = backColor;
+        this.ctx.fillRect(x, dy, w, h);
+        this.ctx.fillStyle = color;
+        this.ctx.fillRect(x, dy, w * percent, h);
     },
     drawCityNodes() {
         const points = gameState.world?.points;

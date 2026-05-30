@@ -5,6 +5,8 @@ import (
 	"math"
 	"sync"
 	"time"
+
+	"GoServer/internal/database"
 )
 
 // Структура для комнатных сообщений
@@ -43,6 +45,8 @@ func NewHub() *Hub {
 }
 
 func (h *Hub) Run() {
+	regenTicker := time.NewTicker(5 * time.Second)
+	defer regenTicker.Stop()
 	for {
 		select {
 		case client := <-h.Register: // Регистрация.
@@ -53,6 +57,8 @@ func (h *Hub) Run() {
 			h.BroadcastToAll(globalMessage)
 		case roomMessage := <-h.RoomBroadcast:
 			h.BroadcastToRoom(roomMessage.WorldID, roomMessage.LocationID, roomMessage.Payload)
+		case <-regenTicker.C:
+			h.handleRegeniration()
 		}
 	}
 }
@@ -117,18 +123,37 @@ func (h *Hub) handleUnregister(client *Client) {
 	h.mu.Lock()
 	currentInMap, ok := h.Clients[client.Character.ID]
 	if ok && currentInMap == client {
-		locID := client.Character.LocationID
-		worldID := client.Character.WorldID
-		name := client.Character.Name
-		fmt.Printf("Персонаж %s не в сети. \n", name)
+		type Params = struct {
+			charID      int64
+			charName    string
+			charWorldID string
+			charLocID   string
+			charHP      int
+			charMana    int
+		}
+		param := Params{
+			charID:      client.Character.ID,
+			charWorldID: client.Character.WorldID,
+			charLocID:   client.Character.LocationID,
+			charName:    client.Character.Name,
+			charHP:      client.Character.HP,
+			charMana:    client.Character.Mana,
+		}
+		fmt.Printf("Персонаж %s не в сети. \n", param.charName)
+		go func(p Params) {
+			err := database.UpdateCharacterHpMana(p.charID, p.charHP, p.charMana)
+			if err != nil {
+				fmt.Printf("ОШИБКА сохранения персонажа %s (ID %d): %v", p.charName, p.charID, err)
+			}
+		}(param)
 		delete(h.Clients, client.Character.ID)
 		close(client.Send)
 		h.mu.Unlock()
-		h.BroadcastToRoom(worldID, locID, map[string]interface{}{
+		h.BroadcastToRoom(param.charWorldID, param.charLocID, map[string]interface{}{
 			"type": "player_left",
 			"player": map[string]interface{}{
-				"id":   client.Character.ID,
-				"name": name,
+				"id":   param.charID,
+				"name": param.charName,
 			},
 		})
 	} else {
@@ -245,4 +270,24 @@ func (h *Hub) GetClientByName(name string) *Client {
 		}
 	}
 	return nil
+}
+
+// Регенерация жизни и маны.
+func (h *Hub) handleRegeniration() {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	for _, client := range h.Clients {
+		if h.IsPlayerMoving(client.Character.ID) {
+			continue
+		}
+		hpChanged := client.AddHP(2)
+		mpChanged := client.AddMana(5)
+		if hpChanged || mpChanged {
+			h.Send(client, map[string]interface{}{
+				"type": "player_update",
+				"hp":   client.Character.HP,
+				"mana": client.Character.Mana,
+			})
+		}
+	}
 }

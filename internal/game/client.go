@@ -76,3 +76,29 @@ func (c *Client) ReadPump(h *Hub) { // Читаем сообщения от бр
 
 	}
 }
+
+///Изменение hр, xp
+
+func (c *Client) AddHP(amount int) bool {
+	oldHp := c.Character.HP
+	c.Character.HP += amount
+	if c.Character.HP > c.Character.MaxHP {
+		c.Character.HP = c.Character.MaxHP
+	}
+	if c.Character.HP < 0 {
+		c.Character.HP = 0
+	}
+	return oldHp != c.Character.HP
+}
+
+func (c *Client) AddMana(amount int) bool {
+	oldMana := c.Character.Mana
+	c.Character.Mana += amount
+	if c.Character.Mana > c.Character.MaxMana {
+		c.Character.Mana = c.Character.MaxMana
+	}
+	if c.Character.Mana < 0 {
+		c.Character.MaxMana = 0
+	}
+	return oldMana != c.Character.Mana
+}

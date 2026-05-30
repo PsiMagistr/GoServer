@@ -5,6 +5,7 @@ export const graphs = {
     h:100,
     barH:20,
     barHealColor:"red",
-    barHealBackColor:"#FFFFFFF",
+    barHealBackColor:"#FFFFFF",
     barGap:2,
+    barManaColor:"blue",
 }
