@@ -71,6 +71,10 @@ export const engine = {
         this.ctx.fillRect(x, dy, w, h);
         this.ctx.fillStyle = color;
         this.ctx.fillRect(x, dy, w * percent, h);
+        this.ctx.fillStyle = "white";
+        this.ctx.font = `bold ${h * 0.8}px Arial`;
+        this.ctx.textAlign = "center";
+        this.ctx.fillText(`${current}/${max}`, x + w / 2, dy + h * 0.85);
     },
     drawCityNodes() {
         const points = gameState.world?.points;

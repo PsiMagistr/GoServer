@@ -18,6 +18,12 @@ export async function apiCall(url, method = "GET", body = null) {
             return await fetch(url, config);
         }        
     }
+    else if(response.status === 429){ 
+        alert("Сервер перегружен. Пожалуйста, не обновляйте страницу так часто.");
+        // Возвращаем специальную ошибку, чтобы main.js не рисовал форму логина
+        throw new Error("RATE_LIMIT_REACHED");
+
+    }
     return response
 }
 

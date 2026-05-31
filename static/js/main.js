@@ -40,7 +40,7 @@ async function main() {
       
     try {
         // ИСПОЛЬЗУЕМ ЧИСТЫЙ ПУТЬ БЕЗ СЛЭША В КОНЦЕ
-        const response = await apiCall("api/me")
+        const response = await apiCall("/api/me")
 
         if (response.ok) {
             const userData = await response.json();
@@ -51,6 +51,10 @@ async function main() {
             initAuth(onSuccess);
         }
     } catch (e) {
+        if (e.message === "RATE_LIMIT_REACHED") {            
+            console.warn("Ждем восстановления лимита...");
+            return;
+        }
         console.error("Ошибка связи с сервером:", e);
         initAuth(onSuccess);
     }
