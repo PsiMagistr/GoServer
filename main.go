@@ -14,6 +14,7 @@ import (
 	"GoServer/internal/database"
 	"GoServer/internal/game"
 	"GoServer/internal/handlers"
+	"GoServer/internal/middleware"
 )
 
 func main() {
@@ -38,7 +39,9 @@ func main() {
 	mux.HandleFunc("/api/login", handlers.LoginHandler)
 	mux.HandleFunc("/api/refresh", handlers.RefreshHandler)
 	mux.Handle("/ws", auth.AuthMiddleware(handlers.WSHandler(gameHub)))
-	var MyServer Server = NewHTTPServer("0.0.0.0:8080", mux)
+	limiter := middleware.NewLimiter(5, 30)
+	protectedLimiter := limiter.Limit(mux)
+	var MyServer Server = NewHTTPServer("0.0.0.0:8080", protectedLimiter)
 	go func() {
 		err := MyServer.Run()
 		if err != nil {
