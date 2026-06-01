@@ -39,7 +39,7 @@ export const engine = {
         this.ctx.drawImage(this.images.map, 0, 0, this.canvas.width, this.canvas.height);
     },
     drawPlayer() {
-        const char = gameState.player;               
+        const char = gameState.player;                      
         this.ctx.drawImage(this.images.hero, graphs.x, graphs.y, graphs.w, graphs.h);        
         const healParams = {           
             x:graphs.x,
@@ -47,6 +47,7 @@ export const engine = {
             w:graphs.w,
             h:graphs.barH,            
             current:char.hp,
+            currentRounded:Math.ceil(char.hp),            
             max:char.max_hp,
             backColor:graphs.barHealBackColor,
             color:graphs.barHealColor,
@@ -57,14 +58,15 @@ export const engine = {
             w:graphs.w,
             h:graphs.barH,            
             current:char.mana,
+            currentRounded:Math.floor(char.mana),
             max:char.max_mana,
             backColor:graphs.barHealBackColor,
             color:graphs.barManaColor,
-        }                        
+        }                                
         this.drawBar(1, healParams);
         this.drawBar(2, manaParams);        
     },
-    drawBar(counter, {x, y, w, h, current, max, color, backColor}) {
+    drawBar(counter, {x, y, w, h, current, max, color, backColor, currentRounded}) {        
         const dy = y + w + graphs.barGap + (graphs.barH + graphs.barGap) * (counter - 1);
         const percent = Math.min(Math.max(current / max, 0), 1)
         this.ctx.fillStyle = backColor;
@@ -74,7 +76,7 @@ export const engine = {
         this.ctx.fillStyle = "white";
         this.ctx.font = `bold ${h * 0.8}px Arial`;
         this.ctx.textAlign = "center";
-        this.ctx.fillText(`${current}/${max}`, x + w / 2, dy + h * 0.85);
+        this.ctx.fillText(`${currentRounded}/${max}`, x + w / 2, dy + h * 0.85);
     },
     drawCityNodes() {
         const points = gameState.world?.points;

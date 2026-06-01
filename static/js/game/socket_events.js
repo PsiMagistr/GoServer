@@ -33,7 +33,7 @@ export const socket_events = {
     async world_sync(msg) {
         console.log("Глобальная синхронизация мира...");        
         // 1. Синхронизируем состояние
-        gameState.player = msg.player;
+        gameState.player = msg.player;        
         gameState.world = msg.world;
         gameState.isInitialized = false;
         // 2. Обновляем списки
@@ -180,9 +180,9 @@ export const socket_events = {
         chatContainer.appendChild(div);
         chatContainer.scrollTop = chatContainer.scrollHeight;
     },    
-    player_update(msg){
+    player_update(msg){               
         gameState.player.hp = msg.hp;
-        gameState.player.mana = msg.mana;       
+        gameState.player.mana = msg.mana;     
        
     },
 }

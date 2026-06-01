@@ -13,7 +13,7 @@ const onSuccess = async (username)=>{
         console.log(`Пользователь ${username} вошел. Запускаем игру...`);
         const response = await apiCall("/api/character/me","GET");
         if(response.ok){
-            const char = await response.json();            
+            const char = await response.json();                                  
             initGame(char);
         }
         else if(response.status == 404){       
