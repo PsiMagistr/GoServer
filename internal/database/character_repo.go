@@ -46,7 +46,7 @@ func UpdateCharacterWorld(charID int64, worldID string, locationID string) error
 	return err
 }
 
-func UpdateCharacterHpMana(charID int64, hp int, mana int) error {
+func UpdateCharacterHpMana(charID int64, hp float64, mana float64) error {
 	query := "UPDATE characters SET hp = ?, mana = ? WHERE id = ?"
 	_, err := DB.Exec(query, hp, mana, charID)
 	return err

@@ -138,6 +138,15 @@ button {
     transition: 0.2s;
 }
 
+.avatar-item img {
+    width: 100%;       /* Растягиваем на всю ширину ячейки */
+    height: 100%;      /* Растягиваем на всю высоту ячейки */
+    display: block;    /* Убираем лишние отступы снизу */
+    object-fit: cover; /* Важно: сохраняет пропорции лица, обрезая лишнее */
+    filter: brightness(0.8); /* Сделаем чуть приглушенными, как ты просил */
+    transition: 0.3s;
+}
+
 .avatar-item.selected { 
     border-color: #d4af37; 
     transform: scale(1.05); 

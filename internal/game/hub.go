@@ -128,8 +128,8 @@ func (h *Hub) handleUnregister(client *Client) {
 			charName    string
 			charWorldID string
 			charLocID   string
-			charHP      int
-			charMana    int
+			charHP      float64
+			charMana    float64
 		}
 		param := Params{
 			charID:      client.Character.ID,

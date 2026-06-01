@@ -22,7 +22,8 @@ func CheckCharacterHandler(w http.ResponseWriter, r *http.Request) {
 	claims := r.Context().Value(auth.UserContextKey).(*auth.Claims)
 	char, err := database.GetCharacterByUserID(claims.UserID)
 	if err != nil {
-		http.Error(w, "Внутренняя ошибка сервера.", http.StatusInternalServerError)
+		fmt.Printf("DEBUG: Error in CheckCharacterHandler: %v\n", err)
+		http.Error(w, "Внутренняя ошибка сервера. Проверка существования персонажа", http.StatusInternalServerError)
 		return
 	}
 	if char == nil {

@@ -21,7 +21,7 @@ const onSuccess = async (username)=>{
             console.log("Аккаунт не имеет персонажа. Создайте его.");              
         }
         else{
-           console.error("Неизвестная ошибка")
+           console.error("Неизвестная ошибка " + response.status)
         }   
     }catch(e){
           console.error("Критическая ошибка (сеть):", e);    
