@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"GoServer/internal/auth"
+	"GoServer/internal/config"
 	"GoServer/internal/database"
 	"GoServer/internal/game"
 	"GoServer/internal/handlers"
@@ -18,9 +19,14 @@ import (
 )
 
 func main() {
-	if err := database.InitDB(); err != nil {
+	err := config.LoadFile("config.json")
+	if err != nil {
+		log.Fatal("Критическая ошибка: конфиг не найден!", err)
+	}
+	if err = database.InitDB(); err != nil {
 		log.Fatal("Произошла ошибка ", err)
 	}
+	addr := fmt.Sprintf("%s:%s", config.Get().Server.IP, config.Get().Server.HOST)
 	gameHub := game.NewHub()
 	go gameHub.Run()
 	defer func() {
@@ -40,10 +46,10 @@ func main() {
 	apiMux.HandleFunc("/api/login", handlers.LoginHandler)
 	apiMux.HandleFunc("/api/refresh", handlers.RefreshHandler)
 	apiMux.Handle("/ws", auth.AuthMiddleware(handlers.WSHandler(gameHub)))
-	limiter := middleware.NewLimiter(2, 5)
+	limiter := middleware.NewLimiter(15, 30)
 	mainMux.Handle("/api/", limiter.Limit(apiMux))
 	mainMux.Handle("/ws", limiter.Limit(apiMux))
-	var MyServer Server = NewHTTPServer("0.0.0.0:8080", mainMux)
+	var MyServer Server = NewHTTPServer(addr, mainMux)
 	go func() {
 		err := MyServer.Run()
 		if err != nil {

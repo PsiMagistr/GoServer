@@ -1,0 +1,19 @@
+{
+    "server":{
+        "ip":"0.0.0.0",
+        "host":"8080"
+    },
+    "db":{
+        "port":"3306",
+        "host":"127.0.0.1",
+        "name":"anhat_db",       
+        "user":"root",
+        "password":""          
+
+    },
+    "jwt":{
+        "jwt_secret":"my_super_secret_rpg_key_12345",
+        "access_token_time":"1m",
+        "refresh_token_time":"10m"
+    }    
+}

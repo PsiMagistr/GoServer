@@ -7,6 +7,7 @@ type Character struct {
 	Gender       string  `db:"gender" json:"gender"`
 	AvatarID     string  `db:"avatar_id" json:"avatar_id"`
 	Level        int     `db:"level" json:"level"`
+	Gold         int     `db:"gold" json:"gold"`
 	FreePoints   int     `db:"free_points" json:"free_points"`
 	Strength     int     `db:"strength" json:"strength"`
 	Agility      int     `db:"agility" json:"agility"`

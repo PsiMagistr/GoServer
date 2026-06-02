@@ -1,7 +1,10 @@
 package database
 
 import (
+	"fmt"
 	"log"
+
+	"GoServer/internal/config"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
@@ -11,7 +14,15 @@ var DB *sqlx.DB
 
 func InitDB() error {
 	var err error
-	dsn := "root:@tcp(127.0.0.1:3306)/anhat_db?parseTime=true&charset=utf8mb4"
+	dbHost := config.Get().DB.HOST
+	dbPort := config.Get().DB.PORT
+	dbUser := config.Get().DB.USER
+	dbName := config.Get().DB.NAME
+	dbPassword := config.Get().DB.PASSWORD
+	dsn := fmt.Sprintf(
+		"%s:%s@tcp(%s:%s)/%s?parseTime=true&charset=utf8mb4",
+		dbUser, dbPassword, dbHost, dbPort, dbName)
+	// dsn := "root:@tcp(127.0.0.1:3306)/anhat_db?parseTime=true&charset=utf8mb4"
 	DB, err = sqlx.Connect("mysql", dsn)
 	if err != nil {
 		return err
@@ -48,6 +59,7 @@ func InitDB() error {
 		gender VARCHAR(10) NOT NULL,
 		avatar_id VARCHAR(50) NOT NULL,
 		level INT DEFAULT 1,
+		gold INT DEFAULT 100,
 		free_points INT DEFAULT 30,
 		strength INT DEFAULT 3,
 		agility INT DEFAULT 3,

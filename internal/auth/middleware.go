@@ -4,6 +4,8 @@ import (
 	"context"
 	"net/http"
 
+	"GoServer/internal/config"
+
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -23,6 +25,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			http.Error(w, "Требуется авторизация (кука не найдена)", http.StatusUnauthorized)
 			return
 		}
+		jwtSecret := []byte(config.Get().JWT.SECRET)
 		claims := Claims{}
 		tokenString := cookie.Value
 		token, err := jwt.ParseWithClaims(tokenString, &claims, func(token *jwt.Token) (interface{}, error) {

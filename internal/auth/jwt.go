@@ -6,13 +6,14 @@ import (
 	"fmt"
 	"time"
 
+	"GoServer/internal/config"
+
 	"GoServer/internal/database"
 
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var jwtSecret = []byte("my_super_secret_rpg_key_12345")
-
+// var jwtSecret = []byte(j)
 type Claims struct {
 	UserID   int64  `json:"user_id"`
 	Username string `json:"username"`
@@ -25,12 +26,21 @@ type TokenPair struct {
 }
 
 func GenerateToken(userID int64, username string) (string, error) {
-	expirationTime := time.Now().Add(1 * time.Minute)
+	jwtSecret := []byte(config.Get().JWT.SECRET)
+	accessTokenDuration, err := time.ParseDuration(config.Get().JWT.ACCESSTIME)
+	if err != nil {
+		accessTokenDuration = 1 * time.Minute
+		fmt.Println("В конфиге неверно установленно время аксес-токена")
+	}
+	now := time.Now()
+	expirationTime := now.Add(accessTokenDuration)
 	claims := &Claims{
 		UserID:   userID,
 		Username: username,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
+			IssuedAt:  jwt.NewNumericDate(now), // Время создания
+			NotBefore: jwt.NewNumericDate(now), // Нельзя использовать до этого момента
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -59,12 +69,17 @@ func GetTokenPair(UserID int64, username string) (*TokenPair, error) {
 	if err != nil {
 		return nil, fmt.Errorf("ошибка генерации рефреш-токена: %w", err)
 	}
-	err = database.SaveRefreshToken(UserID, refreshToken, 10*time.Minute)
+	refreshTokenTime, err := time.ParseDuration(config.Get().JWT.REFRESHTIME)
+	if err != nil {
+		refreshTokenTime = 10 * time.Minute
+		fmt.Println("В конфиге неверно установленно время рефреш-токена")
+	}
+	err = database.SaveRefreshToken(UserID, refreshToken, refreshTokenTime)
 	if err != nil {
 		return nil, fmt.Errorf("ошибка сохранения refresh токена: %w", err)
 	}
 	return &TokenPair{
-		accessToken,
-		refreshToken,
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
 	}, nil
 }
