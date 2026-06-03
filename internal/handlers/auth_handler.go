@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"GoServer/internal/auth"
+	"GoServer/internal/config"
 	"GoServer/internal/database"
 
 	"golang.org/x/crypto/bcrypt"
@@ -23,7 +25,12 @@ type LoginRequest struct {
 	Password string `json:"password"`
 }
 
-func GetCookieParams(name string, value string, maxAge int) *http.Cookie {
+func GetCookieParams(name string, value string, durationstr string) *http.Cookie {
+	d, err := time.ParseDuration(durationstr)
+	if err != nil {
+		d = 15 * time.Minute
+		fmt.Printf("Ошибка парсинга времени для куки %s: %v\n", name, err)
+	}
 	return &http.Cookie{
 		Name:     name,
 		Value:    value,
@@ -31,7 +38,7 @@ func GetCookieParams(name string, value string, maxAge int) *http.Cookie {
 		HttpOnly: true,
 		Secure:   false,
 		SameSite: http.SameSiteLaxMode,
-		MaxAge:   maxAge,
+		MaxAge:   int(d.Seconds()),
 	}
 }
 
@@ -114,8 +121,8 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	accessCookie := GetCookieParams("access_token", tokens.AccessToken, 365*24*3600)
-	refreshCookie := GetCookieParams("refresh_token", tokens.RefreshToken, 365*24*3600)
+	accessCookie := GetCookieParams("access_token", tokens.AccessToken, config.Get().JWT.ACCESSTIME)
+	refreshCookie := GetCookieParams("refresh_token", tokens.RefreshToken, config.Get().JWT.REFRESHTIME)
 
 	http.SetCookie(w, accessCookie)
 	http.SetCookie(w, refreshCookie)
@@ -150,8 +157,8 @@ func RefreshHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Ошибка сервера", http.StatusInternalServerError)
 		return
 	}
-	accessCookie := GetCookieParams("access_token", tokens.AccessToken, 365*24*3600)
-	refreshCookie := GetCookieParams("refresh_token", tokens.RefreshToken, 365*24*3600)
+	accessCookie := GetCookieParams("access_token", tokens.AccessToken, config.Get().JWT.ACCESSTIME)
+	refreshCookie := GetCookieParams("refresh_token", tokens.RefreshToken, config.Get().JWT.REFRESHTIME)
 	http.SetCookie(w, accessCookie)
 	http.SetCookie(w, refreshCookie)
 	w.WriteHeader(http.StatusOK)

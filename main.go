@@ -16,6 +16,8 @@ import (
 	"GoServer/internal/game"
 	"GoServer/internal/handlers"
 	"GoServer/internal/middleware"
+
+	"golang.org/x/time/rate"
 )
 
 func main() {
@@ -46,7 +48,9 @@ func main() {
 	apiMux.HandleFunc("/api/login", handlers.LoginHandler)
 	apiMux.HandleFunc("/api/refresh", handlers.RefreshHandler)
 	apiMux.Handle("/ws", auth.AuthMiddleware(handlers.WSHandler(gameHub)))
-	limiter := middleware.NewLimiter(15, 30)
+	r := rate.Limit(config.Get().Server.LIMITER_R)
+	b := config.Get().Server.LIMITER_B
+	limiter := middleware.NewLimiter(r, b)
 	mainMux.Handle("/api/", limiter.Limit(apiMux))
 	mainMux.Handle("/ws", limiter.Limit(apiMux))
 	var MyServer Server = NewHTTPServer(addr, mainMux)

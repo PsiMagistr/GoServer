@@ -1,7 +1,9 @@
 {
     "server":{
         "ip":"0.0.0.0",
-        "host":"8080"
+        "host":"8080",
+        "limiter_r":2, 
+        "limiter_b":5
     },
     "db":{
         "port":"3306",
