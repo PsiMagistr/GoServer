@@ -28,10 +28,16 @@ type JWT struct {
 	REFRESHTIME string `json:"refresh_token_time"`
 }
 
+type GAME struct {
+	MINCHARLEN int `json:"min_char_len"`
+	MAXCHARLEN int `json:"max_char_len"`
+}
+
 type Config struct {
 	Server Server `json:"server"`
 	DB     DB     `json:"db"`
 	JWT    JWT    `json:"jwt"`
+	GAME   GAME   `json:"game"`
 }
 
 var (

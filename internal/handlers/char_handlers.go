@@ -55,6 +55,7 @@ func CreateCharacterHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Ошибка в формате данных.", http.StatusBadRequest)
 		return
 	}
+	// if req.Name <
 	_, _ = fmt.Printf("Пришли данные создания персонажа. %+v\n", req)
 	// Забираем контекст.
 	claims := r.Context().Value(auth.UserContextKey).(*auth.Claims)
