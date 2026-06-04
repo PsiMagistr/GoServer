@@ -1,6 +1,8 @@
 import { gameState } from "./game.js";
 import { gameActions } from "./actions.js";
 import { engine } from "./engine.js";
+import {modalManager} from "./modalManager.js";
+import {statsModalTemplate} from "../templates/stats_modal.js";
 const CLICK_RADIUS = 20;
 const CLICK_RADIUS_SQ = CLICK_RADIUS * CLICK_RADIUS;
 const clickers = {
@@ -10,6 +12,12 @@ const clickers = {
     "chat-send-btn":(obj, event)=>{        
         obj.sendChat();    
     },
+    "stats":(obj, event)=>{
+        modalManager.show(statsModalTemplate, gameState.player)
+    },
+    "modal-close-btn":(obj, event)=>{
+        modalManager.hide();
+    }
 }
 const movers = {
     "gameCanvas":(obj, event)=>{       
@@ -45,14 +53,18 @@ export const interaction = {
     handleGlobalClick(event) {
          const target = event.target;                
         // 1. Проверка через диспетчер (ищем ID у цели или ближайшего родителя)
-        const clickable = target.closest('[id]');       
-        if(clickable && clickers[event.target.id]){
-            clickers[event.target.id](this, event)
+        const clickable = target.closest('[id]'); 
+        const id = clickable.id;      
+        if(clickable && clickers[id]){
+            clickers[id](this, event)
             return    
         }
         const worldLink = event.target.closest(".world-link");
         if (worldLink) {
             this.handlePortalClick(worldLink)
+        }
+        if(id.startsWith("add-")){
+            alert(id);
         }
     },
     handleMouseMove(event) {       

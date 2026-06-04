@@ -244,6 +244,7 @@ button {
     flex-direction: column;
     padding: 20px;
     background: #0f0f0f;
+    gap:3px;
 }
 
 .canvas-container {
@@ -464,8 +465,213 @@ button {
     animation: portalFadeIn 0.4s ease-out forwards;
 }
 
-.top-bar-simple{
-    padding:5px;
+.top-bar-simple, .hero-bar-simple {
+    display: flex;
+    gap: 15px;
+    background: #161616;
+    border: 1px solid #222;
+    padding: 2px 8px; /* Уменьшили вертикальный паддинг до 2px */
+}
+
+/* Убираем двойную границу посередине */
+.top-bar-simple {
+    border-bottom: none;
+    border-radius: 4px 4px 0 0;
+}
+
+.hero-bar-simple {
+    display: flex;            /* Включаем гибкий контейнер */
+    align-items: center;      /* Центрируем плашки по ВЕРТИКАЛИ */
+    /*justify-content: center; /* Располагаем в начале строки (слева) */
+    gap: 6px;               /* Четкий зазор между плашками */
+    
+    background: #161616;
+    border: 1px solid #222;
+    border-top: none;         /* Приклеиваем к верхней панели */
+    padding: 4px 10px;        /* Внутренние отступы панели */
+    min-height: 30px;         /* Даем панели фиксированную минимальную высоту */
+    border-radius: 0 0 4px 4px;
+}
+
+/* Укрощаем высоту текста */
+.char-name-label, .location-label, .hero-panel-link {
+    font-size: 12px;
+    line-height: 1; /* Текст занимает ровно столько, сколько высота шрифта */
+    display: flex;
+    align-items: center;
+}
+
+/* Чтобы b (болд) не распирал строку по высоте */
+.top-bar-simple b {
+    line-height: 1;
+    margin-left: 4px;
+}
+
+.hero-nav-group {
+    display: flex;
+    flex-direction: column;
+    gap: 3px; /* Здесь мы сами управляем зазором */
+    margin-bottom: 5px; /* Отступ от всей группы до канваса */
+}
+
+.hero-panel-link{
+    display: inline-flex;
+    /*align-items: center;
+    justify-content: center;*/    
+    padding: 3px 10px;  /* Размер плашки */
+    background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%); /* Градиент для объема */
+    border: 1px solid #333;
+    border-radius: 3px;    
+    color: #aaa;        /* Спокойный цвет текста */
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;    
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+    
+}
+
+.hero-panel-link:hover{
+    color: #d4af37;     /* Золотой текст */
+    border-color: #8a6d3b; /* Бронзовая рамка */
+    background: #222;
+    box-shadow: 0 0 8px rgba(212, 175, 55, 0.15);
+}
+
+
+
+/*Модальные окна*/
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.85); /* Полупрозрачный черный */
+    display: none; /* Скрыто по умолчанию */
+    justify-content: center;
+    align-items: center;
+    z-index: 9999; /* Поверх всего */
+    backdrop-filter: blur(4px); /* Эффект размытия */
+}
+
+/* Само окно */
+.modal-window {
+    background: #1a1a1a;
+    border: 2px solid #8a6d3b; /* Бронзовая рамка */
+    box-shadow: 0 0 25px rgba(212, 175, 55, 0.3);
+    border-radius: 8px;
+    padding: 25px;
+    min-width: 320px;
+    max-width: 500px;
+    position: relative;
+    color: #e0e0e0;
+}
+
+/* Кнопка закрытия (крестик) */
+.modal-close {
+    position: absolute;
+    top: 10px; right: 15px;
+    background: transparent;
+    border: none;
+    color: #555;
+    font-size: 24px;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.modal-close:hover { color: #d4af37; }
+
+/* Заголовки внутри модалок */
+.modal-window h2 {
+    color: #d4af37;
+    margin-top: 0;
+    font-size: 18px;
+    text-transform: uppercase;
+    border-bottom: 1px solid #333;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.stat-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* Название слева, кнопка справа */
+    padding: 8px 0;
+    border-bottom: 1px solid #222;
+    min-width: 200px;
+}
+
+.add-stat-btn {
+    background: #d4af37;
+    color: #000;
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
+    font-size: 16px;
+    line-height: 1;
+    margin-left: 15px;
+    font-weight: bold;
+}
+
+.add-stat-btn:hover {
+    background: #f1c40f;
+}
+
+.free-points-block {
+    text-align: center;
+    padding: 10px;
+    margin-bottom: 15px;
+    background: #2b251a;
+    color: #d4af37;
+    border-radius: 4px;
+}
+
+
+.modal-actions {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #252525; /* Разделительная линия */
+    display: flex;
+    justify-content: center;
+}
+
+/* Стили кнопки Сохранить (на базе твоего main-btn) */
+.modal-actions .main-btn {
+    background: #d4af37;
+    color: #0d0d0d;
+    padding: 14px 40px;
+    width: auto; /* Не на всю ширину */
+    min-width: 200px;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    box-shadow: 0 4px 0 #8a6d3b; /* 3D эффект */
+    transition: all 0.2s ease;
+}
+
+/* Эффекты при наведении */
+.modal-actions .main-btn:hover:not(:disabled) {
+    background: #f1c40f;
+    transform: translateY(-1px);
+    box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3), 0 5px 0 #8a6d3b;
+}
+
+/* Эффект при нажатии */
+.modal-actions .main-btn:active:not(:disabled) {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 #8a6d3b;
+}
+
+/* --- СОСТОЯНИЕ: НЕДОСТУПНО --- */
+/* Когда правок нет, кнопка должна выглядеть "выключенной" */
+.modal-actions .main-btn:disabled {
+    background: #252525; /* Темно-серый */
+    color: #555;       /* Тусклый текст */
+    box-shadow: 0 4px 0 #1a1a1a;
+    cursor: not-allowed;
+    filter: grayscale(1);
+    opacity: 0.6;
 }
 
 

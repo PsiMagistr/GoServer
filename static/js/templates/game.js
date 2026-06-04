@@ -38,15 +38,22 @@ export const gameTemplate = (char) => {
 
                 <!-- Основная зона -->
                 <main class="main-screen">
+                <div class="hero-nav-group">
                     <div class="top-bar-simple">
                         <span id = "char_name_label" class="char-name-label">Герой: <b>${char.name}</b></span>
                         <span id = "location_label" class="location-label">Локация: <b>${char.location_id || 'Начало'}</b></span>
                     </div>
+                    <div class="hero-bar-simple">
+                        <span id="stats" class="hero-panel-link">Характеристики</span>
+                        <span class="hero-panel-link">Магия</span>
+                        <span class="hero-panel-link">Рюкзак</span>
+                    </div>
+                </div>    
                     <div class="canvas-container">
                         <div id="move-overlay">
                             <p>Идем в <span class="target-name"></span>...</p>
                             <span class="timer-count">0</span>
-                        </div>
+                        </div>                
                         <canvas id="gameCanvas" width="600" height="400"></canvas>
                     </div>
                     
@@ -64,6 +71,12 @@ export const gameTemplate = (char) => {
                     </div>
                 </div>
                 </main>
+            </div>
+            <div id="modal-overlay" class="modal-overlay" style="display:none;">
+                <div class="modal-window">
+                    <button id="modal-close-btn" class="modal-close">&times;</button>
+                    <div id="modal-content">Пространство модального окна</div>
+                </div>
             </div>
         </div>
     `;
