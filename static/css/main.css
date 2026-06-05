@@ -614,8 +614,13 @@ button {
     font-weight: bold;
 }
 
-.add-stat-btn:hover {
+.add-stat-btn:hover:not(:disabled) {
     background: #f1c40f;
+}
+
+.add-stat-btn:disabled{
+    background:#8a6d3b;
+    cursor:auto;
 }
 
 .free-points-block {

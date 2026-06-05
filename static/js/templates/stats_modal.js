@@ -1,7 +1,12 @@
 export const statsModalTemplate = (player) => {
     const hasPoints = player.free_points > 0;
     const addBtn = (statName)=>{
-        return hasPoints ? `<button class="add-stat-btn" id="add-${statName}">+</button>`:""
+        let disabled = ""       
+        if(!hasPoints){            
+            disabled = "disabled"
+        }
+        const button = `<button class="add-stat-btn" ${disabled} data-state_name="${statName}" id="add-${statName}">+</button>`
+        return button        
     }
     return `
      <div class="stats-view">

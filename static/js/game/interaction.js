@@ -1,8 +1,9 @@
 import { gameState } from "./game.js";
 import { gameActions } from "./actions.js";
 import { engine } from "./engine.js";
-import {modalManager} from "./modalManager.js";
-import {statsModalTemplate} from "../templates/stats_modal.js";
+/*import {modalManager} from "./modalManager.js";
+import {statsModalTemplate} from "../templates/stats_modal.js";*/
+import { statsController } from "./modal_controllers/statsController.js";
 const CLICK_RADIUS = 20;
 const CLICK_RADIUS_SQ = CLICK_RADIUS * CLICK_RADIUS;
 const clickers = {
@@ -13,10 +14,13 @@ const clickers = {
         obj.sendChat();    
     },
     "stats":(obj, event)=>{
-        modalManager.show(statsModalTemplate, gameState.player)
+        statsController.open();
+    },
+    "save-stats-btn":(obj, event)=>{
+        statsController.commit();
     },
     "modal-close-btn":(obj, event)=>{
-        modalManager.hide();
+        statsController.hide();
     }
 }
 const movers = {
@@ -64,7 +68,9 @@ export const interaction = {
             this.handlePortalClick(worldLink)
         }
         if(id.startsWith("add-")){
-            alert(id);
+            console.log(event.target)
+            const stateName = event.target.dataset.state_name;
+            statsController.increment(stateName);
         }
     },
     handleMouseMove(event) {       
