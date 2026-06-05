@@ -7,7 +7,7 @@ export const statsController = {
     draft:null,
     open(){
         this.draft = JSON.parse(JSON.stringify(gameState.player));
-        this.draft.hasChanges = true;
+        this.draft.hasChanges = false;
         this.render();
     },
     increment(statName){
