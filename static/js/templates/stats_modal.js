@@ -32,9 +32,13 @@ export const statsModalTemplate = (draft) => {
                 ${addBtn("wisdom")}    
             </div>
             <div class="stat-line">
+                <span>Обaяние:<b>${draft.charm}</b></span>
+                ${addBtn("charm")}
+            </div> 
+            <div class="stat-line">
                 <span>Выносливость:<b>${draft.vitality}</b></span>
                 ${addBtn("vitality")}
-            </div>            
+            </div>                        
             <br>
             <p style="font-size: 12px; color: #666;">Нажмите на крестик, чтобы закрыть</p>
             <div class="modal-actions">

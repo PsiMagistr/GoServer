@@ -30,4 +30,11 @@ export const gameActions = {
         };
         network.send(packet);
     },
+    sendPlayerStats(stats){
+        const packet = {
+            type:"commit_stats",
+            "stats":stats,
+        }
+        network.send(packet)
+    }
 }

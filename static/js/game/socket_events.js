@@ -182,7 +182,7 @@ export const socket_events = {
     },    
     player_update(msg){               
         gameState.player.hp = msg.hp;
-        gameState.player.mana = msg.mana;     
+        gameState.player.mana = msg.mana;    
        
     },
 }

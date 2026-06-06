@@ -1,7 +1,7 @@
 import { modalManager } from "../modalManager.js";
 import { statsModalTemplate } from "../../templates/stats_modal.js";
 import { gameState } from "../game.js";
-import { network } from "../network.js";
+import { gameActions } from "../actions.js";
 
 export const statsController = {
     draft:null,
@@ -27,6 +27,7 @@ export const statsController = {
         modalManager.hide();
     },
     commit(){
+        gameActions.sendPlayerStats(this.draft);
         this.hide();         
     }
 }

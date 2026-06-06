@@ -51,3 +51,9 @@ func UpdateCharacterHpMana(charID int64, hp float64, mana float64) error {
 	_, err := DB.Exec(query, hp, mana, charID)
 	return err
 }
+
+func UpdateCharacterStats(char *models.Character) error {
+	query := "UPDATE characters SET strength = ?, agility = ?, intuition = ?, wisdom = ?, charm = ?, vitality = ?, free_points = ? WHERE id = ?"
+	_, err := DB.Exec(query, char.Strength, char.Agility, char.Intuition, char.Wisdom, char.Charm, char.Vitality, char.FreePoints, char.ID)
+	return err
+}

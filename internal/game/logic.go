@@ -1,21 +1,34 @@
 package game
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"math"
 	"strings"
 	"time"
 
 	"GoServer/internal/database"
+	"GoServer/internal/models"
 )
 
 type CommandHandler func(c *Client, h *Hub, data map[string]interface{})
+
+type CommitStatsRequest struct {
+	Strength  int `json:"strength"`
+	Agility   int `json:"agility"`
+	Intuition int `json:"intuition"`
+	Wisdom    int `json:"wisdom"`
+	Charm     int `json:"charm"`
+	Vitality  int `json:"vitality"`
+}
 
 var commands = map[string]CommandHandler{
 	"chat_msg":       handleChat,
 	"move":           handleMoveRequest,
 	"portal_request": handlePortalMoveRequest,
 	"private_chat":   handleWhisperRequest,
+	"commit_stats":   handleStatsCommitRequest,
 }
 
 func handleChat(c *Client, h *Hub, data map[string]interface{}) {
@@ -265,4 +278,53 @@ func handleWhisperRequest(c *Client, h *Hub, data map[string]interface{}) {
 		"to":   targetName,
 		"text": text,
 	})
+}
+
+func handleStatsCommitRequest(c *Client, h *Hub, data map[string]interface{}) {
+	statsData, ok := data["stats"]
+	if !ok {
+		log.Println("Ошибка нет ключа stats")
+		return
+	}
+	var req CommitStatsRequest
+	dataBytes, _ := json.Marshal(statsData)
+	err := json.Unmarshal(dataBytes, &req)
+	if err != nil {
+		log.Println("Ошибка демаршалинга статов")
+		return
+	}
+	h.mu.Lock()
+	diffStr := req.Strength - c.Character.Strength
+	diffAgi := req.Agility - c.Character.Agility
+	diffInt := req.Intuition - c.Character.Intuition
+	diffVit := req.Vitality - c.Character.Vitality
+	diffCharm := req.Charm - c.Character.Charm
+	diffWisdom := req.Wisdom - c.Character.Wisdom
+	totalSpent := diffStr + diffAgi + diffInt + diffVit + diffCharm + diffWisdom
+	if diffStr < 0 || diffAgi < 0 || diffInt < 0 || diffVit < 0 || diffCharm < 0 || diffWisdom < 0 {
+		log.Printf("Игрок %s пытался уменьшить характеристики!", c.Character.Name)
+		h.mu.Unlock()
+		return
+	}
+	if totalSpent > c.Character.FreePoints {
+		log.Printf("Игрок %s пытался потратить %d очков, имея %d",
+			c.Character.Name, totalSpent, c.Character.FreePoints)
+		h.mu.Unlock()
+		return
+	}
+	c.Character.Strength = req.Strength
+	c.Character.Agility = req.Agility
+	c.Character.Intuition = req.Intuition
+	c.Character.Vitality = req.Vitality
+	c.Character.Charm = req.Charm
+	c.Character.Wisdom = req.Wisdom
+	c.Character.FreePoints -= totalSpent
+	charCopy := *c.Character
+	h.mu.Unlock()
+	go func(char models.Character) {
+		err := database.UpdateCharacterStats(&charCopy)
+		if err != nil {
+			log.Printf("Ошибка записи статов в БД: %v", err)
+		}
+	}(charCopy)
 }
