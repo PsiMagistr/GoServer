@@ -1,12 +1,12 @@
 export const modalManager = {
-    currentTemplate: null,
-    show(html){
+    currentTemplateFunc: null,
+    show(templateFunc, data){
         const overlay = document.querySelector("#modal-overlay");
         const content = document.querySelector("#modal-content");
         if(!overlay || !content) return
          // Запоминаем, какой шаблон мы используем сейчас
-        this.currentTemplate = html;
-        content.innerHTML = html;        
+        this.currentTemplateFunc = templateFunc;
+        content.innerHTML = this.currentTemplateFunc(data);        
         // ВАЖНО: используем flex для центрирования из CSS
         overlay.style.display = 'flex';
 
@@ -15,7 +15,14 @@ export const modalManager = {
         const overlay = document.querySelector("#modal-overlay");
         if (overlay) {
             overlay.style.display = 'none';
-            this.currentTemplate = null; // Очищаем память
+            this.currentTemplateFunc = null; // Очищаем память
         }
-    }
+    },
+    refresh(data){
+        const overlay = document.querySelector("#modal-overlay");
+        const content = document.querySelector("#modal-content");
+        if (overlay && overlay.style.display === 'flex' && this.currentTemplateFunc) {
+            content.innerHTML = this.currentTemplateFunc(data);
+        }    
+    },        
 }

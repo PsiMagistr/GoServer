@@ -679,4 +679,15 @@ button {
     opacity: 0.6;
 }
 
+.modal-error-msg {
+    background: rgba(255, 0, 0, 0.1);
+    border: 1px solid #ff4d4d;
+    color: #ff4d4d;
+    padding: 8px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    font-size: 13px;
+    font-style: italic;
+}
+
 

@@ -284,9 +284,8 @@ func (h *Hub) handleRegeniration() {
 		mpChanged := client.AddMana(5)
 		if hpChanged || mpChanged {
 			h.Send(client, map[string]interface{}{
-				"type": "player_update",
-				"hp":   client.Character.HP,
-				"mana": client.Character.Mana,
+				"type":   "player_update",
+				"player": client.Character,
 			})
 		}
 	}

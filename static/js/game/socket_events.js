@@ -1,6 +1,7 @@
 import { ui } from "./ui.js";
 import { gameState } from "./game.js";
 import { engine } from "./engine.js";
+import { statsController } from "./modal_controllers/statsController.js";
 
 // Глобальная переменная для управления таймером внутри этого файла
 let moveInterval = null;
@@ -181,9 +182,12 @@ export const socket_events = {
         chatContainer.scrollTop = chatContainer.scrollHeight;
     },    
     player_update(msg){               
-        gameState.player.hp = msg.hp;
-        gameState.player.mana = msg.mana;    
+        gameState.player = msg.player;
+        statsController.onServerSuccess(gameState.player);         
        
+    },
+    error_msg(msg){
+        statsController.onServerError(msg.error);
     },
 }
 

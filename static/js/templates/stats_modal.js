@@ -1,9 +1,13 @@
-export const statsModalTemplate = (draft) => {
-    const hasPoints = draft.free_points > 0;
-    const saveBtnFlag = draft.hasChanges ? "" : "disabled";
+export const statsModalTemplate = (draft) => {    
+    const canClickSave = draft.hasChanges && !draft.isLoading ? "" : "disabled";
+    const canClickAdd = draft.free_points > 0 && !draft.isLoading;
+    const labelSave = !draft.isLoading ? "Сохранить":"Сохранение";   
+    const errorBlock = draft.error 
+        ? `<div class="modal-error-msg">Ошибка сохранения в БД: ${draft.error}</div>` 
+        : '';
     const addBtn = (statName)=>{
         let statBtnFlag = ""       
-        if(!hasPoints){            
+        if(!canClickAdd){            
             statBtnFlag = "disabled"
         }       
         const button = `<button class="add-stat-btn" ${statBtnFlag} data-state_name="${statName}" id="add-${statName}">+</button>`
@@ -41,8 +45,9 @@ export const statsModalTemplate = (draft) => {
             </div>                        
             <br>
             <p style="font-size: 12px; color: #666;">Нажмите на крестик, чтобы закрыть</p>
+            ${errorBlock}            
             <div class="modal-actions">
-                <button id="save-stats-btn" class="main-btn" ${saveBtnFlag}>Сохранить</button>
+                <button id="save-stats-btn" class="main-btn" ${canClickSave}>${labelSave}</button>
             </div>
         </div>
     `;
