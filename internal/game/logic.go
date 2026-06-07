@@ -322,24 +322,25 @@ func handleStatsCommitRequest(c *Client, h *Hub, data map[string]interface{}) {
 	charCopy := *c.Character
 	h.mu.Unlock()
 	go func(char models.Character) {
-		err := database.UpdateCharacterStats(&charCopy)
-		if err != nil {
-			log.Printf("Ошибка записи статов в БД: %v", err)
-			h.Send(c, map[string]interface{}{
-				"type":  "error_msg",
-				"error": err,
-			})
-			return
-		}
+		err := database.UpdateCharacterStats(&char)
 		h.mu.Lock()
-		// Сверяем, что клиент тот же самый (реконнект)
-		if activeClient, online := h.Clients[char.ID]; online && activeClient == c {
-			*c.Character = char // Перезаписываем структуру в памяти
+		defer h.mu.Unlock()
+		activeClient, online := h.Clients[char.ID]
+		if online {
+			if err != nil {
+				log.Printf("Ошибка записи статов в БД: %v", err)
+				h.Send(activeClient, map[string]interface{}{
+					"type":  "error_msg",
+					"error": err,
+				})
+				return
+			}
+			// Сверяем, что клиент тот же самый (реконнект)
+			*activeClient.Character = char
+			h.Send(activeClient, map[string]interface{}{
+				"type":   "player_update",
+				"player": activeClient.Character,
+			})
 		}
-		h.mu.Unlock()
-		h.Send(c, map[string]interface{}{
-			"type":   "player_update",
-			"player": c.Character,
-		})
 	}(charCopy)
 }
