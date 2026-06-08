@@ -62,9 +62,22 @@ export const engine = {
             max:char.max_mana,
             backColor:graphs.barHealBackColor,
             color:graphs.barManaColor,
-        }                                
+        }
+        const expaParams = {           
+            x:graphs.x,
+            y: graphs.y,
+            w:graphs.w,
+            h:graphs.barH,            
+            current:char.exp,
+            currentRounded:Math.floor(char.exp),
+            max:char.max_exp,
+            backColor:graphs.barHealBackColor,
+            color:graphs.barExpColor,
+        }         
+                                                 
         this.drawBar(1, healParams);
-        this.drawBar(2, manaParams);        
+        this.drawBar(2, manaParams);
+        this.drawBar(3, expaParams);        
     },
     drawBar(counter, {x, y, w, h, current, max, color, backColor, currentRounded}) {        
         const dy = y + w + graphs.barGap + (graphs.barH + graphs.barGap) * (counter - 1);

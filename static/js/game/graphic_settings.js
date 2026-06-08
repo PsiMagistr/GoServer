@@ -8,4 +8,5 @@ export const graphs = {
     barHealBackColor:"#20B2AA",
     barGap:2,
     barManaColor:"blue",
+    barExpColor:"#800080",
 }

@@ -20,6 +20,7 @@ type Character struct {
 	Mana         float64 `db:"mana" json:"mana"`
 	MaxMana      float64 `db:"max_mana" json:"max_mana"`
 	Exp          float64 `db:"exp" json:"exp"`
+	MaxExp       float64 `db:"max_exp" json:"max_exp"`
 	NextLevelExp float64 `db:"next_level_exp" json:"next_level_exp"`
 	WorldID      string  `db:"world_id" json:"world_id"`
 	LocationID   string  `db:"location_id" json:"location_id"`

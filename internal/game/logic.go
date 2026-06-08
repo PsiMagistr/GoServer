@@ -312,14 +312,16 @@ func handleStatsCommitRequest(c *Client, h *Hub, data map[string]interface{}) {
 		h.mu.Unlock()
 		return
 	}
-	c.Character.Strength = req.Strength
-	c.Character.Agility = req.Agility
-	c.Character.Intuition = req.Intuition
-	c.Character.Vitality = req.Vitality
-	c.Character.Charm = req.Charm
-	c.Character.Wisdom = req.Wisdom
-	c.Character.FreePoints -= totalSpent
-	charCopy := *c.Character
+	updatedChar := *c.Character
+	updatedChar.Strength = req.Strength
+	updatedChar.Agility = req.Agility
+	updatedChar.Intuition = req.Intuition
+	updatedChar.Vitality = req.Vitality
+	updatedChar.Charm = req.Charm
+	updatedChar.Wisdom = req.Wisdom
+	updatedChar.MaxHP = 150 + float64(updatedChar.Vitality*2)
+	updatedChar.MaxMana = 100 + float64(updatedChar.Wisdom*2)
+	updatedChar.FreePoints -= totalSpent
 	h.mu.Unlock()
 	go func(char models.Character) {
 		err := database.UpdateCharacterStats(&char)
@@ -342,5 +344,5 @@ func handleStatsCommitRequest(c *Client, h *Hub, data map[string]interface{}) {
 				"player": activeClient.Character,
 			})
 		}
-	}(charCopy)
+	}(updatedChar)
 }

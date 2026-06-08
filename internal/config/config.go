@@ -29,8 +29,22 @@ type JWT struct {
 }
 
 type GAME struct {
-	MINCHARLEN int `json:"min_char_len"`
-	MAXCHARLEN int `json:"max_char_len"`
+	MINCHARLEN int     `json:"min_char_len"`
+	MAXCHARLEN int     `json:"max_char_len"`
+	MAXHP      float64 `json:"max_hp"`
+	MAXMANA    float64 `json:"max_mana"`
+	MAXEXP     float64 `json:"max_exp"`
+	NEXTEXP    float64 `json:"next_exp"`
+	FREEPOINTS int     `json:"free_points"`
+	Gold       int     `json:"gold"`
+	Streпth    int     `json:"strength"`
+	Agility    int     `json:"agility"`
+	Vitality   int     `json:"Vitality"`
+	Intuition  int     `json:"intuition"`
+	Wisdom     int     `json:"wisdom"`
+	Charm      int     `json:"charm"`
+	WORLDID    string  `json:"world_id"`
+	LOCATIONID string  `json:"location_id"`
 }
 
 type Config struct {

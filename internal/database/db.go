@@ -14,11 +14,14 @@ var DB *sqlx.DB
 
 func InitDB() error {
 	var err error
-	dbHost := config.Get().DB.HOST
-	dbPort := config.Get().DB.PORT
-	dbUser := config.Get().DB.USER
-	dbName := config.Get().DB.NAME
-	dbPassword := config.Get().DB.PASSWORD
+	params := config.Get()
+	game := params.GAME
+	// game config.Config = params.GAME
+	dbHost := params.DB.HOST
+	dbPort := params.DB.PORT
+	dbUser := params.DB.USER
+	dbName := params.DB.NAME
+	dbPassword := params.DB.PASSWORD
 	dsn := fmt.Sprintf(
 		"%s:%s@tcp(%s:%s)/%s?parseTime=true&charset=utf8mb4",
 		dbUser, dbPassword, dbHost, dbPort, dbName)
@@ -51,32 +54,50 @@ func InitDB() error {
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;`
 
-	createCharacterTableQuery := `
-	CREATE TABLE IF NOT EXISTS characters (
+	createCharacterTableQuery := fmt.Sprintf(
+		`CREATE TABLE IF NOT EXISTS characters (
 		id BIGINT PRIMARY KEY AUTO_INCREMENT,
 		user_id BIGINT UNIQUE NOT NULL,
 		name VARCHAR(255) UNIQUE NOT NULL,
 		gender VARCHAR(10) NOT NULL,
 		avatar_id VARCHAR(50) NOT NULL,
 		level INT DEFAULT 1,
-		gold INT DEFAULT 100,
-		free_points INT DEFAULT 30,
-		strength INT DEFAULT 3,
-		agility INT DEFAULT 3,
-		intuition INT DEFAULT 3,
-		vitality INT DEFAULT 3,
-		wisdom INT DEFAULT 3,		
-		charm INT DEFAULT 3,
-		hp DOUBLE DEFAULT 150.0,
-		max_hp DOUBLE DEFAULT 150.0,
-		mana DOUBLE DEFAULT 200.0,	
-		max_mana DOUBLE DEFAULT 200.0,
-		exp DOUBLE DEFAULT 0.0,
-    	next_level_exp DOUBLE DEFAULT 1000.0,              
-        world_id VARCHAR(100) DEFAULT 'main_city',
-    	location_id VARCHAR(100) DEFAULT 'start_glade',
+		gold INT DEFAULT %v,
+		free_points INT DEFAULT %v,
+		strength INT DEFAULT %v,
+		agility INT DEFAULT %v,
+		intuition INT DEFAULT %v,
+		vitality INT DEFAULT %v,
+		wisdom INT DEFAULT %v,		
+		charm INT DEFAULT %v,
+		hp DOUBLE DEFAULT %v,
+		max_hp DOUBLE DEFAULT %v,
+		mana DOUBLE DEFAULT %v,	
+		max_mana DOUBLE DEFAULT %v,
+		exp DOUBLE DEFAULT 30.0,
+		max_exp DOUBLE DEFAULT %v,
+    	next_level_exp DOUBLE DEFAULT %v,              
+        world_id VARCHAR(100) DEFAULT '%v',
+    	location_id VARCHAR(100) DEFAULT '%v',
 		FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE 
-	)ENGINE=InnoDB;`
+		)ENGINE=InnoDB;`,
+		game.Gold,
+		game.FREEPOINTS,
+		game.Streпth,
+		game.Agility,
+		game.Intuition,
+		game.Vitality,
+		game.Wisdom,
+		game.Charm,
+		game.MAXHP,
+		game.MAXHP,
+		game.MAXMANA,
+		game.MAXMANA,
+		game.MAXEXP,
+		game.NEXTEXP,
+		game.WORLDID,
+		game.LOCATIONID,
+	)
 
 	_, err = DB.Exec(createUserTableQuery)
 	if err != nil {

@@ -53,7 +53,7 @@ func UpdateCharacterHpMana(charID int64, hp float64, mana float64) error {
 }
 
 func UpdateCharacterStats(char *models.Character) error {
-	query := "UPDATE characters SET strength = ?, agility = ?, intuition = ?, wisdom = ?, charm = ?, vitality = ?, free_points = ? WHERE id = ?"
-	_, err := DB.Exec(query, char.Strength, char.Agility, char.Intuition, char.Wisdom, char.Charm, char.Vitality, char.FreePoints, char.ID)
+	query := "UPDATE characters SET strength = ?, agility = ?, intuition = ?, wisdom = ?, charm = ?, vitality = ?, free_points = ?, max_mana = ?, max_hp = ? WHERE id = ?"
+	_, err := DB.Exec(query, char.Strength, char.Agility, char.Intuition, char.Wisdom, char.Charm, char.Vitality, char.FreePoints, char.MaxMana, char.MaxHP, char.ID)
 	return err
 }
