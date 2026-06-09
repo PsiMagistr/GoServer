@@ -21,7 +21,7 @@ const clickers = {
     },
     "modal-close-btn":(obj, event)=>{
         statsController.hide();
-    }
+    },   
 }
 const movers = {
     "gameCanvas":(obj, event)=>{       
@@ -55,7 +55,8 @@ export const interaction = {
         return null;
     },
     handleGlobalClick(event) {
-         const target = event.target;                
+         const target = event.target;
+         this.hideContextMenu();                
         // 1. Проверка через диспетчер (ищем ID у цели или ближайшего родителя)
         const clickable = target.closest('[id]'); 
         const id = clickable.id;      
@@ -67,10 +68,21 @@ export const interaction = {
         if (worldLink) {
             this.handlePortalClick(worldLink)
         }
+        const playerLink = event.target.closest(".player-link")
+        if(playerLink){
+            this.showContextMenu(event, playerLink)
+            return
+        }
         if(id.startsWith("add-")){
             console.log(event.target)
             const stateName = event.target.dataset.state_name;
             statsController.increment(stateName);
+            return
+        }
+        const contextBtn = target.closest('.context-menu-btn');
+        if (contextBtn) {
+            this.handleContextAction(contextBtn.dataset.action, contextBtn.dataset.id);
+            return;
         }
     },
     handleMouseMove(event) {       
@@ -117,4 +129,48 @@ export const interaction = {
         console.log("Запрос на телепортацию в:", worldId);
         gameActions.enterPortal(worldId)
     },
+
+    showContextMenu(event, element){        
+        const menu = document.getElementById('context-menu');
+        const charId = element.dataset.id;
+        const charName = element.querySelector('.p-name').innerText;
+
+        // Наполняем меню кнопками
+        menu.innerHTML = `
+            <div style="padding: 5px; font-size: 10px; color:#FFD700; border-bottom: 1px solid #222;">${charName}</div>
+            <button class="context-menu-btn" data-action="private" data-id="${charId}" data-name="${charName}">📨 Приват</button>
+            <button class="context-menu-btn" data-action="challenge" data-id="${charId}" data-name="${charName}">⚔️ Вызвать</button>
+            <button class="context-menu-btn" data-action="trade" data-id="${charId}">💰 Торговля</button>
+            <button class="context-menu-btn" data-action="info" data-id="${charId}">📜 Инфо</button>
+        `;
+
+        // Позиционируем меню справа от клика
+        menu.style.display = 'flex';
+        menu.style.left = `${event.pageX + 5}px`;
+        menu.style.top = `${event.pageY + 5}px`;   
+    },
+    
+    hideContextMenu() {
+        const menu = document.getElementById('context-menu');
+        if (menu) menu.style.display = 'none';
+    },
+    handleContextAction(action, id) {
+        const name = event.target.dataset.name; // Достаем имя из дата-атрибута кнопки
+
+        switch (action) {
+            case 'private':
+                document.getElementById('chat-to').value = name;
+                document.getElementById('chat-input').focus();
+                break;
+            case 'challenge':
+                if (confirm(`Вызвать на бой ${name}?`)) {
+                    gameActions.sendBattleChallenge(id);
+                }
+                break;
+            case 'trade':
+                alert("Торговля будет доступна позже");
+                break;
+        }
+    },
+
 }

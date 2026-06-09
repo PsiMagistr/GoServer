@@ -78,6 +78,7 @@ export const gameTemplate = (char) => {
                     <div id="modal-content">Пространство модального окна</div>
                 </div>
             </div>
+            <div id="context-menu" class="context-menu" style="display: none;"></div>
         </div>
     `;
 };

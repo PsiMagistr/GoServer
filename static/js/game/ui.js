@@ -24,7 +24,7 @@ export const ui = {
         li.id = itemId;
         li.dataset.id = item.id;
         li.className = className;
-        li.innerText = labelGenerator(item);
+        li.innerHTML = labelGenerator(item);
         container.appendChild(li);
     },
     removeItemFromUI(idPrefix, id){

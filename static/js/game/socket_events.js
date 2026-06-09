@@ -38,7 +38,16 @@ export const socket_events = {
         gameState.world = msg.world;
         gameState.isInitialized = false;
         // 2. Обновляем списки
-        ui.renderList('#players-list', msg.players, "player", 'player-link', (p) => p.name);
+        ui.renderList(
+            '#players-list',
+             msg.players,
+            "player",
+            'player-link',
+            (p) => `
+            <span class="p-name">${p.name}</span>
+            <!--<button class="challenge-btn" id="challenge-${p.id}">⚔️</button>-->
+            `           
+        );
         ui.renderList("#worlds-list", msg.worlds, "world", "world-link", (w) => w.name);
 
         // 3. ЛОГИКА ОВЕРЛЕЯ (Показываем или скрываем сразу, не дожидаясь загрузки картинок)

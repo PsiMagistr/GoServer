@@ -184,7 +184,7 @@ button {
     border-radius: 4px;
     
     /* ФИКСИРУЕМ ВЫСОТУ: теперь секция всегда будет 130px */
-    height: 120px; 
+    height: 130px; 
     
     /* Запрещаем секции расти или сжиматься */
     flex-shrink: 0; 
@@ -228,9 +228,77 @@ button {
     color: #fff;
 }
 
-.game-list li.player-link { color: #F5DEB3; }
+/*.game-list li.player-link { color: #F5DEB3; }
 .game-list li.player-link:hover { color: #d4af37; }
-.game-list li.empty { color: #444; font-style: italic; padding: 10px 15px; }
+.game-list li.empty { color: #444; font-style: italic; padding: 10px 15px; }*/
+
+.game-list li.player-link {
+    display: flex;
+    justify-content: space-between; /* Имя слева, кнопка справа */
+    align-items: center;
+    background: linear-gradient(135deg, #1e1e1e 0%, #161616 100%);
+    border: 1px solid #2a2a2a;
+    border-left: 3px solid #8a6d3b; /* Бронзовый акцент слева */
+    margin: 4px 8px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    color: #F5DEB3;
+    transition: all 0.2s ease-in-out;
+    cursor: default; /* Сама плашка не кнопка, кнопка внутри */
+}
+
+/* Состояние при наведении на плашку */
+.game-list li.player-link:hover {
+    background: #222;
+    border-color: #d4af37;
+    border-left-color: #d4af37; /* Подсвечиваем акцент золотом */
+    transform: translateX(2px); /* Легкий сдвиг вправо */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+    cursor: pointer;
+}
+
+/* Имя внутри плашки */
+.p-name {
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 130px;
+}
+
+/* Кнопка вызова ⚔️ */
+.challenge-btn {
+    background: #252525;
+    border: 1px solid #333;
+    color: #d4af37;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.challenge-btn:hover {
+    background: #d4af37;
+    color: #111;
+    border-color: #fff;
+    transform: scale(1.1);
+}
+
+/* Стиль для пустой секции */
+.game-list li.empty {
+    background: transparent;
+    border: 1px dashed #222;
+    color: #444;
+    text-align: center;
+    font-size: 11px;
+    margin: 10px;
+}
 
 /* Кастомный скроллбар */
 .game-list::-webkit-scrollbar { width: 4px; }
@@ -688,6 +756,53 @@ button {
     margin-bottom: 15px;
     font-size: 13px;
     font-style: italic;
+}
+
+/*.quick-challenge-btn {
+    background: transparent;
+    border: none;
+    filter: grayscale(1);
+    margin-left: 10px;
+    cursor: pointer;
+    font-size: 14px;
+}
+.quick-challenge-btn:hover {
+    filter: grayscale(0);
+    transform: scale(1.2);
+}*/
+
+/*Меню контекста*/
+
+.context-menu {
+    position: absolute;
+    z-index: 10000;
+    background: #1a1a1a;
+    border: 1px solid #d4af37;
+    border-radius: 4px;
+    box-shadow: 5px 5px 15px rgba(0,0,0,0.7);
+    display: flex;
+    flex-direction: column;
+    padding: 5px;
+    min-width: 120px;
+}
+
+/* Кнопки внутри меню */
+.context-menu button {
+    background: transparent;
+    color: #ccc;
+    text-align: left;
+    padding: 8px 12px;
+    font-size: 11px;
+    border-bottom: 1px solid #222;
+    text-transform: uppercase;
+    transition: 0.2s;
+}
+
+.context-menu button:last-child { border-bottom: none; }
+
+.context-menu button:hover {
+    background: #2b251a;
+    color: #d4af37;
 }
 
 
