@@ -23,6 +23,7 @@ export const ui = {
         const li = document.createElement("li");
         li.id = itemId;
         li.dataset.id = item.id;
+        li.dataset.name = item.name;
         li.className = className;
         li.innerHTML = labelGenerator(item);
         container.appendChild(li);

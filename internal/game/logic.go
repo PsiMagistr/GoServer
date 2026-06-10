@@ -324,7 +324,7 @@ func handleStatsCommitRequest(c *Client, h *Hub, data map[string]interface{}) {
 	updatedChar.FreePoints -= totalSpent
 	h.mu.Unlock()
 	go func(char models.Character) {
-		err := database.UpdateCharacterStats(&char)
+		err := database.UpdateCharacter(&char)
 		h.mu.Lock()
 		defer h.mu.Unlock()
 		activeClient, online := h.Clients[char.ID]

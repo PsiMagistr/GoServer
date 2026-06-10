@@ -1,9 +1,9 @@
 import { gameState } from "./game.js";
 import { gameActions } from "./actions.js";
 import { engine } from "./engine.js";
-/*import {modalManager} from "./modalManager.js";
-import {statsModalTemplate} from "../templates/stats_modal.js";*/
 import { statsController } from "./modal_controllers/statsController.js";
+import { contextNenu } from "../templates/context_menu.js";
+
 const CLICK_RADIUS = 20;
 const CLICK_RADIUS_SQ = CLICK_RADIUS * CLICK_RADIUS;
 const clickers = {
@@ -133,17 +133,14 @@ export const interaction = {
     showContextMenu(event, element){        
         const menu = document.getElementById('context-menu');
         const charId = element.dataset.id;
-        const charName = element.querySelector('.p-name').innerText;
-
+        const charName = element.dataset.name
+        if (!charId || !charName) {
+            console.warn("Попытка открыть меню для пустого или удаленного элемента");
+            return;
+        }
+        if (parseInt(charId) === gameState.player.id) return;        
         // Наполняем меню кнопками
-        menu.innerHTML = `
-            <div style="padding: 5px; font-size: 10px; color:#FFD700; border-bottom: 1px solid #222;">${charName}</div>
-            <button class="context-menu-btn" data-action="private" data-id="${charId}" data-name="${charName}">📨 Приват</button>
-            <button class="context-menu-btn" data-action="challenge" data-id="${charId}" data-name="${charName}">⚔️ Вызвать</button>
-            <button class="context-menu-btn" data-action="trade" data-id="${charId}">💰 Торговля</button>
-            <button class="context-menu-btn" data-action="info" data-id="${charId}">📜 Инфо</button>
-        `;
-
+        menu.innerHTML = contextNenu(charId, charName);
         // Позиционируем меню справа от клика
         menu.style.display = 'flex';
         menu.style.left = `${event.pageX + 5}px`;

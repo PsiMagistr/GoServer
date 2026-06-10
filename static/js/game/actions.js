@@ -36,5 +36,8 @@ export const gameActions = {
             "stats":stats,
         }
         network.send(packet)
+    },
+    sendBattleChallenge(id){
+        alert(id);
     }
 }

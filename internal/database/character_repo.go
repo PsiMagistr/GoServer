@@ -57,3 +57,28 @@ func UpdateCharacterStats(char *models.Character) error {
 	_, err := DB.Exec(query, char.Strength, char.Agility, char.Intuition, char.Wisdom, char.Charm, char.Vitality, char.FreePoints, char.MaxMana, char.MaxHP, char.ID)
 	return err
 }
+
+
+func UpdateCharacter(c  *models.Character) error{
+	query := `
+	UPDATE characters SET
+	name = ?,
+	level = ?, gold = ?, free_points = ?,
+	strength = ?, agility = ?, intuition = ?, vitality = ?, charm = ?, wisdom = ?,
+	hp = ?, max_hp = ?, mana = ?, max_mana = ?,
+	exp = ?, max_exp = ?, next_level_exp = ?,
+	world_id = ?, location_id = ?, state = ?
+	WHERE id = ?`	
+	_, err := DB.Exec(query,
+		c.Name,
+		c.Level, c.Gold, c.FreePoints,
+		c.Strength, c.Agility, c.Intuition, c.Vitality, c.Charm, c.Wisdom,
+		c.HP, c.MaxHP, c.Mana, c.MaxMana,
+		c.Exp, c.MaxExp, c.NextLevelExp, 
+		c.WorldID, c.LocationID, c.State,
+		c.ID, 
+	
+	)
+	return err
+
+}

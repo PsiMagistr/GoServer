@@ -5,7 +5,7 @@ import (
 	"math"
 	"sync"
 	"time"
-
+	"GoServer/internal/models"
 	"GoServer/internal/database"
 )
 
@@ -75,7 +75,10 @@ func (h *Hub) handleRegister(client *Client) {
 	// Регистрация в карте онлайна
 	h.Clients[client.Character.ID] = client
 	// 2. Сбор данных для атомарного пакета
-	moveInfo, isMoving := h.movingPlayers[client.Character.ID]
+	moveInfo, movingInHub := h.movingPlayers[client.Character.ID]
+	if movingInHub {
+        client.Character.State = models.StatusMoving
+    }
 	neighbors := h.getNeighbors(client.Character.WorldID, client.Character.LocationID)
 	currentWorld := Universe[client.Character.WorldID]
 	currentNode := currentWorld.Points[client.Character.LocationID]
@@ -86,14 +89,14 @@ func (h *Hub) handleRegister(client *Client) {
 	var timeLeft int
 	worldName := currentWorld.Name
 	locationName := currentNode.Name
-	if isMoving {
+	if client.Character.State == models.StatusMoving && movingInHub {
 		timeLeft = int(math.Ceil(time.Until(moveInfo.ArrivalTime).Seconds()))
 		worldName = moveInfo.TargetWorldName
 		locationName = moveInfo.TargetLocationName
 	}
 	h.Send(client, map[string]interface{}{
 		"type":          "world_sync",
-		"is_moving":     isMoving,
+		"is_moving":     movingInHub,
 		"player":        client.Character,   // Данные персонажа (HP, мана, статы)
 		"world":         currentWorld,       // Данные мира (точки для канваса)
 		"players":       neighbors,          // Список людей в комнате
@@ -289,4 +292,14 @@ func (h *Hub) handleRegeniration() {
 			})
 		}
 	}
+}
+
+func (h *Hub) CanPlayerAct(charID int64) (bool, models.PlayerStatus){
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+	client, ok := h.Clients[charID]
+	if !ok{
+		return false, models.StatusFree // Или обработка оффлайна
+	}
+	return client.Character.State == models.StatusFree, client.Character.State
 }

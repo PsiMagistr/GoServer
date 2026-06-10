@@ -61,6 +61,7 @@ func InitDB() error {
 		name VARCHAR(255) UNIQUE NOT NULL,
 		gender VARCHAR(10) NOT NULL,
 		avatar_id VARCHAR(50) NOT NULL,
+		state int DEFAULT 0,
 		level INT DEFAULT 1,
 		gold INT DEFAULT %v,
 		free_points INT DEFAULT %v,
