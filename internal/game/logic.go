@@ -53,11 +53,20 @@ func handleChat(c *Client, h *Hub, data map[string]interface{}) {
 }
 
 func handleMoveRequest(c *Client, h *Hub, data map[string]interface{}) {
-	if h.IsPlayerMoving(c.Character.ID) {
+	clientStatus := h.GetFullStatus(c.Character.ID)
+	if clientStatus == models.StatusMoving {
+		h.Send(c, map[string]interface{}{
+			"type": "sys_msg",
+			"text": "Вы уже находитесь в процессе перехода.",
+		})
 		return
 	}
 	targetID, ok := data["target_id"].(string)
 	if !ok {
+		h.Send(c, map[string]interface{}{
+			"type": "sys_msg",
+			"text": "Неверный формат данных.",
+		})
 		return
 	}
 
@@ -67,6 +76,10 @@ func handleMoveRequest(c *Client, h *Hub, data map[string]interface{}) {
 	sourceNode := world.Points[c.Character.LocationID]
 
 	if !exists || targetID == c.Character.LocationID {
+		h.Send(c, map[string]interface{}{
+			"type": "sys_msg",
+			"text": "Локации не существует, либо Вы уже находитесь там.",
+		})
 		return
 	}
 	dx := float64(targetNode.X - sourceNode.X)
@@ -90,64 +103,61 @@ func handleMoveRequest(c *Client, h *Hub, data map[string]interface{}) {
 		"world_name":    world.Name,
 		"location_name": targetNode.Name,
 		"duration":      duration.Seconds(),
+		"state":         h.GetFullStatus(charID),
 	})
 
 	go func() {
 		time.Sleep(duration)
-
 		h.mu.Lock()
 		delete(h.movingPlayers, charID)
-		h.mu.Unlock()
-
 		// 1. Обновляем базу (это можно делать без мьютекса)
-		_ = database.UpdateCharacterLocation(charID, targetID)
 
-		// 2. Берем замок, чтобы безопасно обновить данные и собрать список
-		h.mu.Lock() // Берем Lock, так как мы будем ИЗМЕНЯТЬ данные персонажа
 		activeClient, online := h.Clients[charID]
 
-		if !online {
+		if online {
+			// Сначала официально "переставляем" игрока в новую комнату в памяти
+			oldLockID := activeClient.Character.LocationID
+			activeClient.Character.LocationID = targetID
+			activeClient.Character.State = models.StatusFree
+			// ТЕПЕРЬ собираем соседей. Теперь игрок сам попадет в этот список!
+			newNeighbors := h.getNeighbors(activeClient.Character.WorldID, targetID)
+
+			// Получаем данные комнаты для списка порталов
+			currentWorld := Universe[activeClient.Character.WorldID]
+			currentNode := currentWorld.Points[targetID]
+			h.mu.Unlock() // Все операции с данными закончены, отпускаем
+			// 3. Отправляем пакет прибытия
+			h.Send(activeClient, map[string]interface{}{
+				"type":          "move_complete",
+				"location_id":   targetID,
+				"location_name": currentNode.Name,
+				"players":       newNeighbors,
+				"worlds":        currentNode.Worlds,
+				"state":         h.GetFullStatus(activeClient.Character.ID),
+			})
+
+			// 4. Оповещаем остальных
+			h.BroadcastToRoomExcept(worldID, oldLockID, charID, map[string]interface{}{
+				"type": "player_left",
+				"player": map[string]interface{}{
+					"id":   charID,
+					"name": activeClient.Character.Name,
+				},
+			})
+			h.BroadcastToRoomExcept(worldID, targetID, charID, map[string]interface{}{
+				"type":   "player_joined",
+				"player": activeClient.Character,
+			})
+		} else {
 			h.mu.Unlock()
-			return
 		}
-
-		// Сначала официально "переставляем" игрока в новую комнату в памяти
-		oldLockID := activeClient.Character.LocationID
-		activeClient.Character.LocationID = targetID
-		// ТЕПЕРЬ собираем соседей. Теперь игрок сам попадет в этот список!
-		newNeighbors := h.getNeighbors(activeClient.Character.WorldID, targetID)
-
-		// Получаем данные комнаты для списка порталов
-		currentWorld := Universe[activeClient.Character.WorldID]
-		currentNode := currentWorld.Points[targetID]
-		h.mu.Unlock() // Все операции с данными закончены, отпускаем
-
-		// 3. Отправляем пакет прибытия
-		h.Send(activeClient, map[string]interface{}{
-			"type":          "move_complete",
-			"location_id":   targetID,
-			"location_name": currentNode.Name,
-			"players":       newNeighbors,
-			"worlds":        currentNode.Worlds,
-		})
-
-		// 4. Оповещаем остальных
-		h.BroadcastToRoomExcept(worldID, oldLockID, charID, map[string]interface{}{
-			"type": "player_left",
-			"player": map[string]interface{}{
-				"id":   charID,
-				"name": activeClient.Character.Name,
-			},
-		})
-		h.BroadcastToRoomExcept(worldID, targetID, charID, map[string]interface{}{
-			"type":   "player_joined",
-			"player": activeClient.Character,
-		})
+		_ = database.UpdateCharacterLocation(charID, targetID)
 	}()
 }
 
 func handlePortalMoveRequest(c *Client, h *Hub, data map[string]interface{}) {
-	if h.IsPlayerMoving(c.Character.ID) {
+	clientFullStatus := h.GetFullStatus(c.Character.ID)
+	if clientFullStatus == models.StatusMoving {
 		return
 	}
 	targetWorldID, ok := data["world_id"].(string)
@@ -197,26 +207,22 @@ func handlePortalMoveRequest(c *Client, h *Hub, data map[string]interface{}) {
 		"world_name":    targetWorld.Name,
 		"location_name": Universe[targetWorldID].Points["portal"].Name,
 		"duration":      int(portalDuration.Seconds()),
+		"state":         h.GetFullStatus(c.Character.ID),
 	})
 
 	go func() {
 		time.Sleep(portalDuration)
-
 		h.mu.Lock()
 		delete(h.movingPlayers, charID)
-		h.mu.Unlock()
-
 		// Обновляем БД
-		_ = database.UpdateCharacterWorld(charID, targetWorldID, "portal")
-
-		h.mu.RLock()
+		//_ = database.UpdateCharacterWorld(charID, targetWorldID, "portal")
 		activeClient, online := h.Clients[charID]
-		h.mu.RUnlock()
 
 		if online {
 			activeClient.Character.WorldID = targetWorldID
 			activeClient.Character.LocationID = "portal"
-
+			activeClient.Character.State = models.StatusFree
+			h.mu.Unlock()
 			// Полная синхронизация для прыгнувшего
 			h.Send(activeClient, map[string]interface{}{
 				"type":        "world_sync",
@@ -238,7 +244,10 @@ func handlePortalMoveRequest(c *Client, h *Hub, data map[string]interface{}) {
 				"type":   "player_joined",
 				"player": activeClient.Character,
 			})
+		} else {
+			h.mu.Unlock()
 		}
+		_ = database.UpdateCharacterWorld(charID, targetWorldID, "portal")
 	}()
 }
 

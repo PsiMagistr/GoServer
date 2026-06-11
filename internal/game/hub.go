@@ -5,8 +5,9 @@ import (
 	"math"
 	"sync"
 	"time"
-	"GoServer/internal/models"
+
 	"GoServer/internal/database"
+	"GoServer/internal/models"
 )
 
 // Структура для комнатных сообщений
@@ -77,13 +78,12 @@ func (h *Hub) handleRegister(client *Client) {
 	// 2. Сбор данных для атомарного пакета
 	moveInfo, movingInHub := h.movingPlayers[client.Character.ID]
 	if movingInHub {
-        client.Character.State = models.StatusMoving
-    }
+		client.Character.State = models.StatusMoving
+	}
 	neighbors := h.getNeighbors(client.Character.WorldID, client.Character.LocationID)
 	currentWorld := Universe[client.Character.WorldID]
 	currentNode := currentWorld.Points[client.Character.LocationID]
 	h.mu.Unlock()
-
 	// 3. ОТПРАВЛЯЕМ ЕДИНЫЙ ПАКЕТ СИНХРОНИЗАЦИИ
 	// Теперь фронтенд получит всё: кто он, где он, кто рядом и какие порталы доступны
 	var timeLeft int
@@ -96,7 +96,6 @@ func (h *Hub) handleRegister(client *Client) {
 	}
 	h.Send(client, map[string]interface{}{
 		"type":          "world_sync",
-		"is_moving":     movingInHub,
 		"player":        client.Character,   // Данные персонажа (HP, мана, статы)
 		"world":         currentWorld,       // Данные мира (точки для канваса)
 		"players":       neighbors,          // Список людей в комнате
@@ -256,12 +255,12 @@ func (h *Hub) getNeighbors(worldID string, locationID string) []map[string]inter
 	})
 }*/
 
-func (h *Hub) IsPlayerMoving(charID int64) bool {
+/*func (h *Hub) IsPlayerMoving(charID int64) bool {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 	_, moving := h.movingPlayers[charID]
 	return moving
-}
+}*/
 
 // Для чата.
 func (h *Hub) GetClientByName(name string) *Client {
@@ -280,7 +279,7 @@ func (h *Hub) handleRegeniration() {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 	for _, client := range h.Clients {
-		if h.IsPlayerMoving(client.Character.ID) {
+		if h.GetFullStatus(client.Character.ID) == 1 {
 			continue
 		}
 		hpChanged := client.AddHP(2)
@@ -294,12 +293,23 @@ func (h *Hub) handleRegeniration() {
 	}
 }
 
-func (h *Hub) CanPlayerAct(charID int64) (bool, models.PlayerStatus){
+func (h *Hub) GetFullStatus(charID int64) models.PlayerStatus {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
-	client, ok := h.Clients[charID]
-	if !ok{
-		return false, models.StatusFree // Или обработка оффлайна
+	_, moving := h.movingPlayers[charID]
+	if moving {
+		return models.StatusMoving
 	}
-	return client.Character.State == models.StatusFree, client.Character.State
+	client, ok := h.Clients[charID]
+	if ok {
+		return client.Character.State
+	}
+	return models.StatusFree
+}
+
+func (h *Hub) GetActiveClient(charID int64) (*Client, bool) { // Не использовать в местах где мьютекс уже взят.
+	h.mu.RLock()
+	defer h.mu.RLock()
+	client, ok := h.Clients[charID]
+	return client, ok
 }

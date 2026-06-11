@@ -95,9 +95,13 @@ export const interaction = {
             this.sendChat()
         }
     },
-    handleCanvasClick(event) {
+    handleCanvasClick(event) {//Перемещение по локациям
         const node = this.getNodeAt(event.offsetX, event.offsetY);
         if (!node || node.id === gameState.player.location_id) return;
+        if (gameState.player.state == 1) {
+            alert("Вы уже в пути")
+            return
+        }
         const goToQuestion = confirm(`Вы хотите перейти в ${node.name}`);
         if (!goToQuestion) return
         gameActions.moveToNode(node.id);
@@ -118,7 +122,7 @@ export const interaction = {
         msgInput.value = "";
     },
     handlePortalClick(element) {
-        if (gameState.isMoving) {
+        if (gameState.player.state == 1) {
             alert("Вы уже в пути")
             return
         }

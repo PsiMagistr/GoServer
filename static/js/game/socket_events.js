@@ -52,9 +52,11 @@ export const socket_events = {
 
         // 3. ЛОГИКА ОВЕРЛЕЯ (Показываем или скрываем сразу, не дожидаясь загрузки картинок)
         const overlay = document.getElementById('move-overlay');
-        
-        if (msg.is_moving && msg.duration > 0) {
-            gameState.isMoving = true;
+        console.log("world_sync")
+        console.log(msg.player)
+        const state = msg.player.state
+        if (state === 1 && msg.duration > 0) {
+            /*gameState.isMoving = true;*/
             stopTimer()
             if (overlay) {
                 overlay.style.display = 'flex';
@@ -103,7 +105,7 @@ export const socket_events = {
 
     // Вызывается при старте любого перемещения (и при реконнекте после world_sync)
     move_starting(msg) {
-        gameState.isMoving = true;
+        gameState.player.state = msg.state;        
         stopTimer();
 
         const overlay = document.getElementById('move-overlay');
@@ -128,16 +130,14 @@ export const socket_events = {
     },
 
     move_complete(msg) {
-        stopTimer();
-        gameState.isMoving = false;
-        
+        stopTimer();       
+        gameState.player.state = msg.state;              
         // Скрываем оверлей
         const overlay = document.getElementById('move-overlay');
         if (overlay) overlay.style.display = 'none';
-
         // Если это был прыжок между мирами, world_sync уже прилетел или прилетит,
         // но локацию обновим здесь для надежности
-        gameState.player.location_id = msg.location_id;
+        gameState.player.location_id = msg.location_id;       
         
         // Обновляем заголовок локации в UI
        changeLabel(msg)

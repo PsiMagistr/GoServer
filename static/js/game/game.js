@@ -10,7 +10,7 @@ export const gameState = {
     player: null,
     isInitialized: false,
     hoveredNodeId: null,
-    isMoving: false,
+    /*isMoving: false,*/
 
 }
 
