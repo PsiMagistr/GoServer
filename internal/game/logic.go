@@ -355,3 +355,41 @@ func handleStatsCommitRequest(c *Client, h *Hub, data map[string]interface{}) {
 		}
 	}(updatedChar)
 }
+
+func handleSendBattleChallenge(c *Client, h *Hub, data map[string]interface{}) { // Отправляем заявку на бой
+	targetIDRow, ok := data["target_id"]
+	if !ok {
+		return
+	}
+	targetID := int64(targetIDRow.(float64))
+	if targetID == c.Character.ID {
+		return
+	}
+	targetClient, online := h.GetActiveClient(targetID)
+	if !online {
+		return
+	}
+	if h.GetFullStatus(targetID) != models.StatusFree {
+		return
+	}
+	if c.Character.LocationID != targetClient.Character.LocationID || c.Character.WorldID != targetClient.Character.WorldID {
+		return
+	}
+	expires := time.Now().Add(time.Second * 30)
+	challenge := &BattlChallenge{
+		SenderID:   c.Character.ID,
+		SenderName: c.Character.Name,
+		TargetID:   targetID,
+		ExpiresAt:  expires,
+	}
+	h.mu.Lock()
+	if h.challenges[targetID] == nil {
+		h.challenges[targetID] = make(map[int64]*BattlChallenge)
+	}
+	h.challenges[targetID][c.Character.ID] = challenge
+	h.mu.Unlock()
+	h.Send(targetClient, map[string]interface{}{
+		"type":      "new_challenge",
+		"challenge": challenge,
+	})
+}

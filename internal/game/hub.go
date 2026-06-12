@@ -24,10 +24,18 @@ type MoveData struct {
 	TargetLocationName string
 }
 
+type BattlChallenge struct { // Заявка на бой
+	SenderID   int64     `json:"sender_id"`
+	SenderName string    `json:"sender_name"`
+	TargetID   int64     `json:"target_id"`
+	ExpiresAt  time.Time `json:"expires_at"`
+}
+
 type Hub struct {
 	mu            sync.RWMutex
 	Clients       map[int64]*Client
 	movingPlayers map[int64]*MoveData
+	challenges    map[int64]map[int64]*BattlChallenge
 	Register      chan *Client
 	Unregister    chan *Client
 	Broadcast     chan interface{}
@@ -38,6 +46,7 @@ func NewHub() *Hub {
 	return &Hub{
 		Clients:       make(map[int64]*Client),
 		movingPlayers: make(map[int64]*MoveData),
+		challenges:    make(map[int64]map[int64]*BattlChallenge),
 		Register:      make(chan *Client, 64),
 		Unregister:    make(chan *Client, 64),
 		Broadcast:     make(chan interface{}, 256),
@@ -75,6 +84,8 @@ func (h *Hub) handleRegister(client *Client) {
 	}
 	// Регистрация в карте онлайна
 	h.Clients[client.Character.ID] = client
+	challenges := h.GetChallenges(client.Character.ID)
+
 	// 2. Сбор данных для атомарного пакета
 	moveInfo, movingInHub := h.movingPlayers[client.Character.ID]
 	if movingInHub {
@@ -99,6 +110,7 @@ func (h *Hub) handleRegister(client *Client) {
 		"player":        client.Character,   // Данные персонажа (HP, мана, статы)
 		"world":         currentWorld,       // Данные мира (точки для канваса)
 		"players":       neighbors,          // Список людей в комнате
+		"challenges":    challenges,         // Заявки на бой
 		"worlds":        currentNode.Worlds, // Доступные переходы (порталы)
 		"duration":      timeLeft,
 		"world_id":      client.Character.WorldID,
@@ -309,7 +321,20 @@ func (h *Hub) GetFullStatus(charID int64) models.PlayerStatus {
 
 func (h *Hub) GetActiveClient(charID int64) (*Client, bool) { // Не использовать в местах где мьютекс уже взят.
 	h.mu.RLock()
-	defer h.mu.RLock()
+	defer h.mu.RUnlock()
 	client, ok := h.Clients[charID]
 	return client, ok
+}
+
+func (h *Hub) GetChallenges(RecipientID int64) []*BattlChallenge {
+	var myChallenges []*BattlChallenge
+	pending, exists := h.challenges[RecipientID]
+	if exists {
+		for _, challenge := range pending {
+			if time.Now().Before(challenge.ExpiresAt) {
+				myChallenges = append(myChallenges, challenge)
+			}
+		}
+	}
+	return myChallenges
 }
