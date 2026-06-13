@@ -24,11 +24,12 @@ type CommitStatsRequest struct {
 }
 
 var commands = map[string]CommandHandler{
-	"chat_msg":       handleChat,
-	"move":           handleMoveRequest,
-	"portal_request": handlePortalMoveRequest,
-	"private_chat":   handleWhisperRequest,
-	"commit_stats":   handleStatsCommitRequest,
+	"chat_msg":         handleChat,
+	"move":             handleMoveRequest,
+	"portal_request":   handlePortalMoveRequest,
+	"private_chat":     handleWhisperRequest,
+	"commit_stats":     handleStatsCommitRequest,
+	"battle_challenge": handleBattleChallenge,
 }
 
 func handleChat(c *Client, h *Hub, data map[string]interface{}) {
@@ -55,18 +56,12 @@ func handleChat(c *Client, h *Hub, data map[string]interface{}) {
 func handleMoveRequest(c *Client, h *Hub, data map[string]interface{}) {
 	clientStatus := h.GetFullStatus(c.Character.ID)
 	if clientStatus == models.StatusMoving {
-		h.Send(c, map[string]interface{}{
-			"type": "sys_msg",
-			"text": "Вы уже находитесь в процессе перехода.",
-		})
+		h.SystemMsg(c, "Вы уже находитесь в процессе перехода.")
 		return
 	}
 	targetID, ok := data["target_id"].(string)
 	if !ok {
-		h.Send(c, map[string]interface{}{
-			"type": "sys_msg",
-			"text": "Неверный формат данных.",
-		})
+		h.SystemMsg(c, "Неверный вормат данных.")
 		return
 	}
 
@@ -76,10 +71,7 @@ func handleMoveRequest(c *Client, h *Hub, data map[string]interface{}) {
 	sourceNode := world.Points[c.Character.LocationID]
 
 	if !exists || targetID == c.Character.LocationID {
-		h.Send(c, map[string]interface{}{
-			"type": "sys_msg",
-			"text": "Локации не существует, либо Вы уже находитесь там.",
-		})
+		h.SystemMsg(c, "Локации не существует, либо Вы уже находитесь там.")
 		return
 	}
 	dx := float64(targetNode.X - sourceNode.X)
@@ -260,10 +252,7 @@ func handleWhisperRequest(c *Client, h *Hub, data map[string]interface{}) {
 		return
 	}
 	if targetName == c.Character.Name {
-		h.Send(c, map[string]interface{}{
-			"type": "sys_msg",
-			"text": "Вы пытаетесь отправить сообщение самому себе!",
-		})
+		h.SystemMsg(c, "Вы пытаетесь отправить сообщение самому себе!")
 		return
 	}
 	if len([]rune(text)) > 150 {
@@ -271,10 +260,7 @@ func handleWhisperRequest(c *Client, h *Hub, data map[string]interface{}) {
 	}
 	targetClient := h.GetClientByName(targetName)
 	if targetClient == nil {
-		h.Send(c, map[string]interface{}{
-			"type": "sys_msg",
-			"text": "Персонаж " + targetName + " не в сети.",
-		})
+		h.SystemMsg(c, "Персонаж "+targetName+" не в сети.")
 		return
 	}
 	h.Send(targetClient, map[string]interface{}{
@@ -356,23 +342,30 @@ func handleStatsCommitRequest(c *Client, h *Hub, data map[string]interface{}) {
 	}(updatedChar)
 }
 
-func handleSendBattleChallenge(c *Client, h *Hub, data map[string]interface{}) { // Отправляем заявку на бой
-	targetIDRow, ok := data["target_id"]
+func handleBattleChallenge(c *Client, h *Hub, data map[string]interface{}) { // Отправляем заявку на бой
+	targetIDRaw, ok := data["target_id"]
 	if !ok {
+		h.SystemMsg(c, "Неверный формат данных.")
 		return
 	}
-	targetID := int64(targetIDRow.(float64))
-	if targetID == c.Character.ID {
+	targetIDFloat, ok := targetIDRaw.(float64)
+	if !ok {
+		// Если вдруг с фронтенда пришла строка или что-то еще - сервер не упадет
+		h.SystemMsg(c, "Ошибка: ID персонажа должен быть числом.")
 		return
 	}
+	targetID := int64(targetIDFloat)
 	targetClient, online := h.GetActiveClient(targetID)
 	if !online {
+		h.SystemMsg(c, "Заявка не была подана. Персонаж не в сети.")
 		return
 	}
-	if h.GetFullStatus(targetID) != models.StatusFree {
+	if h.GetFullStatus(targetID) != models.StatusFree || h.GetFullStatus(c.Character.ID) != models.StatusFree {
+		h.SystemMsg(c, "Заявка не была подана. Персонаж "+targetClient.Character.Name+" или Вы сами заняты.")
 		return
 	}
 	if c.Character.LocationID != targetClient.Character.LocationID || c.Character.WorldID != targetClient.Character.WorldID {
+		h.SystemMsg(c, "Заявка не была подана. Персонаж "+targetClient.Character.Name+" в другом мире или локации.")
 		return
 	}
 	expires := time.Now().Add(time.Second * 30)

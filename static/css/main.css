@@ -758,6 +758,8 @@ button {
     font-style: italic;
 }
 
+/*Test*/
+
 /*.quick-challenge-btn {
     background: transparent;
     border: none;
@@ -771,7 +773,99 @@ button {
     transform: scale(1.2);
 }*/
 
+.challenge-item {
+    display: flex;
+    flex-direction: column; /* Текст сверху, кнопки снизу */
+    gap: 10px;
+    background: linear-gradient(135deg, #2b1a1a 0%, #1a1a1a 100%); /* Крайне темный бордовый оттенок */
+    border: 1px solid #4a1a1a;
+    border-left: 4px solid #ff4d4d; /* Яркий красный индикатор опасности/вызова */
+    margin: 8px;
+    padding: 12px;
+    border-radius: 4px;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(-20px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* Текст внутри плашки */
+
 /*Меню контекста*/
+/*Стили для приглашений*/
+.challenge-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    margin: 4px 0;
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-radius: 4px;
+    font-family: 'MedievalSharp', cursive; /* Наш спецшрифт */
+}
+
+/* Имя того, кто вызвал */
+.challenge-name {
+    color: #e0e0e0;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100px;
+}
+
+/* Контейнер кнопок */
+.challenge-actions {
+    display: flex;
+    gap: 6px;
+}
+
+/* Общий стиль кнопок боя */
+.btn-battle {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid #333;
+    border-radius: 3px;
+    font-size: 16px;
+    transition: 0.2s;
+    background: #222;
+}
+
+/* Кнопка принять - зеленое свечение при наведении */
+.btn-battle.accept {
+    color: #4caf50;
+}
+.btn-battle.accept:hover {
+    background: #1b3d1c;
+    border-color: #4caf50;
+    color: #fff;
+    box-shadow: 0 0 8px rgba(76, 175, 80, 0.4);
+}
+
+/* Кнопка отказать - красное свечение при наведении */
+.btn-battle.decline {
+    color: #f44336;
+}
+.btn-battle.decline:hover {
+    background: #3d1b1b;
+    border-color: #f44336;
+    color: #fff;
+    box-shadow: 0 0 8px rgba(244, 67, 54, 0.4);
+}
+
+/* Анимация мигания для новых вызовов (необязательно) */
+.challenge-row {
+    border-left: 3px solid #d4af37;
+}
+
+
+/*Конец стилей для приглашений*/
 
 .context-menu {
     position: absolute;

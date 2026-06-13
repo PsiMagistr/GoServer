@@ -33,11 +33,15 @@ export const gameActions = {
     sendPlayerStats(stats){
         const packet = {
             type:"commit_stats",
-            "stats":stats,
+            stats:stats,
         }
         network.send(packet)
     },
     sendBattleChallenge(id){
-        alert(id);
+       const packet = {
+            type:"battle_challenge",
+            target_id:parseInt(id),
+       }
+       network.send(packet)
     }
 }

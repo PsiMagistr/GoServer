@@ -198,5 +198,11 @@ export const socket_events = {
     error_msg(msg){
         statsController.onServerError(msg.error);
     },
+    new_challenge(msg){
+        console.log("Приглашение на бой")
+        console.log(msg)
+    },
+
+
 }
 

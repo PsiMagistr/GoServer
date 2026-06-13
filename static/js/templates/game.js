@@ -17,9 +17,9 @@ export const gameTemplate = (char) => {
                         </ul>
                     </div>
                     <div class="panel-section">
-                        <h3>Здания</h3>
-                        <ul id="buildings-list" class="game-list">
-                            <li class="empty">Пусто</li>
+                        <h3>Приглашения</h3>
+                        <ul id="challenges-list" class="game-list">
+                            <li class="empty">Пусто</li>                           
                         </ul>
                     </div>
                     <div class="panel-section">

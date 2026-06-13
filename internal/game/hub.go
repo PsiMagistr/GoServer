@@ -305,6 +305,13 @@ func (h *Hub) handleRegeniration() {
 	}
 }
 
+func (h *Hub) SystemMsg(c *Client, text string) {
+	h.Send(c, map[string]interface{}{
+		"type": "sys_msg",
+		"text": text,
+	})
+}
+
 func (h *Hub) GetFullStatus(charID int64) models.PlayerStatus {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
