@@ -47,9 +47,21 @@ export const socket_events = {
             <span class="p-name">${p.name}</span>
             <!--<button class="challenge-btn" id="challenge-${p.id}">⚔️</button>-->
             `           
-        );
+        );        
         ui.renderList("#worlds-list", msg.worlds, "world", "world-link", (w) => w.name);
-
+        ui.renderList(
+            "#challenges-list", 
+            msg.challenges, 
+            "invite", 
+            "challenge-row", 
+            (ch) => `
+                <span class="challenge-name">${ch.sender_name}</span>
+                <div class="challenge-actions">
+                    <button class="btn-battle accept" id="accept-${ch.sender_id}">⚔</button>
+                    <button class="btn-battle decline" id="decline-${ch.sender_id}">✕</button>
+                </div>
+            `
+        );
         // 3. ЛОГИКА ОВЕРЛЕЯ (Показываем или скрываем сразу, не дожидаясь загрузки картинок)
         const overlay = document.getElementById('move-overlay');
         console.log("world_sync")
@@ -201,6 +213,20 @@ export const socket_events = {
     new_challenge(msg){
         console.log("Приглашение на бой")
         console.log(msg)
+        const ch = msg.challenge;
+        ui.addItemToList(
+            "#challenges-list", // ID твоего <ul> для заявок
+            { id: ch.sender_id, name: ch.sender_name }, 
+            "invite", 
+            "challenge-row", 
+            (item) => `
+                <span class="challenge-name">${item.name}</span>
+                <div class="challenge-actions">
+                    <button class="btn-battle accept" id="accept-${item.id}">⚔</button>
+                    <button class="btn-battle decline" id="decline-${item.id}">✕</button>
+                </div>
+            `
+        )
     },
 
 
