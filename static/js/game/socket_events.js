@@ -2,6 +2,7 @@ import { ui } from "./ui.js";
 import { gameState } from "./game.js";
 import { engine } from "./engine.js";
 import { statsController } from "./modal_controllers/statsController.js";
+import {utils} from '../utils/utils_functions.js'
 
 // Глобальная переменная для управления таймером внутри этого файла
 let moveInterval = null;
@@ -13,7 +14,7 @@ const stopTimer = () => {
     }
 }
 
- 
+
 
 const clearMoveTimer = () => {
     if (moveInterval) {
@@ -22,7 +23,7 @@ const clearMoveTimer = () => {
     }
 };
 
-const changeLabel = (msg)=>{
+const changeLabel = (msg) => {
     const locLabel = document.querySelector("#location_label");
     if (locLabel && gameState.world) {
         const node = gameState.world.points[msg.location_id];
@@ -30,32 +31,35 @@ const changeLabel = (msg)=>{
     }
 }
 
-export const socket_events = {   
+export const socket_events = {
     async world_sync(msg) {
-        console.log("Глобальная синхронизация мира...");        
+        console.log("Глобальная синхронизация мира...");
+        console.log(msg.challenges)
         // 1. Синхронизируем состояние
-        gameState.player = msg.player;        
+        gameState.player = msg.player;
         gameState.world = msg.world;
         gameState.isInitialized = false;
         // 2. Обновляем списки
         ui.renderList(
             '#players-list',
-             msg.players,
+            msg.players,
             "player",
             'player-link',
             (p) => `
-            <span class="p-name">${p.name}</span>
-            <!--<button class="challenge-btn" id="challenge-${p.id}">⚔️</button>-->
-            `           
-        );        
+            <span class="p-name">${p.name}</span>`
+
+        );
         ui.renderList("#worlds-list", msg.worlds, "world", "world-link", (w) => w.name);
         ui.renderList(
-            "#challenges-list", 
-            msg.challenges, 
-            "invite", 
-            "challenge-row", 
+            "#challenges-list",
+            msg.challenges,
+            "invite",
+            "challenge-row",
             (ch) => `
-                <span class="challenge-name">${ch.sender_name}</span>
+                <div class="challenge-content">
+                    <span class="challenge-name">${ch.sender_name}</span>
+                    <span class="challenge-timer" id="timer-${ch.sender_id}">${ch.time_left}</span>
+                </div>
                 <div class="challenge-actions">
                     <button class="btn-battle accept" id="accept-${ch.sender_id}">⚔</button>
                     <button class="btn-battle decline" id="decline-${ch.sender_id}">✕</button>
@@ -73,7 +77,7 @@ export const socket_events = {
             if (overlay) {
                 overlay.style.display = 'flex';
                 // Подставляем красивые названия, которые Go прислал в world_sync
-                overlay.querySelector('.target-name').innerText = `${msg.world_name}, ${msg.location_name}`;                
+                overlay.querySelector('.target-name').innerText = `${msg.world_name}, ${msg.location_name}`;
                 let timeLeft = msg.duration;
                 const timerEl = overlay.querySelector('.timer-count');
                 timerEl.innerText = timeLeft;
@@ -92,8 +96,8 @@ export const socket_events = {
         } else {
             // Если не движемся — гарантированно прячем
             if (overlay) overlay.style.display = 'none';
-            gameState.isMoving = false;            
-            stopTimer(); 
+            gameState.isMoving = false;
+            stopTimer();
             /////////////////////////          
             changeLabel(msg);
         }
@@ -117,7 +121,7 @@ export const socket_events = {
 
     // Вызывается при старте любого перемещения (и при реконнекте после world_sync)
     move_starting(msg) {
-        gameState.player.state = msg.state;        
+        gameState.player.state = msg.state;
         stopTimer();
 
         const overlay = document.getElementById('move-overlay');
@@ -125,7 +129,7 @@ export const socket_events = {
 
         overlay.style.display = 'flex';
         overlay.querySelector('.target-name').innerText = `${msg.world_name}, ${msg.location_name}`;
-        
+
         let secondsLeft = Math.floor(msg.duration);
         const timerEl = overlay.querySelector('.timer-count');
         timerEl.innerText = secondsLeft;
@@ -142,19 +146,19 @@ export const socket_events = {
     },
 
     move_complete(msg) {
-        stopTimer();       
-        gameState.player.state = msg.state;              
+        stopTimer();
+        gameState.player.state = msg.state;
         // Скрываем оверлей
         const overlay = document.getElementById('move-overlay');
         if (overlay) overlay.style.display = 'none';
         // Если это был прыжок между мирами, world_sync уже прилетел или прилетит,
         // но локацию обновим здесь для надежности
-        gameState.player.location_id = msg.location_id;       
-        
+        gameState.player.location_id = msg.location_id;
+
         // Обновляем заголовок локации в UI
-       changeLabel(msg)
-       ui.renderList('#players-list', msg.players, "player", 'player-link', (p) => p.name);
-       ui.renderList("#worlds-list", msg.worlds, "world", "world-link", (w) => w.name);        
+        changeLabel(msg)
+        ui.renderList('#players-list', msg.players, "player", 'player-link', (p) => p.name);
+        ui.renderList("#worlds-list", msg.worlds, "world", "world-link", (w) => w.name);
     },
 
     player_left(msg) {
@@ -174,53 +178,55 @@ export const socket_events = {
         chatContainer.appendChild(div);
         chatContainer.scrollTop = chatContainer.scrollHeight;
     },
-    sys_msg(msg){
+    sys_msg(msg) {
         console.log(msg);
         const chatContainer = document.getElementById('chat-messages');
         if (!chatContainer) return;
-        const div = document.createElement('div');       
+        const div = document.createElement('div');
         div.className = 'chat-line';
         div.innerHTML = `<span class="sys-msg">[СИСТЕМА]:</span><span class="chat-text"> ${msg.text}</span>`;
         chatContainer.appendChild(div);
         chatContainer.scrollTop = chatContainer.scrollHeight;
     },
-    whisper_received(msg){
+    whisper_received(msg) {
         const chatContainer = document.getElementById('chat-messages');
         if (!chatContainer) return;
-        const div = document.createElement('div');       
+        const div = document.createElement('div');
         div.className = 'chat-line';
         div.innerHTML = `<span class="chat-receiver">[От ${msg.from}]:</span> <span class="chat-text">${msg.text}</span>`;
         chatContainer.appendChild(div);
         chatContainer.scrollTop = chatContainer.scrollHeight;
     },
-    whisper_sent(msg){
+    whisper_sent(msg) {
         const chatContainer = document.getElementById('chat-messages');
         if (!chatContainer) return;
-        const div = document.createElement('div');       
+        const div = document.createElement('div');
         div.className = 'chat-line';
         div.innerHTML = `<span class="chat-sender">[К ${msg.to}]:</span> <span class="chat-text">${msg.text}</span>`;
         chatContainer.appendChild(div);
         chatContainer.scrollTop = chatContainer.scrollHeight;
-    },    
-    player_update(msg){               
-        gameState.player = msg.player;
-        statsController.onServerSuccess(gameState.player);         
-       
     },
-    error_msg(msg){
+    player_update(msg) {
+        gameState.player = msg.player;
+        statsController.onServerSuccess(gameState.player);
+
+    },
+    error_msg(msg) {
         statsController.onServerError(msg.error);
     },
-    new_challenge(msg){
-        console.log("Приглашение на бой")
-        console.log(msg)
+    new_challenge(msg) {
+        utils.createTimer();
         const ch = msg.challenge;
         ui.addItemToList(
             "#challenges-list", // ID твоего <ul> для заявок
-            { id: ch.sender_id, name: ch.sender_name }, 
-            "invite", 
-            "challenge-row", 
+            { id: ch.sender_id, name: ch.sender_name },
+            "invite",
+            "challenge-row",
             (item) => `
-                <span class="challenge-name">${item.name}</span>
+               <div class="challenge-content">
+                    <span class="challenge-name">${ch.sender_name}</span>
+                    <span class="challenge-timer" id="timer-${ch.sender_id}">${ch.time_left}</span>
+                </div>
                 <div class="challenge-actions">
                     <button class="btn-battle accept" id="accept-${item.id}">⚔</button>
                     <button class="btn-battle decline" id="decline-${item.id}">✕</button>

@@ -44,5 +44,9 @@ export const utils = {
             }            
         }
         return result;
-    },        
+    },
+    createTimer(){
+        alert();
+    },
+
 }

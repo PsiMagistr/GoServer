@@ -24,18 +24,19 @@ type MoveData struct {
 	TargetLocationName string
 }
 
-type BattlChallenge struct { // Заявка на бой
+type BattleChallenge struct { // Заявка на бой
 	SenderID   int64     `json:"sender_id"`
 	SenderName string    `json:"sender_name"`
 	TargetID   int64     `json:"target_id"`
 	ExpiresAt  time.Time `json:"expires_at"`
+	TimeLeft   int       `json:"time_left"`
 }
 
 type Hub struct {
 	mu            sync.RWMutex
 	Clients       map[int64]*Client
 	movingPlayers map[int64]*MoveData
-	challenges    map[int64]map[int64]*BattlChallenge
+	challenges    map[int64]map[int64]*BattleChallenge
 	Register      chan *Client
 	Unregister    chan *Client
 	Broadcast     chan interface{}
@@ -46,7 +47,7 @@ func NewHub() *Hub {
 	return &Hub{
 		Clients:       make(map[int64]*Client),
 		movingPlayers: make(map[int64]*MoveData),
-		challenges:    make(map[int64]map[int64]*BattlChallenge),
+		challenges:    make(map[int64]map[int64]*BattleChallenge),
 		Register:      make(chan *Client, 64),
 		Unregister:    make(chan *Client, 64),
 		Broadcast:     make(chan interface{}, 256),
@@ -333,12 +334,14 @@ func (h *Hub) GetActiveClient(charID int64) (*Client, bool) { // Не испол
 	return client, ok
 }
 
-func (h *Hub) GetChallenges(RecipientID int64) []*BattlChallenge {
-	var myChallenges []*BattlChallenge
+func (h *Hub) GetChallenges(RecipientID int64) []*BattleChallenge {
+	var myChallenges []*BattleChallenge
 	pending, exists := h.challenges[RecipientID]
 	if exists {
 		for _, challenge := range pending {
-			if time.Now().Before(challenge.ExpiresAt) {
+			duration := time.Until(challenge.ExpiresAt)
+			if duration > 0 {
+				challenge.TimeLeft = int(math.Ceil(duration.Seconds()))
 				myChallenges = append(myChallenges, challenge)
 			}
 		}

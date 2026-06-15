@@ -371,7 +371,7 @@ func handleBattleChallenge(c *Client, h *Hub, data map[string]interface{}) { // 
 	/**/
 	h.mu.Lock()
 	if h.challenges[targetID] == nil {
-		h.challenges[targetID] = make(map[int64]*BattlChallenge)
+		h.challenges[targetID] = make(map[int64]*BattleChallenge)
 	}
 	if existing, ok := h.challenges[targetID][c.Character.ID]; ok {
 		if time.Now().Before(existing.ExpiresAt) {
@@ -381,12 +381,14 @@ func handleBattleChallenge(c *Client, h *Hub, data map[string]interface{}) { // 
 		}
 	}
 
-	expires := time.Now().Add(time.Second * 30)
-	challenge := &BattlChallenge{
+	expires := time.Now().Add(time.Second * 60)
+	timeLeft := int(math.Ceil(time.Until(expires).Seconds()))
+	challenge := &BattleChallenge{
 		SenderID:   c.Character.ID,
 		SenderName: c.Character.Name,
 		TargetID:   targetID,
 		ExpiresAt:  expires,
+		TimeLeft:   timeLeft,
 	}
 	h.challenges[targetID][c.Character.ID] = challenge
 	h.mu.Unlock()
@@ -395,25 +397,4 @@ func handleBattleChallenge(c *Client, h *Hub, data map[string]interface{}) { // 
 		"challenge": challenge,
 	})
 	h.SystemMsg(c, "Вы вызвали "+targetClient.Character.Name+" на бой.")
-
-	/*if targetChallenges, exists := h.challenges[targetID]; exists {
-		if existingChallenge, hasOld := targetChallenges[c.Character.ID]; hasOld {
-			// Проверяем, не протухла ли старая заявка
-			if time.Now().Before(existingChallenge.ExpiresAt) {
-				h.mu.Unlock()
-				h.SystemMsg(c, "Вы уже отправили вызов этому персонажу. Дождитесь ответа.")
-				return
-			}
-			h.mu.Unlock()
-		}
-	} else {
-		h.challenges[targetID] = make(map[int64]*BattlChallenge)
-		h.challenges[targetID][c.Character.ID] = challenge
-		h.mu.Unlock()
-		h.Send(targetClient, map[string]interface{}{
-			"type":      "new_challenge",
-			"challenge": challenge,
-		})
-		h.SystemMsg(c, "Вы вызвали "+targetClient.Character.Name+" на бой.")
-	}*/
 }
