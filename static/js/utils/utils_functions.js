@@ -45,8 +45,21 @@ export const utils = {
         }
         return result;
     },
-    createTimer(){
-        alert();
+    createTimer(seconds, onTick, onEnd){
+        let timerId = null;
+        let sec = seconds;
+        const time = ()=>{
+            sec--;
+            if(onTick) onTick(sec)            
+            if(sec <= 0){
+                if(onEnd) onEnd()
+                return     
+            }
+            timerId = setTimeout(time, 1000);            
+        }
+        timerId = setTimeout(time, 1000);
+        return ()=>{
+            clearTimeout(timerId)
+        }
     },
-
 }

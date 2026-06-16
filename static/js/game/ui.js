@@ -28,8 +28,15 @@ export const ui = {
         li.innerHTML = labelGenerator(item);
         container.appendChild(li);
     },
-    removeItemFromUI(idPrefix, id){
+    removeItemFromUI(idPrefix, id){        
         const el = document.querySelector(`#${idPrefix}-${id}`);
-        if(el) el.remove();    
+        if(el) {
+            el.remove()
+        } 
+        else{
+            console/log("Нет элемента")
+            console.log(idPrefix)
+            console.log(id)
+        }   
     }
 }

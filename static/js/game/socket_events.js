@@ -2,7 +2,7 @@ import { ui } from "./ui.js";
 import { gameState } from "./game.js";
 import { engine } from "./engine.js";
 import { statsController } from "./modal_controllers/statsController.js";
-import {utils} from '../utils/utils_functions.js'
+import { utils } from '../utils/utils_functions.js'
 
 // Глобальная переменная для управления таймером внутри этого файла
 let moveInterval = null;
@@ -50,9 +50,14 @@ export const socket_events = {
 
         );
         ui.renderList("#worlds-list", msg.worlds, "world", "world-link", (w) => w.name);
+         if (msg.challenges) {
+            const preparedChallenges = msg.challenges.map(ch => ({
+            ...ch,
+            id: ch.sender_id // Клонируем sender_id в поле id
+        }));
         ui.renderList(
             "#challenges-list",
-            msg.challenges,
+            preparedChallenges,
             "invite",
             "challenge-row",
             (ch) => `
@@ -66,6 +71,21 @@ export const socket_events = {
                 </div>
             `
         );
+        const ch = msg.challenges;
+        console.log("+++++++")       
+            for (const ch of msg.challenges) {
+                utils.createTimer(
+                    ch.time_left,
+                    (sec) => {
+                        const el = document.getElementById(`timer-${ch.sender_id}`);
+                        if (el) el.innerText = `${sec}s`;
+                    },
+                    () => {
+                        ui.removeItemFromUI("invite", ch.sender_id);
+                    }
+                )
+            }
+        }                  
         // 3. ЛОГИКА ОВЕРЛЕЯ (Показываем или скрываем сразу, не дожидаясь загрузки картинок)
         const overlay = document.getElementById('move-overlay');
         console.log("world_sync")
@@ -121,7 +141,7 @@ export const socket_events = {
 
     // Вызывается при старте любого перемещения (и при реконнекте после world_sync)
     move_starting(msg) {
-        gameState.player.state = msg.state;
+        /*gameState.player.state = msg.state;
         stopTimer();
 
         const overlay = document.getElementById('move-overlay');
@@ -142,11 +162,27 @@ export const socket_events = {
                 timerEl.innerText = "Прибытие...";
                 stopTimer();
             }
-        }, 1000);
+        }, 1000);*/
+        gameState.player.state = msg.state;
+        const overlay = document.getElementById('move-overlay');
+        if (!overlay) return;
+        overlay.style.display = 'flex';
+        overlay.querySelector('.target-name').innerText = `${msg.world_name}, ${msg.location_name}`;
+        let secondsLeft = Math.floor(msg.duration);
+        const timerEl = overlay.querySelector('.timer-count');
+        timerEl.innerText = secondsLeft;
+        if(gameState.stopMovingTimer) gameState.stopMovingTimer()
+        gameState.stopMovingTimer = utils.createTimer(secondsLeft, (sec)=>{
+            timerEl.innerText = sec;                
+        },
+        ()=>{
+            timerEl.innerText = "Прибытие...";    
+        });
+
     },
 
     move_complete(msg) {
-        stopTimer();
+        if(gameState.stopMovingTimer) gameState.stopMovingTimer()
         gameState.player.state = msg.state;
         // Скрываем оверлей
         const overlay = document.getElementById('move-overlay');
@@ -215,7 +251,6 @@ export const socket_events = {
         statsController.onServerError(msg.error);
     },
     new_challenge(msg) {
-        utils.createTimer();
         const ch = msg.challenge;
         ui.addItemToList(
             "#challenges-list", // ID твоего <ul> для заявок
@@ -232,6 +267,17 @@ export const socket_events = {
                     <button class="btn-battle decline" id="decline-${item.id}">✕</button>
                 </div>
             `
+
+        )
+        utils.createTimer(
+            ch.time_left,
+            (sec) => {
+                const el = document.getElementById(`timer-${ch.sender_id}`);
+                if (el) el.innerText = `${sec}s`;
+            },
+            () => {
+                 ui.removeItemFromUI("invite", ch.sender_id);
+            }
         )
     },
 
