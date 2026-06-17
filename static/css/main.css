@@ -824,7 +824,7 @@ button {
 }
 
 /* Общий стиль кнопок боя */
-.btn-battle {
+/*.btn-battle {
     width: 28px;
     height: 28px;
     display: flex;
@@ -835,17 +835,75 @@ button {
     font-size: 16px;
     transition: 0.2s;
     background: #222;
+}*/
+
+.btn-battle {
+    width: 30px;
+    height: 30px;
+    position: relative; /* Важно для позиционирования таймера внутри */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #222;
+    border: 1px solid #333;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+/* Настраиваем мини-таймер в углу */
+.mini-timer {
+    position: absolute;
+    bottom: 18px;
+    right: 32px;
+    width:30px;
+    background: #111;       /* Темный фон, чтобы цифры были видны на любом фоне */
+    color: #d4af37;        /* Наше золото */
+    font-size: 9px;         /* Очень мелкий шрифт */
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: bold;
+    padding: 0 2px;
+    border: 1px solid #444;
+    border-radius: 2px;
+    line-height: 1;
+    pointer-events: none;   /* Чтобы клик проходил сквозь цифры на саму кнопку */
+}
+
+/* Если время на исходе */
+.mini-timer.critical {
+    color: #ff4d4d;
+    border-color: #8b0000;
 }
 
 /* Кнопка принять - зеленое свечение при наведении */
 .btn-battle.accept {
-    color: #4caf50;
+    width: auto;           /* Разрешаем кнопке растягиваться */
+    min-width: 30px;       /* Минимальная ширина, чтобы влезло "⚔ 00" */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;              /* Отступ между мечами и цифрами */
+    padding: 0 8px;
+    background: #FFFFFF;
 }
 .btn-battle.accept:hover {
     background: #1b3d1c;
     border-color: #4caf50;
     color: #fff;
     box-shadow: 0 0 8px rgba(76, 175, 80, 0.4);
+}
+
+.btn-timer {
+    font-size: 11px;
+    font-family: 'Courier New', Courier, monospace; /* Моноширинный шрифт, чтобы ширина цифр была одинаковой */
+    font-weight: bold;
+    border-left: 1px solid rgba(255,255,255,0.1); /* Тонкая черточка-разделитель внутри кнопки */
+    padding-left: 5px;
+}
+
+/* Красный цвет для последних секунд */
+.btn-timer.critical {
+    color: #ff4d4d;
 }
 
 /* Кнопка отказать - красное свечение при наведении */

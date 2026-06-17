@@ -32,7 +32,7 @@ const changeLabel = (msg) => {
 }
 
 export const socket_events = {
-    async world_sync(msg) {
+    async world_sync(msg) {        
         console.log("Глобальная синхронизация мира...");
         console.log(msg.challenges)
         // 1. Синхронизируем состояние
@@ -50,29 +50,29 @@ export const socket_events = {
 
         );
         ui.renderList("#worlds-list", msg.worlds, "world", "world-link", (w) => w.name);
-         if (msg.challenges) {
+        if (msg.challenges) {
             const preparedChallenges = msg.challenges.map(ch => ({
-            ...ch,
-            id: ch.sender_id // Клонируем sender_id в поле id
-        }));
-        ui.renderList(
-            "#challenges-list",
-            preparedChallenges,
-            "invite",
-            "challenge-row",
-            (ch) => `
-                <div class="challenge-content">
-                    <span class="challenge-name">${ch.sender_name}</span>
-                    <span class="challenge-timer" id="timer-${ch.sender_id}">${ch.time_left}</span>
-                </div>
+                ...ch,
+                id: ch.sender_id // Клонируем sender_id в поле id
+            }));
+            ui.renderList(
+                "#challenges-list",
+                preparedChallenges,
+                "invite",
+                "challenge-row",
+                (ch) => `
+                <span class="challenge-name">${ch.sender_name}</span>
                 <div class="challenge-actions">
-                    <button class="btn-battle accept" id="accept-${ch.sender_id}">⚔</button>
+                    <button class="btn-battle accept" id="accept-${ch.sender_id}">
+                        ⚔
+                        <span class="mini-timer" id="timer-${ch.sender_id}">${ch.time_left}</span>
+                    </button>
                     <button class="btn-battle decline" id="decline-${ch.sender_id}">✕</button>
                 </div>
             `
-        );
-        const ch = msg.challenges;
-        console.log("+++++++")       
+            );
+            const ch = msg.challenges;
+            console.log("+++++++")
             for (const ch of msg.challenges) {
                 utils.createTimer(
                     ch.time_left,
@@ -85,42 +85,34 @@ export const socket_events = {
                     }
                 )
             }
-        }                  
+        }
         // 3. ЛОГИКА ОВЕРЛЕЯ (Показываем или скрываем сразу, не дожидаясь загрузки картинок)
         const overlay = document.getElementById('move-overlay');
         console.log("world_sync")
         console.log(msg.player)
-        const state = msg.player.state
+        const state = msg.player.state;
         if (state === 1 && msg.duration > 0) {
-            /*gameState.isMoving = true;*/
-            stopTimer()
-            if (overlay) {
-                overlay.style.display = 'flex';
-                // Подставляем красивые названия, которые Go прислал в world_sync
-                overlay.querySelector('.target-name').innerText = `${msg.world_name}, ${msg.location_name}`;
-                let timeLeft = msg.duration;
-                const timerEl = overlay.querySelector('.timer-count');
-                timerEl.innerText = timeLeft;
-
-                // Запускаем локальный отсчет для плавности
-                moveInterval = setInterval(() => {
-                    timeLeft--;
-                    if (timeLeft >= 0) {
-                        timerEl.innerText = timeLeft;
-                    } else {
-                        timerEl.innerText = "Прибытие...";
-                        stopTimer();
-                    }
-                }, 1000);
-            }
-        } else {
-            // Если не движемся — гарантированно прячем
-            if (overlay) overlay.style.display = 'none';
-            gameState.isMoving = false;
-            stopTimer();
-            /////////////////////////          
-            changeLabel(msg);
+            if (!overlay) return
+            overlay.style.display = 'flex';
+            overlay.querySelector('.target-name').innerText = `${msg.world_name}, ${msg.location_name}`;
+            let timeLeft = msg.duration;
+            const timerEl = overlay.querySelector('.timer-count');
+            timerEl.innerText = timeLeft;            
+            if(gameState.stopMovingTimer != null) gameState.stopMovingTimer()
+            gameState.stopMovingTimer = utils.createTimer(
+            timeLeft,
+            (sec)=>{
+                 timerEl.innerText = sec;    
+            },()=>{
+                console.log("ffdfdfdfdfdfd")
+                alert("Прыгнули через портал");
+            })
         }
+        else{
+            if (!overlay) return
+            overlay.style.display = 'none';
+            changeLabel(msg)    
+        }      
 
         // 4. ЗАГРУЗКА РЕСУРСОВ (в фоне)
         const assetsToLoad = {
@@ -141,28 +133,6 @@ export const socket_events = {
 
     // Вызывается при старте любого перемещения (и при реконнекте после world_sync)
     move_starting(msg) {
-        /*gameState.player.state = msg.state;
-        stopTimer();
-
-        const overlay = document.getElementById('move-overlay');
-        if (!overlay) return;
-
-        overlay.style.display = 'flex';
-        overlay.querySelector('.target-name').innerText = `${msg.world_name}, ${msg.location_name}`;
-
-        let secondsLeft = Math.floor(msg.duration);
-        const timerEl = overlay.querySelector('.timer-count');
-        timerEl.innerText = secondsLeft;
-
-        moveInterval = setInterval(() => {
-            secondsLeft--;
-            if (secondsLeft >= 0) {
-                timerEl.innerText = secondsLeft;
-            } else {
-                timerEl.innerText = "Прибытие...";
-                stopTimer();
-            }
-        }, 1000);*/
         gameState.player.state = msg.state;
         const overlay = document.getElementById('move-overlay');
         if (!overlay) return;
@@ -171,18 +141,17 @@ export const socket_events = {
         let secondsLeft = Math.floor(msg.duration);
         const timerEl = overlay.querySelector('.timer-count');
         timerEl.innerText = secondsLeft;
-        if(gameState.stopMovingTimer) gameState.stopMovingTimer()
-        gameState.stopMovingTimer = utils.createTimer(secondsLeft, (sec)=>{
-            timerEl.innerText = sec;                
+        if (gameState.stopMovingTimer) gameState.stopMovingTimer()
+        gameState.stopMovingTimer = utils.createTimer(secondsLeft, (sec) => {
+            timerEl.innerText = sec;
         },
-        ()=>{
-            timerEl.innerText = "Прибытие...";    
-        });
+            () => {              
+                timerEl.innerText = "Прибытие...";
+            });
 
     },
-
-    move_complete(msg) {
-        if(gameState.stopMovingTimer) gameState.stopMovingTimer()
+    move_complete(msg) {       
+        if (gameState.stopMovingTimer) gameState.stopMovingTimer()
         gameState.player.state = msg.state;
         // Скрываем оверлей
         const overlay = document.getElementById('move-overlay');
@@ -190,7 +159,6 @@ export const socket_events = {
         // Если это был прыжок между мирами, world_sync уже прилетел или прилетит,
         // но локацию обновим здесь для надежности
         gameState.player.location_id = msg.location_id;
-
         // Обновляем заголовок локации в UI
         changeLabel(msg)
         ui.renderList('#players-list', msg.players, "player", 'player-link', (p) => p.name);
@@ -258,25 +226,24 @@ export const socket_events = {
             "invite",
             "challenge-row",
             (item) => `
-               <div class="challenge-content">
-                    <span class="challenge-name">${ch.sender_name}</span>
-                    <span class="challenge-timer" id="timer-${ch.sender_id}">${ch.time_left}</span>
-                </div>
+                <span class="challenge-name">${ch.sender_name}</span>
                 <div class="challenge-actions">
-                    <button class="btn-battle accept" id="accept-${item.id}">⚔</button>
+                    <button class="btn-battle accept" id="accept-${ch.sender_id}">
+                        ⚔
+                        <span class="mini-timer" id="timer-${item.id}">${ch.time_left}</span>
+                    </button>
                     <button class="btn-battle decline" id="decline-${item.id}">✕</button>
                 </div>
             `
-
         )
         utils.createTimer(
             ch.time_left,
             (sec) => {
                 const el = document.getElementById(`timer-${ch.sender_id}`);
-                if (el) el.innerText = `${sec}s`;
+                if (el) el.innerText = `${sec}`;
             },
             () => {
-                 ui.removeItemFromUI("invite", ch.sender_id);
+                ui.removeItemFromUI("invite", ch.sender_id);
             }
         )
     },

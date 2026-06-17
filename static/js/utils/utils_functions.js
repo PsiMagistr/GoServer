@@ -51,8 +51,8 @@ export const utils = {
         const time = ()=>{
             sec--;
             if(onTick) onTick(sec)            
-            if(sec <= 0){
-                if(onEnd) onEnd()
+            if(sec <= 0){                
+                if(onEnd) onEnd()                  
                 return     
             }
             timerId = setTimeout(time, 1000);            

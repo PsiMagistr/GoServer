@@ -57,6 +57,7 @@ func NewHub() *Hub {
 
 func (h *Hub) Run() {
 	regenTicker := time.NewTicker(5 * time.Second)
+	cleanupTicker := time.NewTicker(1 * time.Minute)
 	defer regenTicker.Stop()
 	for {
 		select {
@@ -70,6 +71,8 @@ func (h *Hub) Run() {
 			h.BroadcastToRoom(roomMessage.WorldID, roomMessage.LocationID, roomMessage.Payload)
 		case <-regenTicker.C:
 			h.handleRegeniration()
+		case <-cleanupTicker.C:
+			h.cleanupChallenges()
 		}
 	}
 }
@@ -347,4 +350,25 @@ func (h *Hub) GetChallenges(RecipientID int64) []*BattleChallenge {
 		}
 	}
 	return myChallenges
+}
+
+func (h *Hub) cleanupChallenges() {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	now := time.Now()
+	count := 0
+	for recipientID, invites := range h.challenges {
+		for senderID, challenge := range invites {
+			if now.After(challenge.ExpiresAt) {
+				delete(invites, senderID)
+				count++
+			}
+			if len(invites) == 0 {
+				delete(h.challenges, recipientID)
+			}
+		}
+	}
+	if count > 0 {
+		fmt.Printf("[CLEANUP] Удалено просроченных заявок: %d\n", count)
+	}
 }
