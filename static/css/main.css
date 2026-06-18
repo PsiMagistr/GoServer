@@ -859,7 +859,7 @@ button {
     width:30px;
     background: #111;       /* Темный фон, чтобы цифры были видны на любом фоне */
     color: #d4af37;        /* Наше золото */
-    font-size: 9px;         /* Очень мелкий шрифт */
+    font-size: 18px;         /* Очень мелкий шрифт */
     font-family: 'Courier New', Courier, monospace;
     font-weight: bold;
     padding: 0 2px;
@@ -893,18 +893,18 @@ button {
     box-shadow: 0 0 8px rgba(76, 175, 80, 0.4);
 }
 
-.btn-timer {
-    font-size: 11px;
-    font-family: 'Courier New', Courier, monospace; /* Моноширинный шрифт, чтобы ширина цифр была одинаковой */
+/*.btn-timer {
+    font-size: 18px;
+    font-family: 'Courier New', Courier, monospace; 
     font-weight: bold;
-    border-left: 1px solid rgba(255,255,255,0.1); /* Тонкая черточка-разделитель внутри кнопки */
+    border-left: 1px solid rgba(255,255,255,0.1); 
     padding-left: 5px;
 }
 
-/* Красный цвет для последних секунд */
+
 .btn-timer.critical {
     color: #ff4d4d;
-}
+}*/
 
 /* Кнопка отказать - красное свечение при наведении */
 .btn-battle.decline {

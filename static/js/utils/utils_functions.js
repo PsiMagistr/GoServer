@@ -51,7 +51,7 @@ export const utils = {
         const time = ()=>{
             sec--;
             if(onTick) onTick(sec)            
-            if(sec <= 0){                
+            if(sec == 0){                
                 if(onEnd) onEnd()                  
                 return     
             }

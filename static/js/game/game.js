@@ -11,6 +11,7 @@ export const gameState = {
     isInitialized: false,
     hoveredNodeId: null,
     stopMovingTimer:null,
+    challengeTimers:{},
 
 }
 

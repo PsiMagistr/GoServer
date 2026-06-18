@@ -74,22 +74,28 @@ export const socket_events = {
             const ch = msg.challenges;
             console.log("+++++++")
             for (const ch of msg.challenges) {
-                utils.createTimer(
+                const timerStop = utils.createTimer(
                     ch.time_left,
                     (sec) => {
                         const el = document.getElementById(`timer-${ch.sender_id}`);
-                        if (el) el.innerText = `${sec}s`;
+                        if (el) el.innerText = `${sec}`;
                     },
                     () => {
                         ui.removeItemFromUI("invite", ch.sender_id);
                     }
                 )
+                gameState.challengeTimers[ch.sender_id] = timerStop
             }
         }
         // 3. ЛОГИКА ОВЕРЛЕЯ (Показываем или скрываем сразу, не дожидаясь загрузки картинок)
         const overlay = document.getElementById('move-overlay');
+         if (overlay){
+            overlay.style.display = 'none';
+            changeLabel(msg)            
+         }      
         console.log("world_sync")
         console.log(msg.player)
+        if(gameState.stopMovingTimer != null) gameState.stopMovingTimer() 
         const state = msg.player.state;
         if (state === 1 && msg.duration > 0) {
             if (!overlay) return
@@ -97,8 +103,7 @@ export const socket_events = {
             overlay.querySelector('.target-name').innerText = `${msg.world_name}, ${msg.location_name}`;
             let timeLeft = msg.duration;
             const timerEl = overlay.querySelector('.timer-count');
-            timerEl.innerText = timeLeft;            
-            if(gameState.stopMovingTimer != null) gameState.stopMovingTimer()
+            timerEl.innerText = timeLeft;           
             gameState.stopMovingTimer = utils.createTimer(
             timeLeft,
             (sec)=>{
@@ -108,11 +113,7 @@ export const socket_events = {
                 alert("Прыгнули через портал");
             })
         }
-        else{
-            if (!overlay) return
-            overlay.style.display = 'none';
-            changeLabel(msg)    
-        }      
+          
 
         // 4. ЗАГРУЗКА РЕСУРСОВ (в фоне)
         const assetsToLoad = {
@@ -235,8 +236,8 @@ export const socket_events = {
                     <button class="btn-battle decline" id="decline-${item.id}">✕</button>
                 </div>
             `
-        )
-        utils.createTimer(
+        )        
+        const timerStop = utils.createTimer(
             ch.time_left,
             (sec) => {
                 const el = document.getElementById(`timer-${ch.sender_id}`);
@@ -246,6 +247,7 @@ export const socket_events = {
                 ui.removeItemFromUI("invite", ch.sender_id);
             }
         )
+        gameState.challengeTimers[ch.sender_id] = timerStop;
     },
 
 

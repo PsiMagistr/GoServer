@@ -3,34 +3,35 @@ import { gameActions } from "./actions.js";
 import { engine } from "./engine.js";
 import { statsController } from "./modal_controllers/statsController.js";
 import { contextNenu } from "../templates/context_menu.js";
+import {ui} from "./ui.js"
 
 const CLICK_RADIUS = 20;
 const CLICK_RADIUS_SQ = CLICK_RADIUS * CLICK_RADIUS;
 const clickers = {
-    "gameCanvas":(obj, event)=>{
+    "gameCanvas": (obj, event) => {
         obj.handleCanvasClick(event);
     },
-    "chat-send-btn":(obj, event)=>{        
-        obj.sendChat();    
+    "chat-send-btn": (obj, event) => {
+        obj.sendChat();
     },
-    "stats":(obj, event)=>{
+    "stats": (obj, event) => {
         statsController.open();
     },
-    "save-stats-btn":(obj, event)=>{
+    "save-stats-btn": (obj, event) => {
         statsController.commit();
     },
-    "modal-close-btn":(obj, event)=>{
+    "modal-close-btn": (obj, event) => {
         statsController.hide();
-    },   
+    },
 }
 const movers = {
-    "gameCanvas":(obj, event)=>{       
+    "gameCanvas": (obj, event) => {
         const node = obj.getNodeAt(event.offsetX, event.offsetY);
-            const found = node ? node.id : null;
-            if (gameState.hoveredNodeId !== found) {
-                gameState.hoveredNodeId = found;
-                event.target.style.cursor = (found && found !== gameState.player.location_id) ? 'pointer' : 'default';
-            }
+        const found = node ? node.id : null;
+        if (gameState.hoveredNodeId !== found) {
+            gameState.hoveredNodeId = found;
+            event.target.style.cursor = (found && found !== gameState.player.location_id) ? 'pointer' : 'default';
+        }
     },
 }
 export const interaction = {
@@ -55,25 +56,25 @@ export const interaction = {
         return null;
     },
     handleGlobalClick(event) {
-         const target = event.target;
-         this.hideContextMenu();                
+        const target = event.target;
+        this.hideContextMenu();
         // 1. Проверка через диспетчер (ищем ID у цели или ближайшего родителя)
-        const clickable = target.closest('[id]'); 
-        const id = clickable.id;      
-        if(clickable && clickers[id]){
+        const clickable = target.closest('[id]');
+        const id = clickable.id;
+        if (clickable && clickers[id]) {
             clickers[id](this, event)
-            return    
+            return
         }
         const worldLink = event.target.closest(".world-link");
         if (worldLink) {
             this.handlePortalClick(worldLink)
         }
         const playerLink = event.target.closest(".player-link")
-        if(playerLink){
+        if (playerLink) {
             this.showContextMenu(event, playerLink)
             return
         }
-        if(id.startsWith("add-")){
+        if (id.startsWith("add-")) {
             console.log(event.target)
             const stateName = event.target.dataset.state_name;
             statsController.increment(stateName);
@@ -84,10 +85,25 @@ export const interaction = {
             this.handleContextAction(contextBtn.dataset.action, contextBtn.dataset.id);
             return;
         }
+        //Обработка кликов кнопок на приглашениях.
+        if (id.startsWith("accept-") || id.startsWith("decline")) {
+            const senderId = id.split("-")[1];
+            const stopTimer = gameState.challengeTimers[senderId]
+            if (stopTimer) {
+                stopTimer();
+                delete gameState.challengeTimers[senderId];
+            }
+            if (id.startsWith("accept-")) {
+                alert();
+                //gameActions.acceptBattle(senderId);
+            } else {
+                ui.removeItemFromUI("invite", senderId);
+            }
+        }
     },
-    handleMouseMove(event) {       
+    handleMouseMove(event) {
         if (movers[event.target.id]) {
-            movers[event.target.id](this, event);    
+            movers[event.target.id](this, event);
         }
     },
     handleGlobalKeyPress(event) {
@@ -134,7 +150,7 @@ export const interaction = {
         gameActions.enterPortal(worldId)
     },
 
-    showContextMenu(event, element){        
+    showContextMenu(event, element) {
         const menu = document.getElementById('context-menu');
         const charId = element.dataset.id;
         const charName = element.dataset.name
@@ -142,15 +158,15 @@ export const interaction = {
             console.warn("Попытка открыть меню для пустого или удаленного элемента");
             return;
         }
-        if (parseInt(charId) === gameState.player.id) return;        
+        if (parseInt(charId) === gameState.player.id) return;
         // Наполняем меню кнопками
         menu.innerHTML = contextNenu(charId, charName);
         // Позиционируем меню справа от клика
         menu.style.display = 'flex';
         menu.style.left = `${event.pageX + 5}px`;
-        menu.style.top = `${event.pageY + 5}px`;   
+        menu.style.top = `${event.pageY + 5}px`;
     },
-    
+
     hideContextMenu() {
         const menu = document.getElementById('context-menu');
         if (menu) menu.style.display = 'none';
