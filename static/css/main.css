@@ -957,4 +957,196 @@ button {
     color: #d4af37;
 }
 
+/*БОЕВАЯ МОДАЛКА*/
+.battle-container {
+    width: 750px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+}
+
+/* Шапка боя */
+.battle-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #333;
+}
+
+.battle-timer {
+    font-size: 24px;
+    font-weight: bold;
+    color: #ff4d4d;
+    text-shadow: 0 0 10px rgba(255, 77, 77, 0.3);
+}
+
+/* Арена с аватарами */
+.battle-arena {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    background: #0a0a0a;
+    padding: 20px;
+    border-radius: 4px;
+    border: 1px solid #222;
+}
+
+.fighter-side {
+    width: 120px;
+    text-align: center;
+}
+
+.fighter-name {
+    color: #d4af37;
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+/* Полоски здоровья в бою */
+.bar-container {
+    width: 100%;
+    height: 10px;
+    background: #222;
+    border: 1px solid #000;
+    margin-bottom: 4px;
+    border-radius: 2px;
+    overflow: hidden;
+}
+.bar-fill { height: 100%; transition: width 0.5s ease-out; }
+.bar-fill.hp { background: linear-gradient(to right, #8b0000, #ff0000); }
+.bar-fill.mp { background: linear-gradient(to right, #00008b, #0000ff); }
+
+#battleCanvas {
+    background: #111;
+    border: 1px solid #333;
+    border-radius: 4px;
+}
+
+/* Лог боя */
+.battle-log {
+    height: 100px;
+    background: #0d0d0d;
+    border: 1px solid #222;
+    padding: 10px;
+    overflow-y: auto;
+    font-size: 12px;
+    color: #888;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.log-entry.sys { color: #d4af37; font-style: italic; }
+.log-entry.damage { color: #ff4d4d; }
+
+/* ==========================================================================
+   МАГИЧЕСКАЯ ПАНЕЛЬ (Слоты и Стихии)
+   ========================================================================== */
+
+.magic-selector {
+    background: #1a1a1a;
+    padding: 15px;
+    border: 1px solid #333;
+    border-radius: 6px;
+}
+
+/* Кнопки стихий */
+.elements-grid {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.el-btn {
+    padding: 12px 15px;
+    border: 1px solid #444;
+    color: #fff;
+    font-size: 11px;
+    border-radius: 4px;
+    flex: 1;
+}
+
+.el-btn.fire  { background: #5a1a1a; box-shadow: inset 0 0 10px #ff4d4d; }
+.el-btn.water { background: #1a3a5a; box-shadow: inset 0 0 10px #4da6ff; }
+.el-btn.air   { background: #3a5a5a; box-shadow: inset 0 0 10px #ffffff; }
+.el-btn.earth { background: #2a4a1a; box-shadow: inset 0 0 10px #4dff4d; }
+
+.el-btn:hover { filter: brightness(1.4); transform: translateY(-2px); }
+.el-btn:active { transform: translateY(1px); }
+
+/* Слоты */
+.selected-slots {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+
+.battle-slot {
+    width: 70px;
+    height: 90px;
+    background: #000;
+    border: 2px solid #333;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: all 0.2s;
+}
+
+/* Выделение текущего заполняемого слота */
+.battle-slot.active-picking {
+    border-color: #d4af37;
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+}
+
+.slot-type {
+    position: absolute;
+    top: 5px;
+    font-size: 9px;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.slot-icon { font-size: 28px; margin-top: 10px; }
+
+/* Состояния слотов по стихиям */
+.slot-fire  { border-color: #ff4d4d; color: #ff4d4d; text-shadow: 0 0 5px #ff4d4d; }
+.slot-water { border-color: #4da6ff; color: #4da6ff; text-shadow: 0 0 5px #4da6ff; }
+.slot-air   { border-color: #ffffff; color: #ffffff; text-shadow: 0 0 5px #ffffff; }
+.slot-earth { border-color: #4dff4d; color: #4dff4d; text-shadow: 0 0 5px #4dff4d; }
+
+/* Финальные кнопки */
+.battle-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 5px;
+}
+
+#btn-submit-turn {
+    flex: 2;
+    background: #d4af37;
+    color: #000;
+}
+
+#btn-submit-turn:disabled {
+    background: #252525;
+    color: #555;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.btn-surrender {
+    flex: 1;
+    background: #3d1b1b;
+    color: #ff6b6b;
+    border: 1px solid #5a1a1a;
+}
+.btn-surrender:hover { background: #5a1a1a; color: #fff; }
+
 

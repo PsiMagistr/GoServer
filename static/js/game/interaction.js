@@ -93,9 +93,9 @@ export const interaction = {
                 stopTimer();
                 delete gameState.challengeTimers[senderId];
             }
-            if (id.startsWith("accept-")) {
-                alert();
-                //gameActions.acceptBattle(senderId);
+            if (id.startsWith("accept-")) {                
+                console.log("Принимаем заявку на бой")
+                gameActions.acceptBattle(senderId);
             } else {
                 ui.removeItemFromUI("invite", senderId);
             }

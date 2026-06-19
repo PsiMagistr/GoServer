@@ -1,3 +1,4 @@
+//Отправление пакетов с данными на сервер.
 import { network } from "./network.js";
 
 export const gameActions = {
@@ -43,5 +44,12 @@ export const gameActions = {
             target_id:parseInt(id),
        }
        network.send(packet)
-    }
+    },
+    acceptBattle(senderId){
+        const packet = {
+            type:"battle_accept",
+            sender_id:parseInt(senderId),
+        }
+        network.send(packet);
+    },
 }

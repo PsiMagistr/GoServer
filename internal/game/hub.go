@@ -33,25 +33,29 @@ type BattleChallenge struct { // Заявка на бой
 }
 
 type Hub struct {
-	mu            sync.RWMutex
-	Clients       map[int64]*Client
-	movingPlayers map[int64]*MoveData
-	challenges    map[int64]map[int64]*BattleChallenge
-	Register      chan *Client
-	Unregister    chan *Client
-	Broadcast     chan interface{}
-	RoomBroadcast chan RoomMessage
+	mu             sync.RWMutex
+	Clients        map[int64]*Client
+	movingPlayers  map[int64]*MoveData
+	challenges     map[int64]map[int64]*BattleChallenge
+	activeBattles  map[int64]*Battle
+	playerToBattle map[int64]int64
+	Register       chan *Client
+	Unregister     chan *Client
+	Broadcast      chan interface{}
+	RoomBroadcast  chan RoomMessage
 }
 
 func NewHub() *Hub {
 	return &Hub{
-		Clients:       make(map[int64]*Client),
-		movingPlayers: make(map[int64]*MoveData),
-		challenges:    make(map[int64]map[int64]*BattleChallenge),
-		Register:      make(chan *Client, 64),
-		Unregister:    make(chan *Client, 64),
-		Broadcast:     make(chan interface{}, 256),
-		RoomBroadcast: make(chan RoomMessage, 256),
+		Clients:        make(map[int64]*Client),
+		movingPlayers:  make(map[int64]*MoveData),
+		challenges:     make(map[int64]map[int64]*BattleChallenge),
+		activeBattles:  make(map[int64]*Battle),
+		playerToBattle: make(map[int64]int64),
+		Register:       make(chan *Client, 64),
+		Unregister:     make(chan *Client, 64),
+		Broadcast:      make(chan interface{}, 256),
+		RoomBroadcast:  make(chan RoomMessage, 256),
 	}
 }
 
@@ -295,7 +299,8 @@ func (h *Hub) handleRegeniration() {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 	for _, client := range h.Clients {
-		if h.GetFullStatus(client.Character.ID) == 1 {
+		if h.GetFullStatus(client.Character.ID) != models.StatusFree {
+			// fmt.Println("Вы не можете восстанавливаться")
 			continue
 		}
 		hpChanged := client.AddHP(2)

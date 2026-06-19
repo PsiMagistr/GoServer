@@ -30,6 +30,7 @@ var commands = map[string]CommandHandler{
 	"private_chat":     handleWhisperRequest,
 	"commit_stats":     handleStatsCommitRequest,
 	"battle_challenge": handleBattleChallenge,
+	"battle_accept":    handleBattleAccept,
 }
 
 func handleChat(c *Client, h *Hub, data map[string]interface{}) {
@@ -397,4 +398,13 @@ func handleBattleChallenge(c *Client, h *Hub, data map[string]interface{}) { // 
 		"challenge": challenge,
 	})
 	h.SystemMsg(c, "Вы вызвали "+targetClient.Character.Name+" на бой.")
+}
+
+func handleBattleAccept(c *Client, h *Hub, data map[string]interface{}) {
+	senderIDRaw, ok := data["sender_id"]
+	if !ok {
+		return
+	}
+	senderID := int64(senderIDRaw.(float64))
+	fmt.Println("Заявка на бой принята.", senderID, c.Character.ID)
 }
