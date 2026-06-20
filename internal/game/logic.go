@@ -405,6 +405,37 @@ func handleBattleAccept(c *Client, h *Hub, data map[string]interface{}) {
 	if !ok {
 		return
 	}
-	senderID := int64(senderIDRaw.(float64))
-	fmt.Println("Заявка на бой принята.", senderID, c.Character.ID)
+	senderIDFloat, ok := senderIDRaw.(float64)
+	if !ok {
+		h.SystemMsg(c, "Ошибка: ID персонажа должен быть числом.")
+		return
+	}
+	senderID := int64(senderIDFloat)
+	h.mu.Lock()
+	invites, hasInvites := h.challenges[c.Character.ID]
+	if !hasInvites {
+		h.mu.Unlock()
+		return
+	}
+	challenge, exists := invites[senderID]
+	if !exists || time.Now().After(challenge.ExpiresAt) {
+		h.mu.Unlock()
+		return
+	}
+	attacker, online := h.Clients[senderID]
+	if !online || attacker.Character.State != models.StatusFree {
+		h.mu.Unlock()
+		h.SystemMsg(c, "Противник уже не в сети или занят.")
+		return
+	}
+	h.mu.Unlock()
+	//.....
+
+	// fmt.Println("Заявка на бой принята.", senderID, c.Character.ID)
+	startData := map[string]interface{}{
+		"type":    "battle_start",
+		"message": "Мы принимаем бой",
+	}
+	h.Send(c, startData)
+	h.Send(attacker, startData)
 }

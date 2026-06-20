@@ -2,6 +2,7 @@ import { ui } from "./ui.js";
 import { gameState } from "./game.js";
 import { engine } from "./engine.js";
 import { statsController } from "./modal_controllers/statsController.js";
+import { battleController } from "./modal_controllers/battleController.js";
 import { utils } from '../utils/utils_functions.js'
 
 // Глобальная переменная для управления таймером внутри этого файла
@@ -249,7 +250,9 @@ export const socket_events = {
         )
         gameState.challengeTimers[ch.sender_id] = timerStop;
     },
-
+    battle_start(msg){
+        battleController.open(msg)
+    },
 
 }
 
