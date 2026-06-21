@@ -631,7 +631,7 @@ button {
     border-radius: 8px;
     padding: 25px;
     min-width: 320px;
-    max-width: 500px;
+    /*max-width: 500px;*/
     position: relative;
     color: #e0e0e0;
 }
@@ -823,20 +823,6 @@ button {
     gap: 6px;
 }
 
-/* Общий стиль кнопок боя */
-/*.btn-battle {
-    width: 28px;
-    height: 28px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border: 1px solid #333;
-    border-radius: 3px;
-    font-size: 16px;
-    transition: 0.2s;
-    background: #222;
-}*/
-
 .btn-battle {
     width: 30px;
     height: 30px;
@@ -893,18 +879,6 @@ button {
     box-shadow: 0 0 8px rgba(76, 175, 80, 0.4);
 }
 
-/*.btn-timer {
-    font-size: 18px;
-    font-family: 'Courier New', Courier, monospace; 
-    font-weight: bold;
-    border-left: 1px solid rgba(255,255,255,0.1); 
-    padding-left: 5px;
-}
-
-
-.btn-timer.critical {
-    color: #ff4d4d;
-}*/
 
 /* Кнопка отказать - красное свечение при наведении */
 .btn-battle.decline {
@@ -957,125 +931,118 @@ button {
     color: #d4af37;
 }
 
+
+
 /*Боевая модалка*/
+
 .battle-interface {
-    min-width: 700px;
+    width: 700px;
+    background: #111;
     display: flex;
     flex-direction: column;
     gap: 10px;
-    color: #eee;
+    padding: 10px;
+    border-radius: 8px;
 }
 
-.battle-top-bar {
+/* Сетка слотов */
+.battle-slots-row {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 5px 10px;
-    background: #1a1a1a;
+    justify-content: center;
+    gap: 8px;
+    background: #000;
+    padding: 10px;
     border: 1px solid #333;
     border-radius: 4px;
 }
 
-.battle-timer {
-    font-family: 'Courier New', monospace;
-    font-size: 20px;
-    color: #ff4d4d;
-    font-weight: bold;
-}
-
-.battle-screen {
-    background: #000;
-    border: 2px solid #8a6d3b;
-    box-shadow: inset 0 0 20px rgba(212, 175, 55, 0.2);
-    position: relative;
-}
-
-/* Стили магии */
-.battle-management {
-    background: #161616;
-    padding: 15px;
-    border-radius: 6px;
-    border: 1px solid #222;
-}
-
-.element-picker {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    margin-bottom: 15px;
-}
-
-.el-btn {
+.battle-slot {
     width: 50px;
     height: 50px;
-    font-size: 24px;
-    background: #222;
-    border: 2px solid #444;
-    border-radius: 50%;
-    transition: 0.2s;
-}
-
-.el-btn:hover { transform: scale(1.1); border-color: #d4af37; }
-
-.magic-slots-container {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-}
-
-.magic-slot {
-    width: 65px;
-    height: 85px;
-    background: #0a0a0a;
-    border: 2px solid #333;
+    background: #111;
+    border: 2px solid #222;
     border-radius: 4px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     position: relative;
+    cursor: pointer;
 }
 
-.slot-label {
-    position: absolute;
-    top: 4px;
-    font-size: 8px;
-    color: #555;
+.slot-shield { border-color: #3b5a8a; } /* Синеватый оттенок для щитов */
+.slot-attack { border-color: #8a3b3b; } /* Красный оттенок для атаки */
+
+/* Контейнер библиотеки */
+.spells-library {
+    display: flex;
+    gap: 15px; /* Зазор между колонками */
+}
+
+.spells-column {
+    flex: 1;
+    background: #1a1a1a;
+    border: 1px solid #252525;
+    padding: 10px;
+    border-radius: 4px;
+}
+
+.spells-column h4 {
+    font-size: 10px;
+    color: #d4af37;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    text-align: center;
     letter-spacing: 1px;
 }
 
-.slot-icon { font-size: 26px; }
+.spells-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 100px;
+    overflow-y: auto;
+}
 
-/* Подсветка активного слота, который сейчас заполняется */
-.magic-slot.active-picking {
+.spell-item {
+    padding: 6px 10px;
+    background: #222;
+    border: 1px solid #333;
+    font-size: 12px;
+    color: #bbb;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: 0.2s;
+}
+
+.spell-item:hover {
+    background: #2a2a2a;
     border-color: #d4af37;
-    box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+    color: #fff;
 }
 
-/* Лог и кнопки */
-.battle-footer {
-    display: grid;
-    grid-template-columns: 1fr 200px;
-    gap: 10px;
-    height: 120px;
-}
-
+/* Лог боя */
 .battle-log {
-    background: #0d0d0d;
+    height: 100px;
+    background: #050505;
     border: 1px solid #222;
     padding: 8px;
-    overflow-y: auto;
+    overflow-y: scroll;
     font-size: 12px;
-    display: flex;
-    flex-direction: column;
+    color: #888;
 }
 
-.battle-actions {
+/* Кнопки */
+.battle-footer-actions {
     display: flex;
-    flex-direction: column;
-    gap: 5px;
+    gap: 10px;
 }
 
-.btn-confirm { background: #28a745 !important; font-size: 14px !important; flex: 2; }
-.btn-confirm:disabled { background: #222 !important; color: #444; cursor: not-allowed; box-shadow: none; }
-.btn-quit { background: #5a1a1a !important; font-size: 11px !important; flex: 1; opacity: 0.7; }
+.battle-btn {
+    padding: 12px;
+    font-weight: bold;
+    border-radius: 4px;
+}
+
+.btn-confirm { background: #28a745; color: #000; flex: 3; }
+.btn-surrender { background: #5a1a1a; color: #ff6b6b; flex: 1; }

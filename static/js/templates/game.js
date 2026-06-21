@@ -76,9 +76,21 @@ export const gameTemplate = (char) => {
                 <div class="modal-window">
                     <button id="modal-close-btn" class="modal-close">&times;</button>
                     <div id="modal-content">Пространство модального окна</div>
-                </div>
+                </div>                
+            </div>
+            <div id="battle-overlay" class="modal-overlay" style="display:none;">
+                <div class="modal-window">                    
+                    <div id="modal-battle-content">Пространство модального боевого окна</div>
+                </div>                
             </div>
             <div id="context-menu" class="context-menu" style="display: none;"></div>
         </div>
     `;
 };
+
+/*
+<div class="modal-battle-window">                    
+                    
+                </div>
+
+*/

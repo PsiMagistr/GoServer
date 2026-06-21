@@ -6,7 +6,7 @@ export const battleController = {
         this.show()
     },
     show(){
-        modalManager.show(battleModalTemplate, this.data);   
+        modalManager.show(battleModalTemplate, this.data, "#battle-overlay");  
         
     }
       

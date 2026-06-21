@@ -1,57 +1,71 @@
 export const battleModalTemplate = (data) => {
-    // data содержит: { player, opponent, timeLeft }
     /*const p = data.player;
     const o = data.opponent;*/
 
-    // Генерируем 5 слотов (2 щита, 3 атаки)
+    // Генерируем 5 слотов (2 защиты, 3 атаки)
     let slotsHtml = '';
     for (let i = 1; i <= 5; i++) {
-        const isShield = i <= 2;
+        //const isShield = i <= 2;
         slotsHtml += `
-            <div class="magic-slot ${isShield ? 'slot-def' : 'slot-atk'}" id="slot-${i}" data-slot="${i}">
-                <div class="slot-label">${isShield ? 'ЩИТ' : 'УДАР'}</div>
-                <div class="slot-icon">?</div>
+            <div class="battle-slot slot-shield" id="slot-${i}" data-slot-index="${i}">
+                <div class="slot-type-label">Пусто</div>
+                <div class="slot-icon" id="slot-icon-${i}"></div>
             </div>
         `;
     }
 
     return `
-        <div class="modal-content">
-            <!-- ВЕРХНЯЯ ПАНЕЛЬ: Таймер и Статус -->
-            <div class="battle-top-bar">
-                <div class="battle-title">Поединок: Вася vs Петя</div>
-                <div id="battle-timer" class="battle-timer">30s</div>
+        <div class="battle-interface">
+            <!-- ВЕРХНЯЯ ПАНЕЛЬ: Таймер и Имена -->
+            <div class="battle-header">
+                <div class="battle-title">Поединок: <b></b> vs <b></b></div>
+                <div id="battle-timer" class="battle-timer">${data.timeLeft || 30}s</div>
             </div>
 
-            <!-- ЭКРАН БОЯ: Канвас (Аватары и Шкалы рисует Engine) -->
+            <!-- ЭКРАН БОЯ (Канвас) -->
             <div class="battle-screen">
-                <canvas id="battleCanvas" width="650" height="250"></canvas>
+                <canvas id="battleCanvas" width="650" height="120"></canvas>
             </div>
 
-            <!-- ЦЕНТРАЛЬНАЯ ПАНЕЛЬ: Выбор стихий и Слоты -->
-            <div class="battle-management">
-                <div class="element-picker">
-                    <button class="el-btn fire" data-element="fire" title="Огонь">🔥</button>
-                    <button class="el-btn water" data-element="water" title="Вода">💧</button>
-                    <button class="el-btn air" data-element="air" title="Воздух">🌬️</button>
-                    <button class="el-btn earth" data-element="earth" title="Земля">🌱</button>
+            <!-- ВЫБРАННЫЕ СЛОТЫ -->
+            <div class="battle-slots-row">
+                ${slotsHtml}
+            </div>
+
+            <!-- КНИГА ЗАКЛИНАНИЙ (Две колонки) -->
+            <div class="spells-library">
+                <!-- Колонка Защиты -->
+                <div class="spells-column">
+                    <h4>Защитные щиты</h4>
+                    <div id="defense-spells" class="spells-list">
+                        <div class="spell-item shield fire" data-type="def" data-element="fire">🔥 Щит Огня</div>
+                        <div class="spell-item shield water" data-type="def" data-element="water">💧 Щит Воды</div>
+                        <div class="spell-item shield air" data-type="def" data-element="air">🌬️ Щит Воздуха</div>
+                        <div class="spell-item shield earth" data-type="def" data-element="earth">🌱 Щит Земли</div>
+                    </div>
                 </div>
 
-                <div class="magic-slots-container">
-                    ${slotsHtml}
+                <!-- Колонка Атаки -->
+                <div class="spells-column">
+                    <h4>Боевая магия</h4>
+                    <div id="attack-spells" class="spells-list">
+                        <div class="spell-item attack fire" data-type="atk" data-element="fire">🔥 Огненный шар</div>
+                        <div class="spell-item attack water" data-type="atk" data-element="water">💧 Ледяная стрела</div>
+                        <div class="spell-item attack air" data-type="atk" data-element="air">🌬️ Молния</div>
+                        <div class="spell-item attack earth" data-type="atk" data-element="earth">🌱 Каменный шип</div>
+                    </div>
                 </div>
             </div>
 
-            <!-- НИЖНЯЯ ПАНЕЛЬ: Лог и Кнопки -->
-            <div class="battle-footer">
-                <div id="battle-log" class="battle-log">
-                    <div class="log-entry sys">Бой начался! Выберите заклинания для хода.</div>
-                </div>
-                
-                <div class="battle-actions">
-                    <button id="btn-submit-turn" class="main-btn btn-confirm" disabled>СДЕЛАТЬ ХОД</button>
-                    <button id="btn-surrender" class="main-btn btn-quit">СДАТЬСЯ</button>
-                </div>
+            <!-- ЛОГ БОЯ -->
+            <div id="battle-log" class="battle-log">
+                <div class="log-entry sys">Бой начался! Соберите комбинацию стихий.</div>
+            </div>
+
+            <!-- КНОПКИ ДЕЙСТВИЙ -->
+            <div class="battle-footer-actions">
+                <button id="btn-submit-turn" class="battle-btn btn-confirm" disabled>ПОДТВЕРДИТЬ ХОД</button>
+                <button id="btn-surrender" class="battle-btn btn-surrender">СДАТЬСЯ</button>
             </div>
         </div>
     `;
