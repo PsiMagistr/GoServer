@@ -25,7 +25,7 @@ export const statsController = {
                
     },
     show(){                       
-        modalManager.show(statsModalTemplate, this.draft, "#modal-overlay");
+        modalManager.show(statsModalTemplate, this.draft,{closable:true});
     },
     refresh(){
         modalManager.refresh(this.draft)
