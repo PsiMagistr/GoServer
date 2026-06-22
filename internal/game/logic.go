@@ -56,8 +56,8 @@ func handleChat(c *Client, h *Hub, data map[string]interface{}) {
 
 func handleMoveRequest(c *Client, h *Hub, data map[string]interface{}) {
 	clientStatus := h.GetFullStatus(c.Character.ID)
-	if clientStatus == models.StatusMoving {
-		h.SystemMsg(c, "Вы уже находитесь в процессе перехода.")
+	if clientStatus != models.StatusFree {
+		h.SystemMsg(c, "Вы не можете двигаться.")
 		return
 	}
 	targetID, ok := data["target_id"].(string)
@@ -150,7 +150,8 @@ func handleMoveRequest(c *Client, h *Hub, data map[string]interface{}) {
 
 func handlePortalMoveRequest(c *Client, h *Hub, data map[string]interface{}) {
 	clientFullStatus := h.GetFullStatus(c.Character.ID)
-	if clientFullStatus == models.StatusMoving {
+	if clientFullStatus != models.StatusFree {
+		h.SystemMsg(c, "Вы не можете двигаться.")
 		return
 	}
 	targetWorldID, ok := data["world_id"].(string)
@@ -400,6 +401,7 @@ func handleBattleChallenge(c *Client, h *Hub, data map[string]interface{}) { // 
 	h.SystemMsg(c, "Вы вызвали "+targetClient.Character.Name+" на бой.")
 }
 
+// Принятие боя
 func handleBattleAccept(c *Client, h *Hub, data map[string]interface{}) {
 	senderIDRaw, ok := data["sender_id"]
 	if !ok {
@@ -419,7 +421,9 @@ func handleBattleAccept(c *Client, h *Hub, data map[string]interface{}) {
 	}
 	challenge, exists := invites[senderID]
 	if !exists || time.Now().After(challenge.ExpiresAt) {
+		delete(h.challenges[c.Character.ID], senderID)
 		h.mu.Unlock()
+		h.SystemMsg(c, "Заявка просрочена.")
 		return
 	}
 	attacker, online := h.Clients[senderID]
@@ -428,14 +432,46 @@ func handleBattleAccept(c *Client, h *Hub, data map[string]interface{}) {
 		h.SystemMsg(c, "Противник уже не в сети или занят.")
 		return
 	}
+	// Добавляем в карту.
+	battleID := time.Now().UnixNano()
+	newBattle := &Battle{
+		ID:              battleID,
+		Attacker:        attacker,
+		Defender:        c,
+		AttackerHP:      attacker.Character.HP,
+		AttackerMaxHP:   attacker.Character.MaxHP,
+		DefenderHP:      c.Character.HP,
+		DefenderMaxHP:   c.Character.MaxHP,
+		AttackerMana:    attacker.Character.Mana,
+		AttackerMaxMana: attacker.Character.MaxMana,
+		DefenderMana:    c.Character.Mana,
+		DefenderMaxMana: c.Character.MaxMana,
+		Round:           1,
+		ExpiresAt:       time.Now().Add(60 * time.Second),
+	}
+	h.activeBattles[battleID] = newBattle
+	h.playerToBattle[attacker.Character.ID] = battleID
+	h.playerToBattle[c.Character.ID] = battleID
+	attacker.Character.State = models.StatusBattle
+	c.Character.State = models.StatusBattle
+	delete(h.challenges[c.Character.ID], senderID)
 	h.mu.Unlock()
-	//.....
 
 	// fmt.Println("Заявка на бой принята.", senderID, c.Character.ID)
-	startData := map[string]interface{}{
-		"type":    "battle_start",
-		"message": "Мы принимаем бой",
+	defenderData := map[string]interface{}{
+		"type":      "battle_start",
+		"battle_id": battleID,
+		"you":       c.Character,
+		"opponent":  attacker.Character,
+		"time_left": 60,
 	}
-	h.Send(c, startData)
-	h.Send(attacker, startData)
+	attackerData := map[string]interface{}{
+		"type":      "battle_start",
+		"battle_id": battleID,
+		"you":       attacker.Character,
+		"opponent":  c.Character,
+		"time_left": 60,
+	}
+	h.Send(c, defenderData)
+	h.Send(attacker, attackerData)
 }
