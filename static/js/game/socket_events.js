@@ -33,7 +33,7 @@ const changeLabel = (msg) => {
 }
 
 export const socket_events = {
-    async world_sync(msg) {        
+    async world_sync(msg) {
         console.log("Глобальная синхронизация мира...");
         console.log(msg.challenges)
         // 1. Синхронизируем состояние
@@ -90,13 +90,13 @@ export const socket_events = {
         }
         // 3. ЛОГИКА ОВЕРЛЕЯ (Показываем или скрываем сразу, не дожидаясь загрузки картинок)
         const overlay = document.getElementById('move-overlay');
-         if (overlay){
+        if (overlay) {
             overlay.style.display = 'none';
-            changeLabel(msg)            
-         }      
+            changeLabel(msg)
+        }
         console.log("world_sync")
         console.log(msg.player)
-        if(gameState.stopMovingTimer != null) gameState.stopMovingTimer() 
+        if (gameState.stopMovingTimer != null) gameState.stopMovingTimer()
         const state = msg.player.state;
         if (state === 1 && msg.duration > 0) {
             if (!overlay) return
@@ -104,26 +104,26 @@ export const socket_events = {
             overlay.querySelector('.target-name').innerText = `${msg.world_name}, ${msg.location_name}`;
             let timeLeft = msg.duration;
             const timerEl = overlay.querySelector('.timer-count');
-            timerEl.innerText = timeLeft;           
+            timerEl.innerText = timeLeft;
             gameState.stopMovingTimer = utils.createTimer(
-            timeLeft,
-            (sec)=>{
-                 timerEl.innerText = sec;    
-            },()=>{
-                console.log("ffdfdfdfdfdfd")
-                alert("Прыгнули через портал");
-            })
+                timeLeft,
+                (sec) => {
+                    timerEl.innerText = sec;
+                }, () => {
+                    console.log("ffdfdfdfdfdfd")
+                    alert("Прыгнули через портал");
+                })
         }
-          
+
 
         // 4. ЗАГРУЗКА РЕСУРСОВ (в фоне)
         const assetsToLoad = {
-            map: `/assets/maps/${msg.world_id}.png`,
-            hero: `/assets/avatars/${msg.player.gender}/${msg.player.avatar_id}.png`
+            map: `./assets/maps/${msg.world_id}.png`,
+            hero: `./assets/avatars/${msg.player.gender}/${msg.player.avatar_id}.png`
         };
 
         try {
-            engine.images = await engine.loaderAssets(assetsToLoad);
+            engine.images = await engine.loaderAssets(assetsToLoad);            
             engine.init(document.getElementById('gameCanvas'));
             gameState.isInitialized = true;
             // Здесь мы НЕ прячем оверлей, так как его должен спрятать только move_complete
@@ -147,12 +147,12 @@ export const socket_events = {
         gameState.stopMovingTimer = utils.createTimer(secondsLeft, (sec) => {
             timerEl.innerText = sec;
         },
-            () => {              
+            () => {
                 timerEl.innerText = "Прибытие...";
             });
 
     },
-    move_complete(msg) {       
+    move_complete(msg) {
         if (gameState.stopMovingTimer) gameState.stopMovingTimer()
         gameState.player.state = msg.state;
         // Скрываем оверлей
@@ -237,7 +237,7 @@ export const socket_events = {
                     <button class="btn-battle decline" id="decline-${item.id}">✕</button>
                 </div>
             `
-        )        
+        )
         const timerStop = utils.createTimer(
             ch.time_left,
             (sec) => {
@@ -250,9 +250,8 @@ export const socket_events = {
         )
         gameState.challengeTimers[ch.sender_id] = timerStop;
     },
-    battle_start(msg){
+    battle_start(msg) {
         battleController.open(msg)
     },
-
 }
 

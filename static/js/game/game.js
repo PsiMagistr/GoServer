@@ -24,7 +24,7 @@ export function initGame(char) {
     }
     const UiElements = utils.getElementsBySelectors(UISchema);
     interaction.init(app);
-    engine.init(UiElements.canvas);
+    //engine.init(UiElements.canvas);
     network.connect();
 }
 

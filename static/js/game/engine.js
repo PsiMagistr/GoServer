@@ -1,49 +1,60 @@
 import { gameState } from "./game.js";
 import { graphs } from "./graphic_settings.js";
-export const engine = {
-    canvas: null,
-    ctx: null,
-    loopId: null,
-    images: null,
-    init(canvasElement) {
-        this.canvas = canvasElement;
-        this.ctx = canvasElement.getContext('2d');
-        this.start();
+export const engine = {   
+    main:{
+        canvas:null,
+        ctx:null,
+        loopId:null,
     },
-    start() {
-        if (this.loopId) this.stop();
+    battle:{
+        canvas: null,
+        ctx: null,
+        loopId: null,
+        data: null,
+    },
+    images:"Строка",
+    init(canvasElement) {        
+        this.main.canvas = canvasElement;
+        this.main.ctx = canvasElement.getContext('2d');
+        this.startMainLoop();
+    },
+    startMainLoop() {        
+        if (this.main.loopId) cancelAnimationFrame(this.main.loopId);
         const render = () => {
-            this.draw()
-            this.loopId = window.requestAnimationFrame(render)
+            this.drawWorld()
+            this.main.loopId = window.requestAnimationFrame(render)
         }
         render();
     },
-    draw() {
-        this.ctx.fillStyle = 'black';
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    drawWorld() {        
+        const canvas = this.main.canvas;
+        const ctx = this.main.ctx;        
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
         if (!gameState.player) {
-            this.ctx.fillStyle = 'lime';
-            this.ctx.fillRect(280, 180, 40, 40);
+            ctx.fillStyle = 'lime';
+            ctx.fillRect(280, 180, 40, 40);
             return;
-        }
-        if (!this.images) return;
+        }      
         this.drawMap();
         this.drawCityNodes();
-        this.drawPlayer();
-
     },
-    stop() {
-        cancelAnimationFrame(this.loopId);
+    stopMainLoop() {
+        cancelAnimationFrame(this.main.loopId);
     },
-    drawMap() {
-        this.ctx.drawImage(this.images.map, 0, 0, this.canvas.width, this.canvas.height);
+    drawMap() {                              
+        const canvas = this.main.canvas;
+        const ctx = this.main.ctx;                       
+        ctx.drawImage(this.images.map, 0, 0, canvas.width, canvas.height);
+        this.drawUnit(ctx, 10, 10, gameState.player, true);
     },
-    drawPlayer() {
-        const char = gameState.player;                      
-        this.ctx.drawImage(this.images.hero, graphs.x, graphs.y, graphs.w, graphs.h);        
+    drawUnit(ctx, x, y, char, isPlayer) {        
+        const avatar = isPlayer ? this.images.hero : this.images.opponent; 
+        if (avatar) {
+            ctx.drawImage(avatar, x, y, 100, 100);
+        }               
         const healParams = {           
-            x:graphs.x,
-            y: graphs.y,
+            x:x,
+            y:y,
             w:graphs.w,
             h:graphs.barH,            
             current:char.hp,
@@ -53,8 +64,8 @@ export const engine = {
             color:graphs.barHealColor,
         }
         const manaParams = {           
-            x:graphs.x,
-            y: graphs.y,
+            x:x,
+            y:y,
             w:graphs.w,
             h:graphs.barH,            
             current:char.mana,
@@ -64,8 +75,8 @@ export const engine = {
             color:graphs.barManaColor,
         }
         const expaParams = {           
-            x:graphs.x,
-            y: graphs.y,
+            x:x,
+            y:y,
             w:graphs.w,
             h:graphs.barH,            
             current:char.exp,
@@ -73,23 +84,23 @@ export const engine = {
             max:char.max_exp,
             backColor:graphs.barHealBackColor,
             color:graphs.barExpColor,
-        }         
+        }        
                                                  
-        this.drawBar(1, healParams);
-        this.drawBar(2, manaParams);
-        this.drawBar(3, expaParams);        
+        this.drawBar(1, ctx, healParams);
+        this.drawBar(2, ctx, manaParams);
+        this.drawBar(3, ctx, expaParams);       
     },
-    drawBar(counter, {x, y, w, h, current, max, color, backColor, currentRounded}) {        
+    drawBar(counter, ctx, {x, y, w, h, current, max, color, backColor, currentRounded}) {                
         const dy = y + w + graphs.barGap + (graphs.barH + graphs.barGap) * (counter - 1);
         const percent = Math.min(Math.max(current / max, 0), 1)
-        this.ctx.fillStyle = backColor;
-        this.ctx.fillRect(x, dy, w, h);
-        this.ctx.fillStyle = color;
-        this.ctx.fillRect(x, dy, w * percent, h);
-        this.ctx.fillStyle = "white";
-        this.ctx.font = `bold ${h * 0.8}px Arial`;
-        this.ctx.textAlign = "center";
-        this.ctx.fillText(`${currentRounded}/${max}`, x + w / 2, dy + h * 0.85);
+        ctx.fillStyle = backColor;
+        ctx.fillRect(x, dy, w, h);
+        ctx.fillStyle = color;
+        ctx.fillRect(x, dy, w * percent, h);
+        ctx.fillStyle = "white";
+        ctx.font = `bold ${h * 0.8}px Arial`;
+        ctx.textAlign = "center";
+        ctx.fillText(`${currentRounded}/${max}`, x + w / 2, dy + h * 0.85);
     },
     drawCityNodes() {
         const points = gameState.world?.points;
@@ -100,6 +111,7 @@ export const engine = {
         }
     },
     drawPointer(node, id){
+        const ctx = this.main.ctx;
         const isCurrent = gameState.player.location_id === id;
             const isHovered = gameState.hoveredNodeId === id;
             let color = "#FFDEAD";
@@ -114,34 +126,33 @@ export const engine = {
             const x = node.x;
             const y = node.y;
             // 1. Рисуем кружок (основание)
-            this.ctx.beginPath();
-            this.ctx.arc(x, y, 8, 0, Math.PI * 2);
-            this.ctx.fillStyle = color;
-            this.ctx.fill();
-            this.ctx.closePath();
+            ctx.beginPath();
+            ctx.arc(x, y, 8, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+            ctx.closePath();
             // 2. Рисуем палочку (шест указателя)
-            this.ctx.beginPath();
-            this.ctx.moveTo(x, y);
-            this.ctx.lineTo(x, y - 30);
-            this.ctx.strokeStyle = "#8a6d3b"; // Цвет дерева/меди
-            this.ctx.lineWidth = 2;
-            this.ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x, y - 30);
+            ctx.strokeStyle = "#8a6d3b"; // Цвет дерева/меди
+            ctx.stroke()
             // 3. Рисуем прямоугольник (табличка)
-            const textWidth = this.ctx.measureText(node.name).width;
+            const textWidth = ctx.measureText(node.name).width;
             const rectW = textWidth + 20;
             const rectH = 25;
             const rectX = x - rectW / 2;
             const rectY = y - 55;
-            this.ctx.fillStyle = backgroundTableColor; // Темный фон таблички
-            this.ctx.strokeStyle = "#d4af37";
-            this.ctx.lineWidth = 1;
-            this.ctx.fillRect(rectX, rectY, rectW, rectH);
-            this.ctx.strokeRect(rectX, rectY, rectW, rectH);
+            ctx.fillStyle = backgroundTableColor; // Темный фон таблички
+            ctx.strokeStyle = "#d4af37";
+            ctx.lineWidth = 1;
+            ctx.fillRect(rectX, rectY, rectW, rectH);
+            ctx.strokeRect(rectX, rectY, rectW, rectH);
             // 4. Текст (название локации)
-            this.ctx.fillStyle = "#ffffff";
-            this.ctx.font = "12px Arial";
-            this.ctx.textAlign = "center";
-            this.ctx.fillText(node.name, x, rectY + 17);
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "12px Arial";
+            ctx.textAlign = "center";
+            ctx.fillText(node.name, x, rectY + 17);
     },
     async loaderAssets(assetsMap) {
         const keys = Object.keys(assetsMap);
