@@ -1,7 +1,9 @@
 import { gameState } from "./game.js";
 import { gameActions } from "./actions.js";
 import { engine } from "./engine.js";
+import { modalManager } from "./modalManager.js";
 import { statsController } from "./modal_controllers/statsController.js";
+import { battleController } from "./modal_controllers/battleController.js";
 import { contextNenu } from "../templates/context_menu.js";
 import {ui} from "./ui.js"
 
@@ -21,7 +23,8 @@ const clickers = {
         statsController.commit();
     },
     "modal-close-btn": (obj, event) => {
-        statsController.hide();
+        console.log("какой шаблон активен")      
+        modalManager.hide();
     },
 }
 const movers = {

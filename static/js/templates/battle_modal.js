@@ -24,7 +24,7 @@ export const battleModalTemplate = (data) => {
 
             <!-- ЭКРАН БОЯ (Канвас) -->
             <div class="battle-screen">
-                <canvas id="battleCanvas" width="650" height="120"></canvas>
+                <canvas id="battleCanvas" width="650" height="200"></canvas>
             </div>
 
             <!-- ВЫБРАННЫЕ СЛОТЫ -->

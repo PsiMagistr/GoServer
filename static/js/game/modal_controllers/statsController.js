@@ -23,9 +23,9 @@ export const statsController = {
             this.refresh();            
         }       
                
-    },
+    },    
     show(){                       
-        modalManager.show(statsModalTemplate, this.draft,{closable:true});
+        modalManager.show(statsModalTemplate, this.draft,{closable:true,},this);
     },
     refresh(){
         modalManager.refresh(this.draft)
@@ -51,5 +51,5 @@ export const statsController = {
          this.draft.error = error.Message;
          this.draft.isLoading = false;
          this.refresh();   
-    }
+    },    
 }

@@ -81,53 +81,55 @@ func (h *Hub) Run() {
 	}
 }
 
-////////handlers
+/*Подготовка пакета syncWorld*/
 
-func (h *Hub) handleRegister(client *Client) {
-	h.mu.Lock()
-	// 1. Кикаем старую сессию (защита от мульти-вкладок)
-	if oldClient, ok := h.Clients[client.Character.ID]; ok {
-		oldClient.Conn.Close()
-		fmt.Printf("Персонаж %s зашел из другого места, старая сессия закрыта.\n", client.Character.Name)
-	}
-	// Регистрация в карте онлайна
-	h.Clients[client.Character.ID] = client
-	challenges := h.GetChallenges(client.Character.ID)
-
-	// 2. Сбор данных для атомарного пакета
-	moveInfo, movingInHub := h.movingPlayers[client.Character.ID]
-	if movingInHub {
-		client.Character.State = models.StatusMoving
-	}
+func (h *Hub) prepareSyncState(client *Client) map[string]interface{} {
 	neighbors := h.getNeighbors(client.Character.WorldID, client.Character.LocationID)
 	currentWorld := Universe[client.Character.WorldID]
 	currentNode := currentWorld.Points[client.Character.LocationID]
-	h.mu.Unlock()
-	// 3. ОТПРАВЛЯЕМ ЕДИНЫЙ ПАКЕТ СИНХРОНИЗАЦИИ
-	// Теперь фронтенд получит всё: кто он, где он, кто рядом и какие порталы доступны
+	challenges := h.GetChallenges(client.Character.ID)
 	var timeLeft int
 	worldName := currentWorld.Name
 	locationName := currentNode.Name
-	if client.Character.State == models.StatusMoving && movingInHub {
-		timeLeft = int(math.Ceil(time.Until(moveInfo.ArrivalTime).Seconds()))
+	moveInfo, isMoving := h.movingPlayers[client.Character.ID]
+	if isMoving {
+		client.Character.State = models.StatusMoving // Синхронизируем стейт
+		secondsLeft := time.Until(moveInfo.ArrivalTime).Seconds()
+		timeLeft = int(math.Ceil(secondsLeft))
 		worldName = moveInfo.TargetWorldName
 		locationName = moveInfo.TargetLocationName
 	}
-	h.Send(client, map[string]interface{}{
+	return map[string]interface{}{
 		"type":          "world_sync",
-		"player":        client.Character,   // Данные персонажа (HP, мана, статы)
-		"world":         currentWorld,       // Данные мира (точки для канваса)
-		"players":       neighbors,          // Список людей в комнате
-		"challenges":    challenges,         // Заявки на бой
-		"worlds":        currentNode.Worlds, // Доступные переходы (порталы)
+		"player":        client.Character,
+		"world":         currentWorld,
+		"players":       neighbors,
+		"challenges":    challenges,
+		"worlds":        currentNode.Worlds,
+		"is_moving":     isMoving,
 		"duration":      timeLeft,
-		"world_id":      client.Character.WorldID,
+		"world_id":      client.Character.WorldID, // Например "main_city"
 		"location_id":   client.Character.LocationID,
 		"world_name":    worldName,
 		"location_name": locationName,
-	})
+		//"battle_info":   battleInfo,
+	}
+}
 
-	// 4. Оповещаем соседей (это всё еще отдельный пакет для ДРУГИХ игроков)
+func (h *Hub) handleRegister(client *Client) {
+	h.mu.Lock()
+	// 1. Безопасность
+	if oldClient, ok := h.Clients[client.Character.ID]; ok {
+		oldClient.Conn.Close()
+	}
+	// 2. Регистрация
+	h.Clients[client.Character.ID] = client
+	// 3. Подготовка данных (Snapshot)
+	syncData := h.prepareSyncState(client)
+	h.mu.Unlock()
+	// 4. Отправка (уже без блокировки всего сервера!)
+	h.Send(client, syncData)
+	// 5. Уведомление окружающих
 	h.BroadcastToRoomExcept(client.Character.WorldID, client.Character.LocationID, client.Character.ID, map[string]interface{}{
 		"type": "player_joined",
 		"player": map[string]interface{}{
@@ -263,26 +265,6 @@ func (h *Hub) getNeighbors(worldID string, locationID string) []map[string]inter
 	return neighbors
 }
 
-/*func (h *Hub) ResyncRoomPresence(c *Client) {
-	h.mu.RLock()
-	neighbors := h.getNeighbors(c.Character.WorldID, c.Character.LocationID)
-	h.mu.RUnlock()
-	currentWorld := Universe[c.Character.WorldID]
-	h.Send(c, map[string]interface{}{
-		"type":    "room_presence",
-		"players": neighbors,
-		"worlds":  currentWorld.Points[c.Character.LocationID].Worlds,
-	})
-}*/
-
-/*func (h *Hub) IsPlayerMoving(charID int64) bool {
-	h.mu.RLock()
-	defer h.mu.RUnlock()
-	_, moving := h.movingPlayers[charID]
-	return moving
-}*/
-
-// Для чата.
 func (h *Hub) GetClientByName(name string) *Client {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
