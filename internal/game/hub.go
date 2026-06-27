@@ -81,8 +81,52 @@ func (h *Hub) Run() {
 	}
 }
 
-/*Подготовка пакета syncWorld*/
+/*Снапшот боя*/
+func (h *Hub) getBattleSnapshot(battleID int64, forPlayerID int64) map[string]interface{} {
+	b, ok := h.activeBattles[battleID]
+	if !ok {
+		return nil
+	}
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	var you, opponent *Client
+	if b.Attacker.Character.ID == forPlayerID {
+		you = b.Attacker
+		opponent = b.Defender
+	} else {
+		you = b.Defender
+		opponent = b.Attacker
+	}
+	return map[string]interface{}{
+		"battle_id": b.ID,
+		"round":     b.Round,
+		"time_left": int(math.Ceil(float64(time.Until(b.ExpiresAt).Seconds()))),
+		"player": map[string]interface{}{
+			"id":       you.Character.ID,
+			"level":    you.Character.Level,
+			"name":     you.Character.Name,
+			"hp":       you.Character.HP, // ПРАВИЛЬНОЕ HP
+			"max_hp":   you.Character.MaxHP,
+			"mana":     you.Character.Mana,
+			"max_mana": you.Character.Mana,
+			"avatar":   you.Character.AvatarID,
+			"gender":   you.Character.Gender,
+		},
+		"opponent": map[string]interface{}{
+			"id":       opponent.Character.ID,
+			"name":     opponent.Character.Name,
+			"level":    opponent.Character.Level,
+			"hp":       opponent.Character.HP, // ПРАВИЛЬНОЕ HP
+			"max_hp":   opponent.Character.MaxExp,
+			"mana":     opponent.Character.Mana,
+			"max_mana": opponent.Character.MaxMana,
+			"avatar":   opponent.Character.AvatarID,
+			"gender":   opponent.Character.Gender,
+		},
+	}
+}
 
+/*Подготовка пакета syncWorld*/
 func (h *Hub) prepareSyncState(client *Client) map[string]interface{} {
 	neighbors := h.getNeighbors(client.Character.WorldID, client.Character.LocationID)
 	currentWorld := Universe[client.Character.WorldID]
