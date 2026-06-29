@@ -36,6 +36,8 @@ export const socket_events = {
     async world_sync(msg) {
         console.log("Глобальная синхронизация мира...");
         console.log(msg.challenges)
+        console.log("Бой")
+        console.log(msg.battle_info)
         // 1. Синхронизируем состояние
         gameState.player = msg.player;
         gameState.world = msg.world;

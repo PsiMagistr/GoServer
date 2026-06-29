@@ -66,9 +66,9 @@ export const engine = {
         const canvas = this.battle.canvas;
         if (!ctx || !this.battle.data) return;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        this.drawUnit(ctx, 10, 10, this.battle.data.you, true);
+        this.drawUnit(ctx, 10, 10, this.battle.data.you, true, false);
         if (this.battle.data.opponent) {
-            this.drawUnit(ctx, 400, 10, this.battle.data.opponent, false);
+            this.drawUnit(ctx, 400, 10, this.battle.data.opponent, false, false);
         }
     },
 
@@ -78,8 +78,9 @@ export const engine = {
         ctx.drawImage(this.images.map, 0, 0, canvas.width, canvas.height);
         this.drawUnit(ctx, 10, 10, gameState.player, true);
     },
-    drawUnit(ctx, x, y, char, isPlayer) {
-        const avatar = isPlayer ? this.images.hero : this.images.opponent;
+    drawUnit(ctx, x, y, char, isPlayer, isExp=true) {
+        try{
+            const avatar = isPlayer ? this.images.hero : this.images.opponent;
         if (avatar) {
             ctx.drawImage(avatar, x, y, 100, 100);
         }
@@ -105,7 +106,11 @@ export const engine = {
             backColor: graphs.barHealBackColor,
             color: graphs.barManaColor,
         }
-        const expaParams = {
+       
+        this.drawBar(1, ctx, healParams);
+        this.drawBar(2, ctx, manaParams);
+        if(!isExp)return
+         const expaParams = {
             x: x,
             y: y,
             w: graphs.w,
@@ -116,10 +121,11 @@ export const engine = {
             backColor: graphs.barHealBackColor,
             color: graphs.barExpColor,
         }
-
-        this.drawBar(1, ctx, healParams);
-        this.drawBar(2, ctx, manaParams);
         this.drawBar(3, ctx, expaParams);
+        }catch(e){
+            console.log("Ошибка отрисовки персонажа", e)
+        }
+        
     },
     drawBar(counter, ctx, { x, y, w, h, current, max, color, backColor, currentRounded }) {
         const dy = y + w + graphs.barGap + (graphs.barH + graphs.barGap) * (counter - 1);

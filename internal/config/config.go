@@ -45,6 +45,7 @@ type GAME struct {
 	Charm      int     `json:"charm"`
 	WORLDID    string  `json:"world_id"`
 	LOCATIONID string  `json:"location_id"`
+	ROUNDTIME  int     `json:"round_time"`
 }
 
 type Config struct {

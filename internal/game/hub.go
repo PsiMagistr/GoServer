@@ -82,13 +82,13 @@ func (h *Hub) Run() {
 }
 
 /*Снапшот боя*/
-func (h *Hub) getBattleSnapshot(battleID int64, forPlayerID int64) map[string]interface{} {
+func (h *Hub) getBattleSnapshot(battleID int64, forPlayerID int64) *BattleSnapshot {
 	b, ok := h.activeBattles[battleID]
 	if !ok {
 		return nil
 	}
-	b.mu.Lock()
-	defer b.mu.Unlock()
+	b.mu.RLock()
+	defer b.mu.RUnlock()
 	var you, opponent *Client
 	if b.Attacker.Character.ID == forPlayerID {
 		you = b.Attacker
@@ -97,31 +97,58 @@ func (h *Hub) getBattleSnapshot(battleID int64, forPlayerID int64) map[string]in
 		you = b.Defender
 		opponent = b.Attacker
 	}
-	return map[string]interface{}{
+	/*return map[string]interface{}{
 		"battle_id": b.ID,
 		"round":     b.Round,
 		"time_left": int(math.Ceil(float64(time.Until(b.ExpiresAt).Seconds()))),
 		"player": map[string]interface{}{
-			"id":       you.Character.ID,
-			"level":    you.Character.Level,
-			"name":     you.Character.Name,
-			"hp":       you.Character.HP, // ПРАВИЛЬНОЕ HP
-			"max_hp":   you.Character.MaxHP,
-			"mana":     you.Character.Mana,
-			"max_mana": you.Character.Mana,
-			"avatar":   you.Character.AvatarID,
-			"gender":   you.Character.Gender,
+			"id":        you.Character.ID,
+			"level":     you.Character.Level,
+			"name":      you.Character.Name,
+			"hp":        you.Character.HP, // ПРАВИЛЬНОЕ HP
+			"max_hp":    you.Character.MaxHP,
+			"mana":      you.Character.Mana,
+			"max_mana":  you.Character.MaxMana,
+			"avatar_id": you.Character.AvatarID,
+			"gender":    you.Character.Gender,
 		},
 		"opponent": map[string]interface{}{
-			"id":       opponent.Character.ID,
-			"name":     opponent.Character.Name,
-			"level":    opponent.Character.Level,
-			"hp":       opponent.Character.HP, // ПРАВИЛЬНОЕ HP
-			"max_hp":   opponent.Character.MaxExp,
-			"mana":     opponent.Character.Mana,
-			"max_mana": opponent.Character.MaxMana,
-			"avatar":   opponent.Character.AvatarID,
-			"gender":   opponent.Character.Gender,
+			"id":        opponent.Character.ID,
+			"name":      opponent.Character.Name,
+			"level":     opponent.Character.Level,
+			"hp":        opponent.Character.HP, // ПРАВИЛЬНОЕ HP
+			"max_hp":    opponent.Character.MaxHP,
+			"mana":      opponent.Character.Mana,
+			"max_mana":  opponent.Character.MaxMana,
+			"avatar_id": opponent.Character.AvatarID,
+			"gender":    opponent.Character.Gender,
+		},
+	}*/
+	return &BattleSnapshot{
+		BattleID: b.ID,
+		Round:    b.Round,
+		TimeLeft: int(math.Ceil(float64(time.Until(b.ExpiresAt).Seconds()))),
+		You: BattleFighterDTO{
+			ID:       you.Character.ID,
+			Name:     you.Character.Name,
+			Level:    you.Character.Level,
+			HP:       you.Character.HP, // Из боя
+			MaxHP:    you.Character.MaxHP,
+			Mana:     you.Character.Mana, // Из боя
+			MaxMana:  you.Character.MaxMana,
+			AvatarID: you.Character.AvatarID,
+			Gender:   you.Character.Gender,
+		},
+		Opponent: BattleFighterDTO{
+			ID:       opponent.Character.ID,
+			Name:     opponent.Character.Name,
+			Level:    opponent.Character.Level,
+			HP:       opponent.Character.HP, // Из боя
+			MaxHP:    opponent.Character.MaxHP,
+			Mana:     opponent.Character.Mana, // Из боя
+			MaxMana:  opponent.Character.MaxMana,
+			AvatarID: opponent.Character.AvatarID,
+			Gender:   opponent.Character.Gender,
 		},
 	}
 }
@@ -143,6 +170,13 @@ func (h *Hub) prepareSyncState(client *Client) map[string]interface{} {
 		worldName = moveInfo.TargetWorldName
 		locationName = moveInfo.TargetLocationName
 	}
+	battleID, hasNum := h.playerToBattle[client.Character.ID]
+	var battleInfo *BattleSnapshot
+	if hasNum {
+		client.Character.State = models.StatusBattle
+		battleInfo = h.getBattleSnapshot(battleID, client.Character.ID)
+
+	}
 	return map[string]interface{}{
 		"type":          "world_sync",
 		"player":        client.Character,
@@ -156,7 +190,7 @@ func (h *Hub) prepareSyncState(client *Client) map[string]interface{} {
 		"location_id":   client.Character.LocationID,
 		"world_name":    worldName,
 		"location_name": locationName,
-		//"battle_info":   battleInfo,
+		"battle_info":   battleInfo,
 	}
 }
 

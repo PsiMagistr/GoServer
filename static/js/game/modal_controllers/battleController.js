@@ -8,16 +8,18 @@ export const battleController = {
         console.log("++++++")
         console.log(this.battleData)
         modalManager.show(battleModalTemplate, this.battleData, { closable: true }, this);
-        const opponent = data.opponent;
+        const opponent = data.opponent; 
+        console.log("TTTTTT")
+        console.log(opponent)
         const assetsToLoad = {
-            /*you: `../../../assets/avatars/${you.gender}/${you.avatar_id}.png`,*/
+            /*you: `../../../assets/avatars/${you.gender}/${you.avatar_id}.png`,*/            
             opponent: `../../../assets/avatars/${opponent.gender}/${opponent.avatar_id}.png`,
         };
         try {
             const newImages = await engine.loaderAssets(assetsToLoad);
             engine.images = { ...engine.images, ...newImages };
             // 5. Теперь, когда картинка врага в памяти, запускаем боевой канвас
-            const canvas = document.getElementById('battleCanvas');
+            const canvas = document.getElementById('battleCanvas');           
             engine.initBattle(canvas, this.battleData);
             console.log("Ресурсы боя загружены, начинаем отрисовку.");
 

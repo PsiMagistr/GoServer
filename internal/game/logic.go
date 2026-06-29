@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"GoServer/internal/config"
 	"GoServer/internal/database"
 	"GoServer/internal/models"
 )
@@ -461,16 +462,36 @@ func handleBattleAccept(c *Client, h *Hub, data map[string]interface{}) {
 	defenderData := map[string]interface{}{
 		"type":      "battle_start",
 		"battle_id": battleID,
-		"you":       c.Character,
-		"opponent":  attacker.Character,
-		"time_left": 60,
+		"you": map[string]interface{}{
+			"id":        c.Character.ID,
+			"level":     c.Character.Level,
+			"name":      c.Character.Name,
+			"hp":        c.Character.HP, // ПРАВИЛЬНОЕ HP
+			"max_hp":    c.Character.MaxHP,
+			"mana":      c.Character.Mana,
+			"max_mana":  c.Character.MaxMana,
+			"avatar_id": c.Character.AvatarID,
+			"gender":    c.Character.Gender,
+		},
+		"opponent": map[string]interface{}{
+			"id":        attacker.Character.ID,
+			"name":      attacker.Character.Name,
+			"level":     attacker.Character.Level,
+			"hp":        attacker.Character.HP,
+			"max_hp":    attacker.Character.MaxHP,
+			"mana":      attacker.Character.Mana,
+			"max_mana":  attacker.Character.MaxMana,
+			"avatar_id": attacker.Character.AvatarID,
+			"gender":    attacker.Character.Gender,
+		},
+		"time_left": config.Get().GAME.ROUNDTIME,
 	}
 	attackerData := map[string]interface{}{
 		"type":      "battle_start",
 		"battle_id": battleID,
 		"you":       attacker.Character,
 		"opponent":  c.Character,
-		"time_left": 60,
+		"time_left": config.Get().GAME.ROUNDTIME,
 	}
 	h.Send(c, defenderData)
 	h.Send(attacker, attackerData)

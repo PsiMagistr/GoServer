@@ -33,6 +33,7 @@
         "vitality":0,
         "intuition":0,
         "wisdom":0,
-        "Charm":0  
+        "Charm":0,
+        "round_time":120  
     }    
 }
