@@ -97,38 +97,36 @@ export const socket_events = {
             changeLabel(msg)
         }
         console.log("world_sync")
-        console.log(msg.player)
-        if (gameState.stopMovingTimer != null) gameState.stopMovingTimer()
-        const state = msg.player.state;
-        if (state === 1 && msg.duration > 0) {
-            if (!overlay) return
-            overlay.style.display = 'flex';
-            overlay.querySelector('.target-name').innerText = `${msg.world_name}, ${msg.location_name}`;
-            let timeLeft = msg.duration;
-            const timerEl = overlay.querySelector('.timer-count');
-            timerEl.innerText = timeLeft;
-            gameState.stopMovingTimer = utils.createTimer(
-                timeLeft,
-                (sec) => {
-                    timerEl.innerText = sec;
-                }, () => {
-                    console.log("ffdfdfdfdfdfd")
-                    alert("Прыгнули через портал");
-                })
-        }
-
-
-        // 4. ЗАГРУЗКА РЕСУРСОВ (в фоне)
+        console.log(msg.player)        
         const assetsToLoad = {
             map: `./assets/maps/${msg.world_id}.png`,
             hero: `./assets/avatars/${msg.player.gender}/${msg.player.avatar_id}.png`
         };
-
         try {
-            engine.images = await engine.loaderAssets(assetsToLoad);            
+            engine.images = await engine.loaderAssets(assetsToLoad);
             engine.init(document.getElementById('gameCanvas'));
-            gameState.isInitialized = true;
+            gameState.isInitialized = true;           
             // Здесь мы НЕ прячем оверлей, так как его должен спрятать только move_complete
+            if (gameState.stopMovingTimer != null) gameState.stopMovingTimer()
+            const state = msg.player.state;
+            if (state === 1 && msg.duration > 0) {
+                if (!overlay) return
+                overlay.style.display = 'flex';
+                overlay.querySelector('.target-name').innerText = `${msg.world_name}, ${msg.location_name}`;
+                let timeLeft = msg.duration;
+                const timerEl = overlay.querySelector('.timer-count');
+                timerEl.innerText = timeLeft;
+                gameState.stopMovingTimer = utils.createTimer(
+                    timeLeft,
+                    (sec) => {
+                        timerEl.innerText = sec;
+                    }, () => {
+                        console.log("Прыгнули через портал");                        
+                    })
+            }
+            else if (state == 2) {
+                battleController.open(msg.battle_info)
+            }
         } catch (e) {
             console.error("Ошибка синхронизации ассетов:", e);
         }
@@ -253,7 +251,7 @@ export const socket_events = {
         gameState.challengeTimers[ch.sender_id] = timerStop;
     },
     battle_start(msg) {
-        battleController.open(msg)
+        battleController.open(msg.battle_info)
     },
 }
 

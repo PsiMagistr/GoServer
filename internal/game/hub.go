@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"GoServer/internal/config"
 	"GoServer/internal/database"
 	"GoServer/internal/models"
 )
@@ -89,66 +90,39 @@ func (h *Hub) getBattleSnapshot(battleID int64, forPlayerID int64) *BattleSnapsh
 	}
 	b.mu.RLock()
 	defer b.mu.RUnlock()
-	var you, opponent *Client
-	if b.Attacker.Character.ID == forPlayerID {
-		you = b.Attacker
-		opponent = b.Defender
+	var you, opponent models.Character
+	if b.AttackerData.ID == forPlayerID {
+		you = b.AttackerData
+		opponent = b.DefenderData
 	} else {
-		you = b.Defender
-		opponent = b.Attacker
+		you = b.DefenderData
+		opponent = b.AttackerData
 	}
-	/*return map[string]interface{}{
-		"battle_id": b.ID,
-		"round":     b.Round,
-		"time_left": int(math.Ceil(float64(time.Until(b.ExpiresAt).Seconds()))),
-		"player": map[string]interface{}{
-			"id":        you.Character.ID,
-			"level":     you.Character.Level,
-			"name":      you.Character.Name,
-			"hp":        you.Character.HP, // ПРАВИЛЬНОЕ HP
-			"max_hp":    you.Character.MaxHP,
-			"mana":      you.Character.Mana,
-			"max_mana":  you.Character.MaxMana,
-			"avatar_id": you.Character.AvatarID,
-			"gender":    you.Character.Gender,
-		},
-		"opponent": map[string]interface{}{
-			"id":        opponent.Character.ID,
-			"name":      opponent.Character.Name,
-			"level":     opponent.Character.Level,
-			"hp":        opponent.Character.HP, // ПРАВИЛЬНОЕ HP
-			"max_hp":    opponent.Character.MaxHP,
-			"mana":      opponent.Character.Mana,
-			"max_mana":  opponent.Character.MaxMana,
-			"avatar_id": opponent.Character.AvatarID,
-			"gender":    opponent.Character.Gender,
-		},
-	}*/
 	return &BattleSnapshot{
 		BattleID: b.ID,
 		Round:    b.Round,
 		TimeLeft: int(math.Ceil(float64(time.Until(b.ExpiresAt).Seconds()))),
 		You: BattleFighterDTO{
-			ID:       you.Character.ID,
-			Name:     you.Character.Name,
-			Level:    you.Character.Level,
-			HP:       you.Character.HP, // Из боя
-			MaxHP:    you.Character.MaxHP,
-			Mana:     you.Character.Mana, // Из боя
-			MaxMana:  you.Character.MaxMana,
-			AvatarID: you.Character.AvatarID,
-			Gender:   you.Character.Gender,
+			ID:       you.ID,
+			Name:     you.Name,
+			Level:    you.Level,
+			HP:       you.HP, // Из боя
+			MaxHP:    you.MaxHP,
+			Mana:     you.Mana, // Из боя
+			MaxMana:  you.MaxMana,
+			AvatarID: you.AvatarID,
+			Gender:   you.Gender,
 		},
 		Opponent: BattleFighterDTO{
-			ID:       opponent.Character.ID,
-			Name:     opponent.Character.Name,
-			Level:    opponent.Character.Level,
-			HP:       opponent.Character.HP, // Из боя
-			MaxHP:    opponent.Character.MaxHP,
-			Mana:     opponent.Character.Mana, // Из боя
-			MaxMana:  opponent.Character.MaxMana,
-			AvatarID: opponent.Character.AvatarID,
-			Gender:   opponent.Character.Gender,
+			ID:       opponent.ID,
+			Name:     opponent.Name,
+			Level:    opponent.Level,
+			HP:       opponent.HP, // Из боя
+			MaxHP:    opponent.MaxHP,
+			Mana:     opponent.Mana, // Из боя
+			MaxMana:  opponent.MaxMana,
+			AvatarID: opponent.AvatarID,
+			Gender:   opponent.Gender,
 		},
 	}
 }
@@ -436,4 +410,45 @@ func (h *Hub) cleanupChallenges() {
 	if count > 0 {
 		fmt.Printf("[CLEANUP] Удалено просроченных заявок: %d\n", count)
 	}
+}
+
+func (h *Hub) executeBattleStart(attacker *Client, defender *Client) {
+	h.mu.Lock()
+	if attacker.Character.State != models.StatusFree || defender.Character.State != models.StatusFree {
+		h.mu.Unlock()
+		h.SystemMsg(attacker, "Заявка не была отправлена. Кто-то из игроков занят")
+		return
+	}
+	battleID := time.Now().UnixNano()
+	newBattle := &Battle{
+		ID:           battleID,
+		AttackerData: *attacker.Character,
+		DefenderData: *defender.Character,
+		Round:        1,
+		ExpiresAt:    time.Now().Add(time.Duration(config.Get().GAME.ROUNDTIME) * time.Second),
+	}
+	h.activeBattles[battleID] = newBattle
+	h.playerToBattle[attacker.Character.ID] = battleID
+	h.playerToBattle[defender.Character.ID] = battleID
+	attacker.Character.State = models.StatusBattle
+	defender.Character.State = models.StatusBattle
+	delete(h.challenges, attacker.Character.ID)
+	delete(h.challenges, defender.Character.ID)
+	atkInfo := h.getBattleSnapshot(battleID, attacker.Character.ID)
+	defInfo := h.getBattleSnapshot(battleID, defender.Character.ID)
+	h.mu.Unlock()
+	h.Send(attacker, map[string]interface{}{"type": "battle_start", "battle_info": atkInfo})
+	h.Send(defender, map[string]interface{}{"type": "battle_start", "battle_info": defInfo})
+}
+
+func (h *Hub) GetInviteFromSpecificPlayer(recipientID int64, senderID int64) *BattleChallenge {
+	invites, ok := h.challenges[recipientID]
+	if ok {
+		challange, find := invites[senderID]
+		if find {
+			return challange
+		}
+
+	}
+	return nil
 }

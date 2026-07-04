@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"GoServer/internal/config"
 	"GoServer/internal/database"
 	"GoServer/internal/models"
 )
@@ -373,17 +372,27 @@ func handleBattleChallenge(c *Client, h *Hub, data map[string]interface{}) { // 
 	}
 	/**/
 	h.mu.Lock()
+	backChallenge := h.GetInviteFromSpecificPlayer(c.Character.ID, targetID)
+	if backChallenge != nil {
+		if time.Now().Before(backChallenge.ExpiresAt) {
+			h.mu.Unlock()                         // Отпускаем Хаб, так как запуск боя возьмет свои локи
+			h.executeBattleStart(targetClient, c) // (Агрессор - тот кто вызвал ПЕРВЫМ)
+			return
+		}
+	}
+	////
 	if h.challenges[targetID] == nil {
 		h.challenges[targetID] = make(map[int64]*BattleChallenge)
 	}
-	if existing, ok := h.challenges[targetID][c.Character.ID]; ok {
+
+	existing := h.GetInviteFromSpecificPlayer(targetID, c.Character.ID)
+	if existing != nil {
 		if time.Now().Before(existing.ExpiresAt) {
 			h.mu.Unlock()
 			h.SystemMsg(c, "Вы уже отправили вызов этому персонажу. Дождитесь ответа.")
 			return
 		}
 	}
-
 	expires := time.Now().Add(time.Second * 60)
 	timeLeft := int(math.Ceil(time.Until(expires).Seconds()))
 	challenge := &BattleChallenge{
@@ -415,84 +424,39 @@ func handleBattleAccept(c *Client, h *Hub, data map[string]interface{}) {
 	}
 	senderID := int64(senderIDFloat)
 	h.mu.Lock()
-	invites, hasInvites := h.challenges[c.Character.ID]
+	myInvites, hasInvites := h.challenges[c.Character.ID]
 	if !hasInvites {
 		h.mu.Unlock()
+		h.SystemMsg(c, "У вас нет активных вызовов.")
 		return
 	}
-	challenge, exists := invites[senderID]
-	if !exists || time.Now().After(challenge.ExpiresAt) {
+	challenge, exists := myInvites[senderID]
+	if !exists {
+		h.mu.Unlock()
+		h.SystemMsg(c, "Вызов от этого игрока не найден.")
+		return
+	}
+
+	if time.Now().After(challenge.ExpiresAt) {
 		delete(h.challenges[c.Character.ID], senderID)
 		h.mu.Unlock()
-		h.SystemMsg(c, "Заявка просрочена.")
+		h.SystemMsg(c, "Срок действия вызова истек.")
 		return
 	}
+
 	attacker, online := h.Clients[senderID]
 	if !online || attacker.Character.State != models.StatusFree {
 		h.mu.Unlock()
 		h.SystemMsg(c, "Противник уже не в сети или занят.")
 		return
 	}
-	// Добавляем в карту.
-	battleID := time.Now().UnixNano()
-	newBattle := &Battle{
-		ID:              battleID,
-		Attacker:        attacker,
-		Defender:        c,
-		AttackerHP:      attacker.Character.HP,
-		AttackerMaxHP:   attacker.Character.MaxHP,
-		DefenderHP:      c.Character.HP,
-		DefenderMaxHP:   c.Character.MaxHP,
-		AttackerMana:    attacker.Character.Mana,
-		AttackerMaxMana: attacker.Character.MaxMana,
-		DefenderMana:    c.Character.Mana,
-		DefenderMaxMana: c.Character.MaxMana,
-		Round:           1,
-		ExpiresAt:       time.Now().Add(60 * time.Second),
-	}
-	h.activeBattles[battleID] = newBattle
-	h.playerToBattle[attacker.Character.ID] = battleID
-	h.playerToBattle[c.Character.ID] = battleID
-	attacker.Character.State = models.StatusBattle
-	c.Character.State = models.StatusBattle
-	delete(h.challenges[c.Character.ID], senderID)
-	h.mu.Unlock()
 
-	// fmt.Println("Заявка на бой принята.", senderID, c.Character.ID)
-	defenderData := map[string]interface{}{
-		"type":      "battle_start",
-		"battle_id": battleID,
-		"you": map[string]interface{}{
-			"id":        c.Character.ID,
-			"level":     c.Character.Level,
-			"name":      c.Character.Name,
-			"hp":        c.Character.HP, // ПРАВИЛЬНОЕ HP
-			"max_hp":    c.Character.MaxHP,
-			"mana":      c.Character.Mana,
-			"max_mana":  c.Character.MaxMana,
-			"avatar_id": c.Character.AvatarID,
-			"gender":    c.Character.Gender,
-		},
-		"opponent": map[string]interface{}{
-			"id":        attacker.Character.ID,
-			"name":      attacker.Character.Name,
-			"level":     attacker.Character.Level,
-			"hp":        attacker.Character.HP,
-			"max_hp":    attacker.Character.MaxHP,
-			"mana":      attacker.Character.Mana,
-			"max_mana":  attacker.Character.MaxMana,
-			"avatar_id": attacker.Character.AvatarID,
-			"gender":    attacker.Character.Gender,
-		},
-		"time_left": config.Get().GAME.ROUNDTIME,
+	if c.Character.State != models.StatusFree {
+		h.mu.Unlock()
+		h.SystemMsg(c, "Вы заняты и не можете принять заявку.")
+		return
 	}
-	attackerData := map[string]interface{}{
-		"type":      "battle_start",
-		"battle_id": battleID,
-		"you":       attacker.Character,
-		"opponent":  c.Character,
-		"time_left": config.Get().GAME.ROUNDTIME,
-	}
-	h.Send(c, defenderData)
-	h.Send(attacker, attackerData)
+
+	h.mu.Unlock()
+	h.executeBattleStart(attacker, c)
 }

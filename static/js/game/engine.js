@@ -13,7 +13,7 @@ export const engine = {
         data: null,
         loopId: null,
     },
-    images: null,
+    images: {},
     init(canvasElement) {
         this.main.canvas = canvasElement;
         this.main.ctx = canvasElement.getContext('2d');
@@ -39,7 +39,7 @@ export const engine = {
         if (this.battle.loopId) cancelAnimationFrame(this.battle.loopId);
         const render = () => {
             this.renderBattle();
-            this.battle.loopId = requestAnimationFrame(render);            
+            //this.battle.loopId = requestAnimationFrame(render);            
         }
         render();
     },
@@ -68,7 +68,7 @@ export const engine = {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         this.drawUnit(ctx, 10, 10, this.battle.data.you, true, false);
         if (this.battle.data.opponent) {
-            this.drawUnit(ctx, 400, 10, this.battle.data.opponent, false, false);
+            this.drawUnit(ctx, canvas.width - 110, 10, this.battle.data.opponent, false, false);
         }
     },
 
@@ -81,8 +81,15 @@ export const engine = {
     drawUnit(ctx, x, y, char, isPlayer, isExp=true) {
         try{
             const avatar = isPlayer ? this.images.hero : this.images.opponent;
-        if (avatar) {
+        if (avatar) {            
             ctx.drawImage(avatar, x, y, 100, 100);
+        }
+        else{
+            ctx.fillStyle = "gray";
+            ctx.fillRect(x, y, 100, 100);
+            console.log("Аватарка")
+            console.log(abatar)           
+            
         }
         const healParams = {
             x: x,

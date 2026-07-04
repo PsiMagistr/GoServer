@@ -8,15 +8,15 @@ export const battleController = {
         console.log("++++++")
         console.log(this.battleData)
         modalManager.show(battleModalTemplate, this.battleData, { closable: true }, this);
-        const opponent = data.opponent; 
-        console.log("TTTTTT")
-        console.log(opponent)
-        const assetsToLoad = {
-            /*you: `../../../assets/avatars/${you.gender}/${you.avatar_id}.png`,*/            
-            opponent: `../../../assets/avatars/${opponent.gender}/${opponent.avatar_id}.png`,
-        };
+        const you = data.you;
+        const opponent = data.opponent;
+        const assetsToLoad = {}
+        if (!engine.images || !engine.images.hero) {
+            assetsToLoad.hero = `../../assets/avatars/${data.you.gender}/${data.you.avatar_id}.png`;
+        }        
+        assetsToLoad.opponent =  `../../../assets/avatars/${opponent.gender}/${opponent.avatar_id}.png`;
         try {
-            const newImages = await engine.loaderAssets(assetsToLoad);
+            const newImages = await engine.loaderAssets(assetsToLoad);            
             engine.images = { ...engine.images, ...newImages };
             // 5. Теперь, когда картинка врага в памяти, запускаем боевой канвас
             const canvas = document.getElementById('battleCanvas');           
@@ -28,12 +28,8 @@ export const battleController = {
         }
 
     },
-    show(images) {
-        modalManager.show(battleModalTemplate, this.data, { closable: true });
-        const canvas = document.querySelector("#battleCanvas");
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(images.you, 10, 10, 100, 100);
-        ctx.drawImage(images.opponent, 120, 10, 100, 100);
+    show() {
+        modalManager.show(battleModalTemplate, this.data, { closable: true });       
     },
     onHide() {
         engine.stopBattleLoop();
