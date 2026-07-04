@@ -47,9 +47,13 @@ export const utils = {
     },
     createTimer(seconds, onTick, onEnd){
         let timerId = null;
+        const endTime = Date.now() + (seconds * 1000);
         let sec = seconds;
         const time = ()=>{
-            sec--;
+            const now = Date.now();
+            const diff = endTime - now;
+            const sec = Math.ceil(diff / 1000);
+            //sec--;
             if(onTick) onTick(sec)            
             if(sec == 0){                
                 if(onEnd) onEnd()                  

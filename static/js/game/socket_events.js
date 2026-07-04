@@ -250,8 +250,8 @@ export const socket_events = {
         )
         gameState.challengeTimers[ch.sender_id] = timerStop;
     },
-    battle_start(msg) {
-        battleController.open(msg.battle_info)
+    battle_start(msg) {       
+        battleController.open(msg.battle_info)       
     },
 }
 
