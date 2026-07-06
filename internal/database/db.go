@@ -100,6 +100,27 @@ func InitDB() error {
 		game.LOCATIONID,
 	)
 
+	createSpellsTableQuery := `
+	CREATE TABLE IF NOT EXISTS spells(
+	id INT AUTO_INCREMENT PRIMARY KEY,
+	name VARCHAR(100) NOT NULL,
+	mana_cost DOUBLE DEFAULT 5.0,
+	min_level INT DEFAULT 1,
+	element ENUM('fire', 'water', 'air', 'earth') NOT NULL,
+	type ENUM('attack', 'shield') NOT NULL,
+	power DOUBLE DEFAULT 1.0,         -- Величина воздействия (коэффициент)
+    description TEXT
+	) ENGINE=InnoDB`
+
+	createCharacterSpellsTableQuery := `
+	CREATE TABLE IF NOT EXISTS character_spells (
+    character_id BIGINT NOT NULL,
+    spell_id INT NOT NULL,
+    PRIMARY KEY (character_id, spell_id),
+    FOREIGN KEY (character_id) REFERENCES characters(id) ON DELETE CASCADE,
+    FOREIGN KEY (spell_id) REFERENCES spells(id) ON DELETE CASCADE
+	) ENGINE=InnoDB;`
+
 	_, err = DB.Exec(createUserTableQuery)
 	if err != nil {
 		log.Println("Ошибка создания таблицы users", err)
@@ -113,6 +134,16 @@ func InitDB() error {
 	_, err = DB.Exec(createCharacterTableQuery)
 	if err != nil {
 		log.Println("Ошибка создания таблицы characters", err)
+		return err
+	}
+	_, err = DB.Exec(createSpellsTableQuery)
+	if err != nil {
+		log.Println("Ошибка создания таблицы spells", err)
+		return err
+	}
+	_, err = DB.Exec(createCharacterSpellsTableQuery)
+	if err != nil {
+		log.Println("Ошибка создания таблицы character_spells", err)
 		return err
 	}
 	log.Println("База данных успешно инициализирована")

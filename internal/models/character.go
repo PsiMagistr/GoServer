@@ -25,4 +25,5 @@ type Character struct {
 	NextLevelExp float64      `db:"next_level_exp" json:"next_level_exp"`
 	WorldID      string       `db:"world_id" json:"world_id"`
 	LocationID   string       `db:"location_id" json:"location_id"`
+	Spells       []Spell      `db:"-" json:"spells"`
 }

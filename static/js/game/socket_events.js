@@ -97,7 +97,9 @@ export const socket_events = {
             changeLabel(msg)
         }
         console.log("world_sync")
-        console.log(msg.player)        
+        console.log(msg.player)
+        console.log("Заклинания")
+        console.log(msg.player.spells)        
         const assetsToLoad = {
             map: `./assets/maps/${msg.world_id}.png`,
             hero: `./assets/avatars/${msg.player.gender}/${msg.player.avatar_id}.png`

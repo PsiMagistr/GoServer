@@ -33,6 +33,13 @@ func WSHandler(hub *game.Hub) http.HandlerFunc {
 			return
 		}
 
+		spells, err := database.GetCharacterSpells(char.ID)
+		if err != nil {
+			log.Println("Ошибка получения заклинаний БД. ", err)
+			return
+		}
+		char.Spells = spells
+
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			log.Println("WS Upgrade error:", err)

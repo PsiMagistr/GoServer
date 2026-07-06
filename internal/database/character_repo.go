@@ -58,8 +58,7 @@ func UpdateCharacterStats(char *models.Character) error {
 	return err
 }
 
-
-func UpdateCharacter(c  *models.Character) error{
+func UpdateCharacter(c *models.Character) error {
 	query := `
 	UPDATE characters SET
 	name = ?,
@@ -68,17 +67,25 @@ func UpdateCharacter(c  *models.Character) error{
 	hp = ?, max_hp = ?, mana = ?, max_mana = ?,
 	exp = ?, max_exp = ?, next_level_exp = ?,
 	world_id = ?, location_id = ?, state = ?
-	WHERE id = ?`	
+	WHERE id = ?`
 	_, err := DB.Exec(query,
 		c.Name,
 		c.Level, c.Gold, c.FreePoints,
 		c.Strength, c.Agility, c.Intuition, c.Vitality, c.Charm, c.Wisdom,
 		c.HP, c.MaxHP, c.Mana, c.MaxMana,
-		c.Exp, c.MaxExp, c.NextLevelExp, 
+		c.Exp, c.MaxExp, c.NextLevelExp,
 		c.WorldID, c.LocationID, c.State,
-		c.ID, 
-	
+		c.ID,
 	)
 	return err
+}
 
+func GetCharacterSpells(charID int64) ([]models.Spell, error) {
+	var spells []models.Spell
+	query := `
+	SELECT * FROM spells
+	JOIN character_spells ON spells.id = character_spells.spell_id
+	WHERE character_spells.character_id = ?`
+	err := DB.Select(&spells, query, charID)
+	return spells, err
 }

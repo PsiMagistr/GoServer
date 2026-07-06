@@ -52,8 +52,7 @@ export const utils = {
         const time = ()=>{
             const now = Date.now();
             const diff = endTime - now;
-            const sec = Math.ceil(diff / 1000);
-            //sec--;
+            const sec = Math.ceil(diff / 1000);            
             if(onTick) onTick(sec)            
             if(sec == 0){                
                 if(onEnd) onEnd()                  
