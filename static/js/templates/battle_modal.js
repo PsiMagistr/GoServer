@@ -14,6 +14,8 @@ export const battleModalTemplate = (data) => {
         `;
     }
 
+    
+
     return `
         <div class="battle-interface">
             <!-- ВЕРХНЯЯ ПАНЕЛЬ: Таймер и Имена -->
@@ -34,27 +36,27 @@ export const battleModalTemplate = (data) => {
 
             <!-- КНИГА ЗАКЛИНАНИЙ (Две колонки) -->
             <div class="spells-library">
+             <!-- Колонка Атаки -->
+                <div class="spells-column">
+                        <h4>Боевая магия</h4>
+                        <div id="attack-spells" class="spells-list">
+                            <div class="spell-item attack fire" data-type="atk" data-element="fire">🔥 Огненный шар</div>
+                            <div class="spell-item attack water" data-type="atk" data-element="water">💧 Ледяная стрела</div>
+                            <div class="spell-item attack air" data-type="atk" data-element="air">🌬️ Молния</div>
+                            <div class="spell-item attack earth" data-type="atk" data-element="earth">🌱 Каменный шип</div>
+                        </div>
+                    </div>
                 <!-- Колонка Защиты -->
                 <div class="spells-column">
-                    <h4>Защитные щиты</h4>
+                    <h4>Щиты</h4>
                     <div id="defense-spells" class="spells-list">
                         <div class="spell-item shield fire" data-type="def" data-element="fire">🔥 Щит Огня</div>
                         <div class="spell-item shield water" data-type="def" data-element="water">💧 Щит Воды</div>
                         <div class="spell-item shield air" data-type="def" data-element="air">🌬️ Щит Воздуха</div>
                         <div class="spell-item shield earth" data-type="def" data-element="earth">🌱 Щит Земли</div>
                     </div>
-                </div>
-
-                <!-- Колонка Атаки -->
-                <div class="spells-column">
-                    <h4>Боевая магия</h4>
-                    <div id="attack-spells" class="spells-list">
-                        <div class="spell-item attack fire" data-type="atk" data-element="fire">🔥 Огненный шар</div>
-                        <div class="spell-item attack water" data-type="atk" data-element="water">💧 Ледяная стрела</div>
-                        <div class="spell-item attack air" data-type="atk" data-element="air">🌬️ Молния</div>
-                        <div class="spell-item attack earth" data-type="atk" data-element="earth">🌱 Каменный шип</div>
-                    </div>
-                </div>
+                </div>             
+               
             </div>
 
             <!-- ЛОГ БОЯ -->

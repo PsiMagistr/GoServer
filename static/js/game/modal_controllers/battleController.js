@@ -1,70 +1,100 @@
 import { modalManager } from "../modalManager.js";
 import { battleModalTemplate } from "../../templates/battle_modal.js";
 import { engine } from "../engine.js";
-import {utils} from "../../utils/utils_functions.js";
+import { utils } from "../../utils/utils_functions.js";
+import { ui } from '../ui.js';
+import { gameState } from "../game.js";
+
 export const battleController = {
+    battleData: null,
     stopTimerFunc: null,
+
+    // 1. Точка входа (вызывается из сокета)
     async open(data) {
-        engine.stopMainLoop();
         this.battleData = data;
-        console.log("++++++")
-        console.log(this.battleData)
-        modalManager.show(battleModalTemplate, this.battleData, { closable: true }, this);
-        const you = data.you;
-        const opponent = data.opponent;
-        this.startTurnTimer(this.battleData.time_left)
-        const assetsToLoad = {}
-        if (!engine.images || !engine.images.hero) {
-            assetsToLoad.hero = `../../assets/avatars/${data.you.gender}/${data.you.avatar_id}.png`;
-        }        
-        assetsToLoad.opponent =  `../../../assets/avatars/${opponent.gender}/${opponent.avatar_id}.png`;
+        
+        // Останавливаем мир
+        engine.stopMainLoop();
+
+        // 2. Рисуем "тело" модалки (сразу, чтобы игрок видел интерфейс)
+        this.renderFrame();
+
+        // 3. Запускаем таймер
+        this.startTurnTimer(this.battleData.time_left);
+
+        // 4. Наполняем списки заклинаний (теперь элементы уже есть в DOM)
+        this.renderSpells();
+
+        // 5. Грузим картинки и запускаем канвас
+        await this.setupGraphics();
+    },
+
+    // Рисует саму оболочку окна через менеджер
+    renderFrame() {
+        modalManager.show(battleModalTemplate, this.battleData, { closable: false }, this);
+    },
+
+    // Наполняет пустые <ul> списками магии
+    renderSpells() {
+        const allSpells = gameState.player.spells || [];
+        
+        ui.renderList(
+            "#defense-spells",
+            allSpells.filter(s => s.type === "shield"),
+            "spell", "spell-item",
+            (s) => this.generateSpellContent(s)
+        );
+
+        ui.renderList(
+            "#attack-spells",
+            allSpells.filter(s => s.type === "attack"),
+            "spell", "spell-item",
+            (s) => this.generateSpellContent(s)
+        );
+    },
+
+    // Асинхронная подготовка графики
+    async setupGraphics() {
+        const { you, opponent } = this.battleData;
+        const assets = {
+            opponent: `/assets/avatars/${opponent.gender}/${opponent.avatar_id}.png`
+        };
+
+        // Если вдруг при F5 потеряли свою картинку
+        if (!engine.images?.hero) {
+            assets.hero = `/assets/avatars/${you.gender}/${you.avatar_id}.png`;
+        }
+
         try {
-            const newImages = await engine.loaderAssets(assetsToLoad);            
+            const newImages = await engine.loaderAssets(assets);
             engine.images = { ...engine.images, ...newImages };
-            // 5. Теперь, когда картинка врага в памяти, запускаем боевой канвас
-            const canvas = document.getElementById('battleCanvas');           
-            engine.initBattle(canvas, this.battleData);
-            console.log("Ресурсы боя загружены, начинаем отрисовку.");
-
+            
+            const canvas = document.getElementById('battleCanvas');
+            if (canvas) engine.initBattle(canvas, this.battleData);
         } catch (e) {
-            console.error("Ошибка синхронизации ассетов:", e);
+            console.error("Battle Graphics Error:", e);
         }
-
-    },
-    show() {
-        modalManager.show(battleModalTemplate, this.data, { closable: true });       
-    },
-    onHide() {
-        engine.stopBattleLoop();
-         if (this.stopTimerFunc) {
-            this.stopTimerFunc();
-            this.stopTimerFunc = null;
-        }
-        engine.startMainLoop();
-    },
-    hide() {       
-        modalManager.hide();
     },
 
-    startTurnTimer(seconds){
-        if(this.stopTimerFunc){
-            this.stopTimerFunc();
-        }
+    // Вспомогательный метод для содержимого <li>
+    generateSpellContent(s) { 
+        return s.name;
+    },
+
+    startTurnTimer(seconds) {
+        if (this.stopTimerFunc) this.stopTimerFunc();
         const timerEl = document.getElementById('battle-timer');
-        if (!timerEl){
-            alert()
-            return
-        }
-        this.stopTimerFunc = utils.createTimer(
-            seconds,
-            (sec)=>{                
-                 timerEl.innerText = `${sec}s`;
+        if (!timerEl) return;
 
-        },
-        ()=>{
-
-        })
-
+        this.stopTimerFunc = utils.createTimer(seconds, 
+            (sec) => { timerEl.innerText = `${sec}s`; },
+            () => { timerEl.innerText = "0s"; }
+        );
     },
 
-}
+    cleanup() {
+        if (this.stopTimerFunc) this.stopTimerFunc();
+        engine.stopBattleLoop();
+        engine.startMainLoop();
+    }
+};    

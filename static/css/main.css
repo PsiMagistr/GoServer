@@ -1001,7 +1001,7 @@ button {
     flex-direction: column;
     gap: 4px;
     max-height: 100px;
-    overflow-y: auto;
+    overflow-y: auto;    
 }
 
 .spell-item {
