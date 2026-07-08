@@ -25,7 +25,7 @@ const clickers = {
     "modal-close-btn": (obj, event) => {
         console.log("какой шаблон активен")      
         modalManager.hide();
-    },
+    },   
 }
 const movers = {
     "gameCanvas": (obj, event) => {
@@ -102,6 +102,11 @@ export const interaction = {
             } else {
                 ui.removeItemFromUI("invite", senderId);
             }
+
+        }
+        const spellItem = target.closest(".spell-item");
+        if(spellItem){
+            battleController.pickSpell(spellItem.dataset.id)
         }
     },
     handleMouseMove(event) {

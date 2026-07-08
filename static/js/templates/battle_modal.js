@@ -7,8 +7,8 @@ export const battleModalTemplate = (data) => {
     for (let i = 1; i <= 5; i++) {
         //const isShield = i <= 2;
         slotsHtml += `
-            <div class="battle-slot slot-shield" id="slot-${i}" data-slot-index="${i}">
-                <div class="slot-type-label">Пусто</div>
+            <div class="battle-slot" id="slot-${i}" data-slot-index="${i}">
+                <div id="label-slot-${i}" class="slot-type-label">Пусто</div>
                 <div class="slot-icon" id="slot-icon-${i}"></div>
             </div>
         `;

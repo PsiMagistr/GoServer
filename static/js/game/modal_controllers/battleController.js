@@ -8,6 +8,7 @@ import { gameState } from "../game.js";
 export const battleController = {
     battleData: null,
     stopTimerFunc: null,
+    slots:[null, null, null, null, null],
 
     // 1. Точка входа (вызывается из сокета)
     async open(data) {
@@ -96,5 +97,59 @@ export const battleController = {
         if (this.stopTimerFunc) this.stopTimerFunc();
         engine.stopBattleLoop();
         engine.startMainLoop();
-    }
+    },
+    getStats(){
+        let shields=0;
+        let attacks=0;
+        let totalMana=0;
+        for(const slot of this.slots){           
+            if(slot){
+                if(slot.type=="shield"){
+                    shields++;
+                }
+                if(slot.type=="attack"){
+                    attacks++
+                }
+                totalMana += slot.mana_cost                
+            }
+            
+        }         
+        return {shields, attacks, totalMana}
+    },
+    pickSpell(spellId){
+        const spell = gameState.player.spells.find(s=>s.id==spellId)
+        const stats = this.getStats();        
+        if(spell.type=="shield" && stats.shields >=2){
+            alert("Нельзя повесть больше двух щитов");
+            return;
+        }
+        if(spell.type=="attack" && stats.attacks >=3){
+            alert("Нельзя повесить больше двух атакующих заклов.");
+            return;
+        }
+        if (stats.totalMana + spell.mana_cost > gameState.player.mana) {
+            alert("Недостаточно маны для такой комбинации!");
+            return;
+        }
+        const freeIndex = this.slots.indexOf(null)
+        if(freeIndex !== -1){
+            this.slots[freeIndex] = spell;
+            this.renderSlots()
+        }
+    },
+    unpickSlots(spellId){
+        this.slots[spellId] = null;
+        this.renderSlots();
+    },
+    renderSlots(){
+        for(let i = 0; i < this.slots.length; i++){
+            const slot = this.slots[i]
+            let value = "Пусто"
+            if(slot){
+                value = this.slots[i].name;                                
+            }
+            const slotElement = document.querySelector(`#label-slot-${i+1}`);
+            slotElement.textContent = value;            
+        }
+    },
 };    
