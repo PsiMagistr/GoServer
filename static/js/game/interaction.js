@@ -5,7 +5,7 @@ import { modalManager } from "./modalManager.js";
 import { statsController } from "./modal_controllers/statsController.js";
 import { battleController } from "./modal_controllers/battleController.js";
 import { contextNenu } from "../templates/context_menu.js";
-import {ui} from "./ui.js"
+import { ui } from "./ui.js"
 
 const CLICK_RADIUS = 20;
 const CLICK_RADIUS_SQ = CLICK_RADIUS * CLICK_RADIUS;
@@ -23,9 +23,16 @@ const clickers = {
         statsController.commit();
     },
     "modal-close-btn": (obj, event) => {
-        console.log("какой шаблон активен")      
+        console.log("какой шаблон активен")
         modalManager.hide();
-    },   
+    },
+    "btn-submit-turn": (obj, event) => {
+        console.log("=======")        
+        const battleId = battleController.battleData.battle_id
+        const round = battleController.battleData.round;
+        const spells = battleController.slots.map(slot=>slot.id);    
+        gameActions.sendBattleTurn(battleId, round, spells)
+    }
 }
 const movers = {
     "gameCanvas": (obj, event) => {
@@ -96,7 +103,7 @@ export const interaction = {
                 stopTimer();
                 delete gameState.challengeTimers[senderId];
             }
-            if (id.startsWith("accept-")) {                
+            if (id.startsWith("accept-")) {
                 console.log("Принимаем заявку на бой")
                 gameActions.acceptBattle(senderId);
             } else {
@@ -105,8 +112,14 @@ export const interaction = {
 
         }
         const spellItem = target.closest(".spell-item");
-        if(spellItem){
+        if (spellItem) {
             battleController.pickSpell(spellItem.dataset.id)
+        }
+        const slotItem = target.closest(".battle-slot");
+        if (slotItem) {            
+            const index = parseInt(slotItem.dataset.slotIndex) - 1;            
+            battleController.unpickSlots(index);
+
         }
     },
     handleMouseMove(event) {

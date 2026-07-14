@@ -196,6 +196,14 @@ export const socket_events = {
         chatContainer.appendChild(div);
         chatContainer.scrollTop = chatContainer.scrollHeight;
     },
+    battle_log(msg){        
+        const battleChatContainer = document.querySelector("#battle-log");
+        if (!battleChatContainer) return;       
+        const div = document.createElement('div');
+        div.innerHTML = `<span class="sys-msg">[СИСТЕМА]:</span><span class="chat-text"> ${msg.text}</span>`;
+        battleChatContainer.appendChild(div);
+        battleChatContainer.scrollTop = battleChatContainer.scrollHeight;
+    },
     whisper_received(msg) {
         const chatContainer = document.getElementById('chat-messages');
         if (!chatContainer) return;

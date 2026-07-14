@@ -355,6 +355,13 @@ func (h *Hub) SystemMsg(c *Client, text string) {
 	})
 }
 
+func (h *Hub) BattleMsg(c *Client, text string) {
+	h.Send(c, map[string]interface{}{
+		"type": "battle_log",
+		"text": text,
+	})
+}
+
 func (h *Hub) GetFullStatus(charID int64) models.PlayerStatus {
 	h.mu.RLock()
 	defer h.mu.RUnlock()

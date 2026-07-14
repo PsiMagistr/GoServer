@@ -124,7 +124,7 @@ export const battleController = {
             return;
         }
         if(spell.type=="attack" && stats.attacks >=3){
-            alert("Нельзя повесить больше двух атакующих заклов.");
+            alert("Нельзя повесить больше 3 атакующих заклов.");
             return;
         }
         if (stats.totalMana + spell.mana_cost > gameState.player.mana) {
@@ -136,8 +136,9 @@ export const battleController = {
             this.slots[freeIndex] = spell;
             this.renderSlots()
         }
+        //if(this.slots.length == 5)
     },
-    unpickSlots(spellId){
+    unpickSlots(spellId){        
         this.slots[spellId] = null;
         this.renderSlots();
     },
@@ -147,9 +148,15 @@ export const battleController = {
             let value = "Пусто"
             if(slot){
                 value = this.slots[i].name;                                
-            }
+            }           
             const slotElement = document.querySelector(`#label-slot-${i+1}`);
-            slotElement.textContent = value;            
+            slotElement.textContent = value; 
+            const  btnSubmitTurn  = document.querySelector("#btn-submit-turn");
+            const isReady = this.slots.every(s => s !== null)
+            if(btnSubmitTurn){
+                btnSubmitTurn.disabled = !isReady
+            }        
         }
     },
+    
 };    

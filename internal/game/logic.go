@@ -31,6 +31,7 @@ var commands = map[string]CommandHandler{
 	"commit_stats":     handleStatsCommitRequest,
 	"battle_challenge": handleBattleChallenge,
 	"battle_accept":    handleBattleAccept,
+	"battle_turn":      handleBattleTurn,
 }
 
 func handleChat(c *Client, h *Hub, data map[string]interface{}) {
@@ -459,4 +460,27 @@ func handleBattleAccept(c *Client, h *Hub, data map[string]interface{}) {
 
 	h.mu.Unlock()
 	h.executeBattleStart(attacker, c)
+}
+
+func handleBattleTurn(c *Client, h *Hub, data map[string]interface{}) { // Ход
+	var req BattleTurnRequest
+	dataBytes, _ := json.Marshal(data)
+	err := json.Unmarshal(dataBytes, &req)
+	if err != nil {
+		h.BattleMsg(c, "Ошибка: Неверный формат хода.")
+		return
+	}
+	if len(req.Spells) != 5 {
+		h.BattleMsg(c, "Нужно выбрать ровно 5 заклинаний.")
+		return
+	}
+	h.mu.RLock()
+	battle, exists := h.activeBattles[req.BattleID]
+	h.mu.RUnlock()
+	if !exists || battle.Round != req.Round {
+		h.BattleMsg(c, "Ошибка: Бой не найден или раунд уже завершен...")
+		return
+	}
+	fmt.Println("Ход ", req.BattleID)
+	h.BattleMsg(c, "Привет!")
 }

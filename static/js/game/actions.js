@@ -52,4 +52,13 @@ export const gameActions = {
         }
         network.send(packet);
     },
+    sendBattleTurn(battleId, round, spells){
+        const packet = {
+            type:"battle_turn",
+            battle_id:battleId,
+            spells:spells,
+            round:round,
+        } 
+        network.send(packet)       
+    },
 }

@@ -14,6 +14,7 @@ type Battle struct {
 	AttackerTurn []string
 	DefenderTurn []string
 	Round        int
+	Finished     bool
 	Log          []string  // Лог боя для этого матча
 	ExpiresAt    time.Time // Таймер на совершение хода
 	mu           sync.RWMutex
@@ -37,4 +38,10 @@ type BattleSnapshot struct {
 	TimeLeft int              `json:"time_left"`
 	You      BattleFighterDTO `json:"you"`
 	Opponent BattleFighterDTO `json:"opponent"`
+}
+
+type BattleTurnRequest struct {
+	BattleID int64 `json:"battle_id"`
+	Round    int   `json:"round"`
+	Spells   []int `json:"spells"`
 }

@@ -1199,6 +1199,12 @@ button {
     flex: 3;
 }
 
+.btn-confirm:disabled {
+    background: #CCCCCC;
+    color: #000;
+    flex: 3;
+}
+
 .btn-surrender {
     background: #5a1a1a;
     color: #ff6b6b;
