@@ -28,6 +28,10 @@ func main() {
 	if err = database.InitDB(); err != nil {
 		log.Fatal("Произошла ошибка ", err)
 	}
+	err = database.InitSpells(database.DB)
+	if err != nil {
+		log.Fatal("Ошибка загрузки заклинаний:", err)
+	}
 	addr := fmt.Sprintf("%s:%s", config.Get().Server.IP, config.Get().Server.HOST)
 	gameHub := game.NewHub()
 	go gameHub.Run()
