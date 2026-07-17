@@ -459,3 +459,43 @@ func (h *Hub) GetInviteFromSpecificPlayer(recipientID int64, senderID int64) *Ba
 	}
 	return nil
 }
+
+func (h *Hub) validateBattleTurn(c *Client, selectedIDs []int) error {
+	if len(selectedIDs) != 5 {
+		return fmt.Errorf("Нужно выбрать ровно 5 заклинаний")
+	}
+	attackCount := 0
+	shieldCount := 0
+	var totalMana float64
+	for _, id := range selectedIDs {
+		spell, exists := database.AllSpells[id]
+		if !exists {
+			return fmt.Errorf("заклинание ID:%d не существует", id)
+		}
+		hasIt := false
+		for _, owned := range c.Character.Spells {
+			if owned.ID == id {
+				hasIt = true
+				break
+			}
+		}
+		if !hasIt {
+			return fmt.Errorf("вы не владеете магией '%s'", spell.Name)
+		}
+		if spell.Type == "attack" {
+			attackCount++
+		} else {
+			shieldCount++
+		}
+		totalMana += spell.ManaCost
+
+	}
+	if shieldCount != 2 || attackCount != 3 {
+		return fmt.Errorf("комбинация должна быть: 2 щита и 3 атаки")
+	}
+	// 4. Проверка ресурсов
+	if totalMana > c.Character.Mana {
+		return fmt.Errorf("недостаточно маны (нужно %.1f, есть %.1f)", totalMana, c.Character.Mana)
+	}
+	return nil
+}

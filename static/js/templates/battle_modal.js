@@ -1,6 +1,7 @@
 export const battleModalTemplate = (data) => {
     const you = data.you;
     const opponent = data.opponent;
+    const round = data.round;
 
     // Генерируем 5 слотов (2 защиты, 3 атаки)
     let slotsHtml = '';
@@ -20,7 +21,7 @@ export const battleModalTemplate = (data) => {
         <div class="battle-interface">
             <!-- ВЕРХНЯЯ ПАНЕЛЬ: Таймер и Имена -->
             <div class="battle-header">
-                <div class="battle-title">Поединок: <b>${you.name}</b> vs <b>${opponent.name}</b></div>
+                <div class="battle-title">Поединок: <b>${you.name}</b> vs <b>${opponent.name}</b> Раунд:${round}</div>
                 <div id="battle-timer" class="battle-timer">${data.time_left || 30}s</div>
             </div>
 

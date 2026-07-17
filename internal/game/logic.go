@@ -470,15 +470,45 @@ func handleBattleTurn(c *Client, h *Hub, data map[string]interface{}) { // Хо�
 		h.BattleMsg(c, "Ошибка: Неверный формат хода.")
 		return
 	}
-	if len(req.Spells) != 5 {
-		h.BattleMsg(c, "Нужно выбрать ровно 5 заклинаний.")
-		return
-	}
 	h.mu.RLock()
 	battle, exists := h.activeBattles[req.BattleID]
 	h.mu.RUnlock()
 	if !exists || battle.Round != req.Round {
+		fmt.Println("Раунды ", req.Round)
 		h.BattleMsg(c, "Ошибка: Бой не найден или раунд уже завершен...")
+		return
+	}
+	battle.mu.Lock()
+	defer battle.mu.Unlock()
+	if battle.Finished {
+		h.BattleMsg(c, "Бой уже завершен")
+		return
+	}
+	if battle.Round != req.Round {
+		h.BattleMsg(c, "Ошибка: Раунд уже завершен или еще не начат.")
+		return
+	}
+	err = h.validateBattleTurn(c, req.Spells)
+	if err != nil {
+		h.mu.Unlock()
+		h.BattleMsg(c, err.Error()) // Сообщаем игроку, что не так
+		return
+
+	}
+	if c.Character.ID == battle.AttackerData.ID {
+		if battle.AttackerTurn != nil {
+			h.BattleMsg(c, "Вы уже совершили ход в этом раунде.")
+			return
+		}
+		battle.AttackerTurn = req.Spells
+	} else if c.Character.ID == battle.DefenderData.ID {
+		if battle.DefenderTurn != nil {
+			h.BattleMsg(c, "Вы уже совершили ход в этом раунде.")
+			return
+		}
+		battle.DefenderTurn = req.Spells
+	} else {
+		h.BattleMsg(c, "Вы не участвуете в этом бою.")
 		return
 	}
 	fmt.Println("Ход ", req.BattleID)

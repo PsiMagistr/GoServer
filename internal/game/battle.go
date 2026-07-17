@@ -11,8 +11,8 @@ type Battle struct {
 	ID           int64
 	AttackerData models.Character
 	DefenderData models.Character
-	AttackerTurn []string
-	DefenderTurn []string
+	AttackerTurn []int
+	DefenderTurn []int
 	Round        int
 	Finished     bool
 	Log          []string  // Лог боя для этого матча
