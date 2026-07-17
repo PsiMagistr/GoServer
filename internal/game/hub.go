@@ -6,7 +6,6 @@ import (
 	"sync"
 	"time"
 
-	"GoServer/internal/config"
 	"GoServer/internal/database"
 	"GoServer/internal/models"
 )
@@ -44,6 +43,7 @@ type Hub struct {
 	Unregister     chan *Client
 	Broadcast      chan interface{}
 	RoomBroadcast  chan RoomMessage
+	lastBattleID   int64 // Добавляем поле-счетчик
 }
 
 func NewHub() *Hub {
@@ -57,6 +57,7 @@ func NewHub() *Hub {
 		Unregister:     make(chan *Client, 64),
 		Broadcast:      make(chan interface{}, 256),
 		RoomBroadcast:  make(chan RoomMessage, 256),
+		lastBattleID:   time.Now().Unix(),
 	}
 }
 
@@ -419,14 +420,14 @@ func (h *Hub) cleanupChallenges() {
 	}
 }
 
-func (h *Hub) executeBattleStart(attacker *Client, defender *Client) {
+/*func (h *Hub) executeBattleStart(attacker *Client, defender *Client) {
 	h.mu.Lock()
 	if attacker.Character.State != models.StatusFree || defender.Character.State != models.StatusFree {
 		h.mu.Unlock()
 		h.SystemMsg(attacker, "Заявка не была отправлена. Кто-то из игроков занят")
 		return
 	}
-	battleID := time.Now().UnixNano()
+	battleID := atomic.AddInt64(&h.lastBattleID, 1)
 	newBattle := &Battle{
 		ID:           battleID,
 		AttackerData: *attacker.Character,
@@ -446,7 +447,7 @@ func (h *Hub) executeBattleStart(attacker *Client, defender *Client) {
 	h.mu.Unlock()
 	h.Send(attacker, map[string]interface{}{"type": "battle_start", "battle_info": atkInfo})
 	h.Send(defender, map[string]interface{}{"type": "battle_start", "battle_info": defInfo})
-}
+}*/
 
 func (h *Hub) GetInviteFromSpecificPlayer(recipientID int64, senderID int64) *BattleChallenge {
 	invites, ok := h.challenges[recipientID]
