@@ -546,6 +546,9 @@ func handleBattleTurn(c *Client, h *Hub, data map[string]interface{}) { // Хо�
 		h.BattleMsg(c, "Вы не участвуете в этом бою.")
 		return
 	}
-	fmt.Println("Ход ", req.BattleID)
-	h.BattleMsg(c, "Привет!")
+	if battle.AttackerTurn != nil && battle.DefenderTurn != nil {
+		h.BattleMsg(c, "Оба походили.")
+	} else {
+		h.BattleMsg(c, "Ход принят. Ожидание противника...")
+	}
 }

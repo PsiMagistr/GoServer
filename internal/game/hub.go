@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"GoServer/internal/config"
 	"GoServer/internal/database"
 	"GoServer/internal/models"
 )
@@ -420,35 +421,6 @@ func (h *Hub) cleanupChallenges() {
 	}
 }
 
-/*func (h *Hub) executeBattleStart(attacker *Client, defender *Client) {
-	h.mu.Lock()
-	if attacker.Character.State != models.StatusFree || defender.Character.State != models.StatusFree {
-		h.mu.Unlock()
-		h.SystemMsg(attacker, "Заявка не была отправлена. Кто-то из игроков занят")
-		return
-	}
-	battleID := atomic.AddInt64(&h.lastBattleID, 1)
-	newBattle := &Battle{
-		ID:           battleID,
-		AttackerData: *attacker.Character,
-		DefenderData: *defender.Character,
-		Round:        1,
-		ExpiresAt:    time.Now().Add(time.Duration(config.Get().GAME.ROUNDTIME) * time.Second),
-	}
-	h.activeBattles[battleID] = newBattle
-	h.playerToBattle[attacker.Character.ID] = battleID
-	h.playerToBattle[defender.Character.ID] = battleID
-	attacker.Character.State = models.StatusBattle
-	defender.Character.State = models.StatusBattle
-	delete(h.challenges, attacker.Character.ID)
-	delete(h.challenges, defender.Character.ID)
-	atkInfo := h.getBattleSnapshot(battleID, attacker.Character.ID)
-	defInfo := h.getBattleSnapshot(battleID, defender.Character.ID)
-	h.mu.Unlock()
-	h.Send(attacker, map[string]interface{}{"type": "battle_start", "battle_info": atkInfo})
-	h.Send(defender, map[string]interface{}{"type": "battle_start", "battle_info": defInfo})
-}*/
-
 func (h *Hub) GetInviteFromSpecificPlayer(recipientID int64, senderID int64) *BattleChallenge {
 	invites, ok := h.challenges[recipientID]
 	if ok {
@@ -499,4 +471,57 @@ func (h *Hub) validateBattleTurn(c *Client, selectedIDs []int) error {
 		return fmt.Errorf("недостаточно маны (нужно %.1f, есть %.1f)", totalMana, c.Character.Mana)
 	}
 	return nil
+}
+
+// Метод рассчета боя.
+func (h *Hub) resolveBattleRound(b *Battle, isTimeout bool) {
+	b.mu.Lock()
+	if b.Finished {
+		b.mu.Unlock()
+		return
+	}
+	p1Moved := b.AttackerTurn != nil
+	p2Moved := b.DefenderTurn != nil
+	if isTimeout {
+		if !p1Moved && !p2Moved {
+			// Финишируем finishBattle
+			b.mu.Unlock()
+			return
+		}
+		if !p1Moved {
+			// Финишируем
+			b.mu.Unlock()
+			return
+		}
+		if !p2Moved {
+			// Финишируем
+			b.mu.Unlock()
+			return
+		}
+
+	}
+	b.Log = append(b.Log, fmt.Sprintf("Раунд %d завершен. Расчет произведен.", b.Round))
+	b.Round++
+	b.AttackerTurn = nil
+	b.DefenderTurn = nil
+	roundDuration := time.Duration(config.Get().GAME.ROUNDTIME * int(time.Second))
+	b.ExpiresAt = time.Now().Add(roundDuration)
+	b.mu.Unlock()
+	atkInfo := h.getBattleSnapshot(b.ID, b.AttackerData.ID)
+	defInfo := h.getBattleSnapshot(b.ID, b.DefenderData.ID)
+	attacker, ok := h.GetActiveClient(b.AttackerData.ID)
+	if ok {
+		h.Send(attacker, map[string]interface{}{
+			"type": "battle_update",
+			"data": atkInfo,
+		})
+	}
+	defender, ok := h.GetActiveClient(b.DefenderData.ID)
+	if ok {
+		h.Send(defender, map[string]interface{}{
+			"type": "battle_update",
+			"data": defInfo,
+		})
+	}
+	// go h.battleTimerGuard(b.ID, b.Round) Дописать.
 }
