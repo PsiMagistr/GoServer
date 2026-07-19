@@ -263,5 +263,11 @@ export const socket_events = {
     battle_start(msg) {       
         battleController.open(msg.battle_info)       
     },
+    battle_update(msg){
+        battleController.open(msg.battle_info)        
+    },
+    battle_end(msg){
+        alert(msg.reason)
+    }
 }
 

@@ -491,64 +491,81 @@ func executeBattleStart(h *Hub, attacker *Client, defender *Client) {
 	h.mu.Unlock()
 	h.Send(attacker, map[string]interface{}{"type": "battle_start", "battle_info": atkInfo})
 	h.Send(defender, map[string]interface{}{"type": "battle_start", "battle_info": defInfo})
+	go h.battleTimerGuard(newBattle.ID, newBattle.Round)
 }
 
-func handleBattleTurn(c *Client, h *Hub, data map[string]interface{}) { // Ход
+func handleBattleTurn(c *Client, h *Hub, data map[string]interface{}) {
 	var req BattleTurnRequest
 	dataBytes, _ := json.Marshal(data)
-	err := json.Unmarshal(dataBytes, &req)
-	if err != nil {
+	if err := json.Unmarshal(dataBytes, &req); err != nil {
 		h.BattleMsg(c, "Ошибка: Неверный формат хода.")
 		return
 	}
+
 	h.mu.RLock()
 	battle, exists := h.activeBattles[req.BattleID]
 	h.mu.RUnlock()
+
 	if !exists {
-		// fmt.Println(battle.ID)
-		fmt.Println(req.BattleID)
-		h.BattleMsg(c, `Ошибка: Бой не найден`)
+		h.BattleMsg(c, "Ошибка: Бой не найден")
 		return
 	}
-	if battle.Round != req.Round {
-		h.BattleMsg(c, "Ошибка: Раунд уже завершен")
-		return
-	}
+
+	// 1. БЕРЕМ ЗАМОК ВРУЧНУЮ
 	battle.mu.Lock()
-	defer battle.mu.Unlock()
+
+	// 2. ПРОВЕРКИ (внутри лока)
 	if battle.Finished {
+		battle.mu.Unlock() // ВСЕГДА разблокируем перед return!
 		h.BattleMsg(c, "Бой уже завершен")
 		return
 	}
-	if battle.Round != req.Round {
-		h.BattleMsg(c, "Ошибка: Раунд уже завершен или еще не начат.")
-		return
-	}
-	err = h.validateBattleTurn(c, req.Spells)
-	if err != nil {
-		h.BattleMsg(c, err.Error()) // Сообщаем игроку, что не так
-		return
 
+	if battle.Round != req.Round {
+		battle.mu.Unlock()
+		h.BattleMsg(c, "Ошибка: Раунд уже завершен")
+		return
 	}
+
+	// 3. ВАЛИДАЦИЯ (тоже внутри лока)
+	if err := h.validateBattleTurn(c, req.Spells); err != nil {
+		battle.mu.Unlock()
+		h.BattleMsg(c, err.Error())
+		return
+	}
+
+	// 4. ЗАПИСЫВАЕМ ХОД
 	if c.Character.ID == battle.AttackerData.ID {
 		if battle.AttackerTurn != nil {
-			h.BattleMsg(c, "Вы уже совершили ход в этом раунде.")
+			battle.mu.Unlock()
+			h.BattleMsg(c, "Вы уже походили.")
 			return
 		}
 		battle.AttackerTurn = req.Spells
 	} else if c.Character.ID == battle.DefenderData.ID {
 		if battle.DefenderTurn != nil {
-			h.BattleMsg(c, "Вы уже совершили ход в этом раунде.")
+			battle.mu.Unlock()
+			h.BattleMsg(c, "Вы уже походили.")
 			return
 		}
 		battle.DefenderTurn = req.Spells
 	} else {
-		h.BattleMsg(c, "Вы не участвуете в этом бою.")
+		battle.mu.Unlock()
+		h.BattleMsg(c, "Вы не в этом бою.")
 		return
 	}
+
+	// 5. ПРОВЕРКА ЗАВЕРШЕНИЯ ХОДОВ
 	if battle.AttackerTurn != nil && battle.DefenderTurn != nil {
-		h.BattleMsg(c, "Оба походили.")
+		// ВАЖНО: Мы закончили менять данные боя в ЭТОЙ функции.
+		// Отпускаем замок ПЕРЕД вызовом тяжелой логики.
+		battle.mu.Unlock()
+
+		fmt.Println("Все походили, запускаем расчет для боя:", battle.ID)
+		h.resolveBattleRound(battle, false)
 	} else {
+		// Если второй игрок еще не походил
+		battle.mu.Unlock()
 		h.BattleMsg(c, "Ход принят. Ожидание противника...")
 	}
 }

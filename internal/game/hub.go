@@ -473,55 +473,124 @@ func (h *Hub) validateBattleTurn(c *Client, selectedIDs []int) error {
 	return nil
 }
 
-// Метод рассчета боя.
+// Метод надзирателя
+func (h *Hub) battleTimerGuard(battleID int64, round int) {
+	h.mu.RLock()
+	b, exists := h.activeBattles[battleID]
+	h.mu.RUnlock()
+	if !exists {
+		return
+	}
+	time.Sleep(time.Until(b.ExpiresAt.Add(2 * time.Second)))
+	b.mu.Lock()
+	if b.Finished || b.Round != round {
+		b.mu.Unlock()
+		return
+	}
+	fmt.Println("Гуард выход по таймауту")
+	b.mu.Unlock()
+	h.resolveBattleRound(b, true)
+}
+
 func (h *Hub) resolveBattleRound(b *Battle, isTimeout bool) {
+	fmt.Println("resolveBattleRound")
 	b.mu.Lock()
 	if b.Finished {
+		fmt.Println("Финишировано resolveBattleRound")
 		b.mu.Unlock()
 		return
 	}
 	p1Moved := b.AttackerTurn != nil
 	p2Moved := b.DefenderTurn != nil
+
 	if isTimeout {
+		fmt.Println("Выход по таймауту")
 		if !p1Moved && !p2Moved {
-			// Финишируем finishBattle
-			b.mu.Unlock()
+			fmt.Println("Оба бойца пропустили ход")
+			b.mu.Unlock() // Отпускаем ПЕРЕД вызовом finishBattle
+			h.finishBattle(b, "Ничья: оба бойца пропустили ход.")
 			return
 		}
 		if !p1Moved {
-			// Финишируем
 			b.mu.Unlock()
+			h.finishBattle(b, fmt.Sprintf("Победа %s: оппонент не явился.", b.DefenderData.Name))
 			return
 		}
 		if !p2Moved {
-			// Финишируем
 			b.mu.Unlock()
+			h.finishBattle(b, fmt.Sprintf("Победа %s: оппонент не явился.", b.AttackerData.Name))
 			return
 		}
-
 	}
+
+	// ЛОГИКА НОВОГО РАУНДА
 	b.Log = append(b.Log, fmt.Sprintf("Раунд %d завершен. Расчет произведен.", b.Round))
 	b.Round++
 	b.AttackerTurn = nil
 	b.DefenderTurn = nil
-	roundDuration := time.Duration(config.Get().GAME.ROUNDTIME * int(time.Second))
+
+	roundDuration := time.Duration(config.Get().GAME.ROUNDTIME) * time.Second
 	b.ExpiresAt = time.Now().Add(roundDuration)
-	b.mu.Unlock()
+
+	b.mu.Unlock() // Закончили менять данные боя
+
+	// Рассылаем снапшоты (уже без лока)
+	// h.sendBattleUpdates(b)
+
+	// Запускаем таймер на следующий раунд
 	atkInfo := h.getBattleSnapshot(b.ID, b.AttackerData.ID)
 	defInfo := h.getBattleSnapshot(b.ID, b.DefenderData.ID)
 	attacker, ok := h.GetActiveClient(b.AttackerData.ID)
 	if ok {
+		fmt.Println("Походили1")
 		h.Send(attacker, map[string]interface{}{
-			"type": "battle_update",
-			"data": atkInfo,
+			"type":        "battle_update",
+			"battle_info": atkInfo,
 		})
+	} else {
+		fmt.Println("Не находит1")
 	}
 	defender, ok := h.GetActiveClient(b.DefenderData.ID)
 	if ok {
+		fmt.Println("Походили2")
 		h.Send(defender, map[string]interface{}{
-			"type": "battle_update",
-			"data": defInfo,
+			"type":        "battle_update",
+			"battle_info": defInfo,
 		})
+	} else {
+		fmt.Println("Не находит 2")
 	}
-	// go h.battleTimerGuard(b.ID, b.Round) Дописать.
+
+	go h.battleTimerGuard(b.ID, b.Round)
+}
+
+func (h *Hub) finishBattle(b *Battle, reason string) {
+	b.mu.Lock() // Сначала защищаем сам объект боя
+	if b.Finished {
+		b.mu.Unlock()
+		return
+	}
+	h.mu.Lock()
+	b.Finished = true
+	delete(h.activeBattles, b.ID)
+	delete(h.playerToBattle, b.AttackerData.ID)
+	delete(h.playerToBattle, b.DefenderData.ID)
+	h.mu.Unlock()
+	attacker, aOk := h.GetActiveClient(b.AttackerData.ID)
+	if aOk {
+		attacker.Character.State = models.StatusFree
+	}
+
+	defender, dOk := h.GetActiveClient(b.DefenderData.ID)
+	if dOk {
+		defender.Character.State = models.StatusFree
+	}
+
+	// Уведомляем игроков
+	endMsg := map[string]interface{}{
+		"type":   "battle_end",
+		"reason": reason,
+	}
+	h.Send(attacker, endMsg)
+	h.Send(defender, endMsg)
 }
