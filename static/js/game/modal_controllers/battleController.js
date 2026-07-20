@@ -8,12 +8,11 @@ import { gameState } from "../game.js";
 export const battleController = {
     battleData: null,
     stopTimerFunc: null,
-    slots:[null, null, null, null, null],
-
+    slots: [null, null, null, null, null],
     // 1. Точка входа (вызывается из сокета)
     async open(data) {
+        this.slots = [null, null, null, null, null];
         this.battleData = data;
-        
         // Останавливаем мир
         engine.stopMainLoop();
 
@@ -22,10 +21,8 @@ export const battleController = {
 
         // 3. Запускаем таймер
         this.startTurnTimer(this.battleData.time_left);
-
         // 4. Наполняем списки заклинаний (теперь элементы уже есть в DOM)
         this.renderSpells();
-
         // 5. Грузим картинки и запускаем канвас
         await this.setupGraphics();
     },
@@ -38,7 +35,7 @@ export const battleController = {
     // Наполняет пустые <ul> списками магии
     renderSpells() {
         const allSpells = gameState.player.spells || [];
-        
+
         ui.renderList(
             "#defense-spells",
             allSpells.filter(s => s.type === "shield"),
@@ -69,7 +66,7 @@ export const battleController = {
         try {
             const newImages = await engine.loaderAssets(assets);
             engine.images = { ...engine.images, ...newImages };
-            
+
             const canvas = document.getElementById('battleCanvas');
             if (canvas) engine.initBattle(canvas, this.battleData);
         } catch (e) {
@@ -78,18 +75,37 @@ export const battleController = {
     },
 
     // Вспомогательный метод для содержимого <li>
-    generateSpellContent(s) { 
+    generateSpellContent(s) {
         return s.name;
     },
 
     startTurnTimer(seconds) {
         if (this.stopTimerFunc) this.stopTimerFunc();
+
+        // 1. Находим элемент таймера ОДИН раз
         const timerEl = document.getElementById('battle-timer');
         if (!timerEl) return;
 
-        this.stopTimerFunc = utils.createTimer(seconds, 
-            (sec) => { timerEl.innerText = `${sec}s`; },
-            () => { timerEl.innerText = "0s"; }
+        // Сбрасываем стили (на случай если прошлый таймер был "красным")
+        timerEl.style.color = "";
+        timerEl.classList.remove("blink");
+
+        // 2. Создаем "умный" таймер на базе Date.now()
+        this.stopTimerFunc = utils.createTimer(
+            seconds,
+            (sec) => {
+                // ПРЯМОЕ ОБНОВЛЕНИЕ: меняем только текст, не трогая остальной HTML
+                if (timerEl) {
+                    timerEl.innerText = `${sec}s`;
+
+                    if (sec <= 5) {
+                        timerEl.style.color = "#ff4d4d";
+                    }
+                }
+            },
+            () => {
+                if (timerEl) timerEl.innerText = "0s";
+            }
         );
     },
 
@@ -98,32 +114,32 @@ export const battleController = {
         engine.stopBattleLoop();
         engine.startMainLoop();
     },
-    getStats(){
-        let shields=0;
-        let attacks=0;
-        let totalMana=0;
-        for(const slot of this.slots){           
-            if(slot){
-                if(slot.type=="shield"){
+    getStats() {
+        let shields = 0;
+        let attacks = 0;
+        let totalMana = 0;
+        for (const slot of this.slots) {
+            if (slot) {
+                if (slot.type == "shield") {
                     shields++;
                 }
-                if(slot.type=="attack"){
+                if (slot.type == "attack") {
                     attacks++
                 }
-                totalMana += slot.mana_cost                
+                totalMana += slot.mana_cost
             }
-            
-        }         
-        return {shields, attacks, totalMana}
+
+        }
+        return { shields, attacks, totalMana }
     },
-    pickSpell(spellId){
-        const spell = gameState.player.spells.find(s=>s.id==spellId)
-        const stats = this.getStats();        
-        if(spell.type=="shield" && stats.shields >=2){
+    pickSpell(spellId) {
+        const spell = gameState.player.spells.find(s => s.id == spellId)
+        const stats = this.getStats();
+        if (spell.type == "shield" && stats.shields >= 2) {
             alert("Нельзя повесть больше двух щитов");
             return;
         }
-        if(spell.type=="attack" && stats.attacks >=3){
+        if (spell.type == "attack" && stats.attacks >= 3) {
             alert("Нельзя повесить больше 3 атакующих заклов.");
             return;
         }
@@ -132,31 +148,58 @@ export const battleController = {
             return;
         }
         const freeIndex = this.slots.indexOf(null)
-        if(freeIndex !== -1){
+        if (freeIndex !== -1) {
             this.slots[freeIndex] = spell;
             this.renderSlots()
         }
         //if(this.slots.length == 5)
     },
-    unpickSlots(spellId){        
+    unpickSlots(spellId) {
         this.slots[spellId] = null;
         this.renderSlots();
     },
-    renderSlots(){
-        for(let i = 0; i < this.slots.length; i++){
+    renderSlots() {
+        for (let i = 0; i < this.slots.length; i++) {
             const slot = this.slots[i]
             let value = "Пусто"
-            if(slot){
-                value = this.slots[i].name;                                
-            }           
-            const slotElement = document.querySelector(`#label-slot-${i+1}`);
-            slotElement.textContent = value; 
-            const  btnSubmitTurn  = document.querySelector("#btn-submit-turn");
+            if (slot) {
+                value = this.slots[i].name;
+            }
+            const slotElement = document.querySelector(`#label-slot-${i + 1}`);
+            slotElement.textContent = value;
+            const btnSubmitTurn = document.querySelector("#btn-submit-turn");
             const isReady = this.slots.every(s => s !== null)
-            if(btnSubmitTurn){
+            if (btnSubmitTurn) {
                 btnSubmitTurn.disabled = !isReady
-            }        
+            }
         }
     },
-    
+    end(msg) {
+        // 1. Останавливаем боевой таймер
+        if (this.stopTimerFunc) {
+            this.cleanup()
+            this.stopTimerFunc = null;
+        }
+        const timerEl = document.getElementById('battle-timer');
+        if (timerEl) {
+            timerEl.innerText = "0s";
+            timerEl.style.color = "#555"; // Делаем его серым, "неактивным"
+            timerEl.classList.remove("blink"); // Убираем мигание, если оно было
+        }
+
+        // 2. Блокируем кнопку "Сделать ход", если она была активна
+        const submitBtn = document.getElementById('btn-submit-turn');
+        if (submitBtn) submitBtn.disabled = true;
+
+        // 3. Выводим результат в лог боя (красиво)
+        const log = document.getElementById('battle-log');
+        if (log) {
+            log.innerHTML += `<div class="log-entry result"><b>ИТОГ: ${msg.reason}</b></div>`;
+            log.scrollTop = log.scrollHeight;
+        }
+        // 4. САМОЕ ГЛАВНОЕ: Показываем крестик закрытия через менеджер
+        modalManager.setClosable(true);
+        console.log("Бой окончен. Окно разблокировано.");
+    },
+
 };    
