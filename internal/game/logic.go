@@ -34,6 +34,7 @@ var commands = map[string]CommandHandler{
 	"battle_challenge": handleBattleChallenge,
 	"battle_accept":    handleBattleAccept,
 	"battle_turn":      handleBattleTurn,
+	"battle_decline":   handleBattleDecline,
 }
 
 func handleChat(c *Client, h *Hub, data map[string]interface{}) {
@@ -567,5 +568,31 @@ func handleBattleTurn(c *Client, h *Hub, data map[string]interface{}) {
 		// Если второй игрок еще не походил
 		battle.mu.Unlock()
 		h.BattleMsg(c, "Ход принят. Ожидание противника...")
+	}
+}
+
+// Удаление заявок.
+func handleBattleDecline(c *Client, h *Hub, data map[string]interface{}) {
+	senderIDRaw, ok := data["sender_id"]
+	if !ok {
+		return
+	}
+	senderID := int64(senderIDRaw.(float64))
+	if !ok {
+		h.SystemMsg(c, "Ошибка: ID персонажа должен быть числом.")
+		return
+	}
+	h.mu.Lock()
+	invites, exists := h.challenges[c.Character.ID]
+	if exists {
+		delete(invites, senderID)
+	}
+	if len(invites) == 0 {
+		delete(h.challenges, c.Character.ID)
+	}
+	h.mu.Unlock()
+	attacker, online := h.GetActiveClient(senderID)
+	if online {
+		h.SystemMsg(attacker, "Персонаж "+c.Character.Name+" отклонил ваш вызов.")
 	}
 }

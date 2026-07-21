@@ -159,6 +159,7 @@ export const battleController = {
         this.renderSlots();
     },
     renderSlots() {
+        const isReady = this.slots.every(s => s !== null)
         for (let i = 0; i < this.slots.length; i++) {
             const slot = this.slots[i]
             let value = "Пусто"
@@ -167,8 +168,7 @@ export const battleController = {
             }
             const slotElement = document.querySelector(`#label-slot-${i + 1}`);
             slotElement.textContent = value;
-            const btnSubmitTurn = document.querySelector("#btn-submit-turn");
-            const isReady = this.slots.every(s => s !== null)
+            const btnSubmitTurn = document.querySelector("#btn-submit-turn");           
             if (btnSubmitTurn) {
                 btnSubmitTurn.disabled = !isReady
             }

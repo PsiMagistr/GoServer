@@ -2,28 +2,28 @@
 import { network } from "./network.js";
 
 export const gameActions = {
-    moveToNode(targetId) {        
+    moveToNode(targetId) {
         const packet = {
             "type": "move",
             "target_id": targetId,
         }
         network.send(packet);
     },
-    enterPortal(worldId) {        
+    enterPortal(worldId) {
         const packet = {
             "type": "portal_request",
             "world_id": worldId,
         };
         network.send(packet);
     },
-    sendPublicChat(text){
+    sendPublicChat(text) {
         const packet = {
             type: "chat_msg",
             text: text,
         };
         network.send(packet);
     },
-    sendWhisper(recipient, text){
+    sendWhisper(recipient, text) {
         const packet = {
             type: "private_chat",
             target_name: recipient,
@@ -31,34 +31,41 @@ export const gameActions = {
         };
         network.send(packet);
     },
-    sendPlayerStats(stats){
+    sendPlayerStats(stats) {
         const packet = {
-            type:"commit_stats",
-            stats:stats,
+            type: "commit_stats",
+            stats: stats,
         }
         network.send(packet)
     },
-    sendBattleChallenge(id){
-       const packet = {
-            type:"battle_challenge",
-            target_id:parseInt(id),
-       }
-       network.send(packet)
-    },
-    acceptBattle(senderId){
+    sendBattleChallenge(id) {
         const packet = {
-            type:"battle_accept",
-            sender_id:parseInt(senderId),
+            type: "battle_challenge",
+            target_id: parseInt(id),
+        }
+        network.send(packet)
+    },
+    acceptBattle(senderId) {
+        const packet = {
+            type: "battle_accept",
+            sender_id: parseInt(senderId),
         }
         network.send(packet);
     },
-    sendBattleTurn(battleId, round, spells){
+    sendBattleTurn(battleId, round, spells) {
         const packet = {
-            type:"battle_turn",
-            battle_id:battleId,
-            spells:spells,
-            round:round,
-        } 
-        network.send(packet)       
+            type: "battle_turn",
+            battle_id: battleId,
+            spells: spells,
+            round: round,
+        }
+        network.send(packet)
+    },
+    declineChallenge(senderId) {
+        const packet = {
+            type: "battle_decline",
+            sender_id: Number(senderId)
+        }
+        network.send(packet)
     },
 }

@@ -30,8 +30,12 @@ export const ui = {
     },
     removeItemFromUI(idPrefix, id){        
         const el = document.querySelector(`#${idPrefix}-${id}`);
+        const parent = el.parentElement;
         if(el) {
             el.remove()
+            if(parent.childElementCount === 0){
+                parent.innerHTML = `<li class="empty">Пусто</li>`
+            }
         } 
         else{
             console/log("Нет элемента")

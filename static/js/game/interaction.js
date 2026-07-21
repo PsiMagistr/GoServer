@@ -105,9 +105,11 @@ export const interaction = {
             }
             if (id.startsWith("accept-")) {
                 console.log("Принимаем заявку на бой")
+                ui.removeItemFromUI("invite", senderId);
                 gameActions.acceptBattle(senderId);
             } else {
                 ui.removeItemFromUI("invite", senderId);
+                gameActions.declineChallenge(senderId)
             }
 
         }
