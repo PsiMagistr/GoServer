@@ -1237,3 +1237,14 @@ button {
     background: rgba(0, 0, 0, 0.1);
     z-index: 5;
 }
+
+.btn-surrender:disabled {
+    background: #221515 !important; /* Очень темный коричнево-серый */
+    color: #443333 !important;       /* Тусклый цвет текста */
+    border-color: #332222 !important;
+    cursor: not-allowed;
+    filter: grayscale(1);           /* Полностью убираем цветность */
+    opacity: 0.5;
+    box-shadow: none !important;
+    transform: none !important;
+}

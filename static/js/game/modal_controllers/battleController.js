@@ -102,7 +102,7 @@ export const battleController = {
         
         // Кнопку "Сдаться" обычно оставляют активной, но можно тоже приглушить
         if (surrenderBtn) {
-            surrenderBtn.style.opacity = locked ? "0.5" : "1";
+            surrenderBtn.disabled = locked ? true : false;
         }
     },
 
