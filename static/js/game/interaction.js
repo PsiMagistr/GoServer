@@ -27,12 +27,18 @@ const clickers = {
         modalManager.hide();
     },
     "btn-submit-turn": (obj, event) => {
-        console.log("=======")        
+        console.log("=======")
+        battleController.setLock(true);        
         const battleId = battleController.battleData.battle_id
         const round = battleController.battleData.round;
         const spells = battleController.slots.map(slot=>slot.id);    
         gameActions.sendBattleTurn(battleId, round, spells)
-    }
+    },
+    "btn-surrender": () => {
+        if (confirm("Вы действительно хотите сдаться?")) {
+            gameActions.surrender();
+        }
+    },
 }
 const movers = {
     "gameCanvas": (obj, event) => {

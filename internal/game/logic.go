@@ -35,6 +35,7 @@ var commands = map[string]CommandHandler{
 	"battle_accept":    handleBattleAccept,
 	"battle_turn":      handleBattleTurn,
 	"battle_decline":   handleBattleDecline,
+	"battle_surrender": handleBattleSurrender,
 }
 
 func handleChat(c *Client, h *Hub, data map[string]interface{}) {
@@ -595,4 +596,24 @@ func handleBattleDecline(c *Client, h *Hub, data map[string]interface{}) {
 	if online {
 		h.SystemMsg(attacker, "Персонаж "+c.Character.Name+" отклонил ваш вызов.")
 	}
+}
+
+// Обработка сдачи боя.
+func handleBattleSurrender(c *Client, h *Hub, data map[string]interface{}) {
+	h.mu.RLock()
+	battleID, inBattle := h.playerToBattle[c.Character.ID]
+	h.mu.RUnlock()
+	if !inBattle {
+		h.BattleMsg(c, "Вы уже не в бою.")
+		return
+	}
+	h.mu.Lock()
+	battle, exists := h.activeBattles[battleID]
+	h.mu.Unlock()
+	if !exists {
+		h.BattleMsg(c, "Бой не найден же.")
+		return
+	}
+	reason := fmt.Sprintf("Персонаж %s признал поражение.", c.Character.Name)
+	h.finishBattle(battle, reason)
 }

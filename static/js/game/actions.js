@@ -68,4 +68,10 @@ export const gameActions = {
         }
         network.send(packet)
     },
+    surrender(){        
+        const packet = {
+            type: "battle_surrender"
+        }
+        network.send(packet);
+    }
 }

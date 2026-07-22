@@ -78,6 +78,38 @@ export const battleController = {
     generateSpellContent(s) {
         return s.name;
     },
+     setLock(locked) {
+        this.isLoading = locked;
+
+        // 1. Управляем списками заклинаний
+        const lists = document.querySelectorAll('.spells-list');
+        lists.forEach(list => {
+            if (locked) {
+                list.classList.add('locked');
+            } else {
+                list.classList.remove('locked');
+            }
+        });
+
+        // 2. Управляем кнопками внизу
+        const submitBtn = document.getElementById('btn-submit-turn');
+        const surrenderBtn = document.getElementById('btn-surrender');
+
+        if (submitBtn) {
+            submitBtn.disabled = locked || !this.isSlotsFull();
+            submitBtn.innerText = locked ? "ОЖИДАНИЕ..." : "ПОДТВЕРДИТЬ ХОД";
+        }
+        
+        // Кнопку "Сдаться" обычно оставляют активной, но можно тоже приглушить
+        if (surrenderBtn) {
+            surrenderBtn.style.opacity = locked ? "0.5" : "1";
+        }
+    },
+
+    // Вспомогательная проверка
+    isSlotsFull() {
+        return this.slots.every(s => s !== null);
+    },
 
     startTurnTimer(seconds) {
         if (this.stopTimerFunc) this.stopTimerFunc();
@@ -199,6 +231,7 @@ export const battleController = {
         }
         // 4. САМОЕ ГЛАВНОЕ: Показываем крестик закрытия через менеджер
         modalManager.setClosable(true);
+        this.setLock(true)
         console.log("Бой окончен. Окно разблокировано.");
     },
 
