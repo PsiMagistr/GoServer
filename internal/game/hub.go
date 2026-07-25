@@ -524,7 +524,32 @@ func (h *Hub) resolveBattleRound(b *Battle, isTimeout bool) {
 	}
 
 	// ЛОГИКА НОВОГО РАУНДА
-	b.Log = append(b.Log, fmt.Sprintf("Раунд %d завершен. Расчет произведен.", b.Round))
+	// b.Log = append(b.Log, fmt.Sprintf("Раунд %d завершен. Расчет произведен.", b.Round))
+	combatResult := h.calculateCombat(b)
+	// ПРИМЕНЯЕМ ЦИФРЫ
+	b.AttackerData.HP -= combatResult.DamageToAttacker
+	b.DefenderData.HP -= combatResult.DamageToDefender
+	b.AttackerData.HP += combatResult.HPToAttacker
+	b.DefenderData.HP += combatResult.HPToDefender
+	b.AttackerData.Mana += combatResult.ManaToAttacker
+	b.DefenderData.Mana += combatResult.ManaToDefender
+	// Добавляем логи раунда в общий лог боя
+	b.Log = append(b.Log, combatResult.RoundLog...)
+
+	// ПРОВЕРКА ПОБЕДЫ
+	if b.AttackerData.HP <= 0 || b.DefenderData.HP <= 0 {
+		reason := "Бой завершен."
+		if b.AttackerData.HP <= 0 && b.DefenderData.HP <= 0 {
+			reason = "Оба бойца пали. Ничья!"
+		} else if b.AttackerData.HP <= 0 {
+			reason = fmt.Sprintf("Победа за %s!", b.DefenderData.Name)
+		} else {
+			reason = fmt.Sprintf("Победа за %s!", b.AttackerData.Name)
+		}
+		b.mu.Unlock()
+		h.finishBattle(b, reason)
+		return
+	}
 	b.Round++
 	b.AttackerTurn = nil
 	b.DefenderTurn = nil
@@ -538,6 +563,7 @@ func (h *Hub) resolveBattleRound(b *Battle, isTimeout bool) {
 	// h.sendBattleUpdates(b)
 
 	// Запускаем таймер на следующий раунд
+	fmt.Println("Тест ", b.DefenderData.HP)
 	atkInfo := h.getBattleSnapshot(b.ID, b.AttackerData.ID)
 	defInfo := h.getBattleSnapshot(b.ID, b.DefenderData.ID)
 	attacker, ok := h.GetActiveClient(b.AttackerData.ID)
@@ -593,4 +619,63 @@ func (h *Hub) finishBattle(b *Battle, reason string) {
 	}
 	h.Send(attacker, endMsg)
 	h.Send(defender, endMsg)
+}
+
+func (h *Hub) calculateCombat(b *Battle) RoundCalculationResult {
+	res := RoundCalculationResult{
+		RoundLog: make([]string, 0),
+	}
+
+	// Коэффициент регенерации (например, 5% от макс)
+	regenRate := 0.05
+
+	for i := 0; i < 5; i++ {
+		s1 := database.AllSpells[b.AttackerTurn[i]] // Заклинание Агрессора
+		s2 := database.AllSpells[b.DefenderTurn[i]] // Заклинание Защитника
+
+		idx1 := elementToIndex[s1.Element]
+		idx2 := elementToIndex[s2.Element]
+
+		// СЛУЧАЙ 1: Атака против Щита
+		if s1.Type == "attack" && s2.Type == "shield" {
+			mult := atkVsShield[idx1][idx2]
+			dmg := (float64(b.AttackerData.Strength) * s1.Power) * mult
+			res.DamageToDefender += dmg
+			res.RoundLog = append(res.RoundLog, fmt.Sprintf("Слот %d: %s бьет в %s. Урон: %.1f", i+1, s1.Name, s2.Name, dmg))
+		} else if s2.Type == "attack" && s1.Type == "shield" {
+			mult := atkVsShield[idx2][idx1]
+			dmg := (float64(b.DefenderData.Strength) * s2.Power) * mult
+			res.DamageToAttacker += dmg
+			res.RoundLog = append(res.RoundLog, fmt.Sprintf("Слот %d: %s отражает %s. Урон вам: %.1f", i+1, s1.Name, s2.Name, dmg))
+
+			// СЛУЧАЙ 2: Атака против Атаки
+		} else if s1.Type == "attack" && s2.Type == "attack" {
+			mult1 := atkVsAtk[idx1][idx2]
+			mult2 := atkVsAtk[idx2][idx1]
+			dmgToDef := (float64(b.AttackerData.Strength) * s1.Power) * mult1
+			dmgToAtk := (float64(b.DefenderData.Strength) * s2.Power) * mult2
+			res.DamageToDefender += dmgToDef
+			res.DamageToAttacker += dmgToAtk
+			res.RoundLog = append(res.RoundLog, fmt.Sprintf("Слот %d: Встречная атака! %s vs %s. Вы нанесли %.1f, получили %.1f", i+1, s1.Name, s2.Name, dmgToDef, dmgToAtk))
+
+			// СЛУЧАЙ 3: Щит против Щита
+		} else if s1.Type == "shield" && s2.Type == "shield" {
+			if s1.Element == s2.Element {
+				// Одинаковые щиты - реген маны
+				mGain1 := b.AttackerData.MaxMana * regenRate
+				mGain2 := b.DefenderData.MaxMana * regenRate
+				res.ManaToAttacker += mGain1
+				res.ManaToDefender += mGain2
+				res.RoundLog = append(res.RoundLog, fmt.Sprintf("Слот %d: Резонанс щитов %s. +Мана.", i+1, s1.Element))
+			} else {
+				// Разные щиты - реген HP
+				hGain1 := b.AttackerData.MaxHP * regenRate
+				hGain2 := b.DefenderData.MaxHP * regenRate
+				res.HPToAttacker += hGain1
+				res.HPToDefender += hGain2
+				res.RoundLog = append(res.RoundLog, fmt.Sprintf("Слот %d: Сплетение защит %s и %s. +Жизнь.", i+1, s1.Name, s2.Name))
+			}
+		}
+	}
+	return res
 }

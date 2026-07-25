@@ -45,3 +45,13 @@ type BattleTurnRequest struct {
 	Round    int   `json:"round"`
 	Spells   []int `json:"spells"`
 }
+
+type RoundCalculationResult struct {
+	DamageToAttacker float64
+	DamageToDefender float64
+	ManaToAttacker   float64
+	ManaToDefender   float64
+	HPToAttacker     float64
+	HPToDefender     float64
+	RoundLog         []string
+}
