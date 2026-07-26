@@ -264,9 +264,8 @@ export const socket_events = {
         battleController.open(msg.battle_info)       
     },
     battle_update(msg){
-        battleController.open(msg.battle_info)
-        console.log("+++++++wqwqwq")
-        alert(msg.battle_info.you.hp)        
+        battleController.open(msg.battle_info)        
+                
     },
     battle_end(msg){        
         battleController.end(msg);

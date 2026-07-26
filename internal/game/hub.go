@@ -126,6 +126,7 @@ func (h *Hub) getBattleSnapshot(battleID int64, forPlayerID int64) *BattleSnapsh
 			AvatarID: opponent.AvatarID,
 			Gender:   opponent.Gender,
 		},
+		Log: b.Log,
 	}
 }
 
@@ -527,12 +528,13 @@ func (h *Hub) resolveBattleRound(b *Battle, isTimeout bool) {
 	// b.Log = append(b.Log, fmt.Sprintf("Раунд %d завершен. Расчет произведен.", b.Round))
 	combatResult := h.calculateCombat(b)
 	// ПРИМЕНЯЕМ ЦИФРЫ
-	b.AttackerData.HP -= combatResult.DamageToAttacker
+	/*b.AttackerData.HP -= combatResult.DamageToAttacker
 	b.DefenderData.HP -= combatResult.DamageToDefender
 	b.AttackerData.HP += combatResult.HPToAttacker
 	b.DefenderData.HP += combatResult.HPToDefender
 	b.AttackerData.Mana += combatResult.ManaToAttacker
-	b.DefenderData.Mana += combatResult.ManaToDefender
+	b.DefenderData.Mana += combatResult.ManaToDefender*/
+	b.AttackerData.HP -= 10
 	// Добавляем логи раунда в общий лог боя
 	b.Log = append(b.Log, combatResult.RoundLog...)
 
@@ -547,6 +549,7 @@ func (h *Hub) resolveBattleRound(b *Battle, isTimeout bool) {
 			reason = fmt.Sprintf("Победа за %s!", b.AttackerData.Name)
 		}
 		b.mu.Unlock()
+		h.sendBattleUpdates(b)
 		h.finishBattle(b, reason)
 		return
 	}
@@ -563,30 +566,7 @@ func (h *Hub) resolveBattleRound(b *Battle, isTimeout bool) {
 	// h.sendBattleUpdates(b)
 
 	// Запускаем таймер на следующий раунд
-	fmt.Println("Тест ", b.DefenderData.HP)
-	atkInfo := h.getBattleSnapshot(b.ID, b.AttackerData.ID)
-	defInfo := h.getBattleSnapshot(b.ID, b.DefenderData.ID)
-	attacker, ok := h.GetActiveClient(b.AttackerData.ID)
-	if ok {
-		fmt.Println("Походили1")
-		h.Send(attacker, map[string]interface{}{
-			"type":        "battle_update",
-			"battle_info": atkInfo,
-		})
-	} else {
-		fmt.Println("Не находит1")
-	}
-	defender, ok := h.GetActiveClient(b.DefenderData.ID)
-	if ok {
-		fmt.Println("Походили2")
-		h.Send(defender, map[string]interface{}{
-			"type":        "battle_update",
-			"battle_info": defInfo,
-		})
-	} else {
-		fmt.Println("Не находит 2")
-	}
-
+	h.sendBattleUpdates(b)
 	go h.battleTimerGuard(b.ID, b.Round)
 }
 
@@ -678,4 +658,23 @@ func (h *Hub) calculateCombat(b *Battle) RoundCalculationResult {
 		}
 	}
 	return res
+}
+
+func (h *Hub) sendBattleUpdates(b *Battle) {
+	atkInfo := h.getBattleSnapshot(b.ID, b.AttackerData.ID)
+	defInfo := h.getBattleSnapshot(b.ID, b.DefenderData.ID)
+	attacker, ok := h.GetActiveClient(b.AttackerData.ID)
+	if ok {
+		h.Send(attacker, map[string]interface{}{
+			"type":        "battle_update",
+			"battle_info": atkInfo,
+		})
+	}
+	defender, ok := h.GetActiveClient(b.DefenderData.ID)
+	if ok {
+		h.Send(defender, map[string]interface{}{
+			"type":        "battle_update",
+			"battle_info": defInfo,
+		})
+	}
 }

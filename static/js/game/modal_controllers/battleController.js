@@ -27,9 +27,22 @@ export const battleController = {
         await this.setupGraphics();
     },
 
+    renderLog(){        
+        if(this.battleData.log){
+            const logField = document.querySelector("#battle-log");
+            if(!logField) return
+            let txt = "";
+            for(const s of this.battleData.log){
+                txt += `<div class="log-entry sys">${s}</div>`
+            }
+            logField.innerHTML += txt           
+            logField.scrollTop = logField.scrollHeight;
+        }
+    },
     // Рисует саму оболочку окна через менеджер
     renderFrame() {
         modalManager.show(battleModalTemplate, this.battleData, { closable: false }, this);
+        this.renderLog();
     },
 
     // Наполняет пустые <ul> списками магии

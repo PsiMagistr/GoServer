@@ -38,6 +38,7 @@ type BattleSnapshot struct {
 	TimeLeft int              `json:"time_left"`
 	You      BattleFighterDTO `json:"you"`
 	Opponent BattleFighterDTO `json:"opponent"`
+	Log      []string         `json:"log"`
 }
 
 type BattleTurnRequest struct {
