@@ -1248,3 +1248,14 @@ button {
     box-shadow: none !important;
     transform: none !important;
 }
+
+.player-link.in-busy {
+    filter: grayscale(1); /* Делаем всё серым */
+    opacity: 0.6;         /* Делаем полупрозрачным */
+    border-left-color: #555 !important; /* Убираем яркий акцент */
+}
+
+.player-link.in-busy:hover {
+    transform: none;      /* Убираем анимацию прыжка при наведении */
+    box-shadow: none;
+}

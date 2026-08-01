@@ -193,6 +193,7 @@ func (h *Hub) handleRegister(client *Client) {
 			"avatar_id": client.Character.AvatarID,
 			"level":     client.Character.Level,
 			"gender":    client.Character.Gender,
+			"state":     client.Character.State,
 		},
 	})
 	fmt.Printf("Персонаж %s онлайн.\n", client.Character.Name)
@@ -314,6 +315,7 @@ func (h *Hub) getNeighbors(worldID string, locationID string) []map[string]inter
 				"avatar_id": other.Character.AvatarID,
 				"level":     other.Character.Level,
 				"gender":    other.Character.Gender,
+				"state":     other.Character.State,
 			})
 		}
 	}
@@ -528,16 +530,16 @@ func (h *Hub) resolveBattleRound(b *Battle, isTimeout bool) {
 	// b.Log = append(b.Log, fmt.Sprintf("Раунд %d завершен. Расчет произведен.", b.Round))
 	combatResult := h.calculateCombat(b)
 	// ПРИМЕНЯЕМ ЦИФРЫ
-	/*b.AttackerData.HP -= combatResult.DamageToAttacker
+	b.AttackerData.HP -= combatResult.DamageToAttacker
 	b.DefenderData.HP -= combatResult.DamageToDefender
 	b.AttackerData.HP += combatResult.HPToAttacker
 	b.DefenderData.HP += combatResult.HPToDefender
 	b.AttackerData.Mana += combatResult.ManaToAttacker
-	b.DefenderData.Mana += combatResult.ManaToDefender*/
-	b.AttackerData.HP -= 10
+	b.DefenderData.Mana += combatResult.ManaToDefender
+	b.AttackerData.ClampStats()
+	b.DefenderData.ClampStats()
 	// Добавляем логи раунда в общий лог боя
 	b.Log = append(b.Log, combatResult.RoundLog...)
-
 	// ПРОВЕРКА ПОБЕДЫ
 	if b.AttackerData.HP <= 0 || b.DefenderData.HP <= 0 {
 		reason := "Бой завершен."
@@ -585,11 +587,19 @@ func (h *Hub) finishBattle(b *Battle, reason string) {
 	attacker, aOk := h.GetActiveClient(b.AttackerData.ID)
 	if aOk {
 		attacker.Character.State = models.StatusFree
+		attacker.Character.HP = b.AttackerData.HP
+		attacker.Character.Mana = b.AttackerData.Mana
+
+		// СОХРАНЕНИЕ: пишем в базу полную структуру
+		go database.UpdateCharacter(attacker.Character)
 	}
 
 	defender, dOk := h.GetActiveClient(b.DefenderData.ID)
 	if dOk {
 		defender.Character.State = models.StatusFree
+		defender.Character.HP = b.DefenderData.HP
+		defender.Character.Mana = b.DefenderData.HP
+		go database.UpdateCharacter(defender.Character)
 	}
 
 	// Уведомляем игроков
@@ -607,24 +617,25 @@ func (h *Hub) calculateCombat(b *Battle) RoundCalculationResult {
 	}
 
 	// Коэффициент регенерации (например, 5% от макс)
-	regenRate := 0.05
+	regenRate := 0.01
 
 	for i := 0; i < 5; i++ {
 		s1 := database.AllSpells[b.AttackerTurn[i]] // Заклинание Агрессора
 		s2 := database.AllSpells[b.DefenderTurn[i]] // Заклинание Защитника
-
 		idx1 := elementToIndex[s1.Element]
-		idx2 := elementToIndex[s2.Element]
-
-		// СЛУЧАЙ 1: Атака против Щита
+		idx2 := elementToIndex[s2.Element] // СЛУЧАЙ 1: Атака против Щита
+		res.ManaToAttacker -= s1.ManaCost
+		res.ManaToDefender -= s2.ManaCost
 		if s1.Type == "attack" && s2.Type == "shield" {
 			mult := atkVsShield[idx1][idx2]
-			dmg := (float64(b.AttackerData.Strength) * s1.Power) * mult
+			// dmg := (float64(b.AttackerData.Strength) * s1.Power) * mult
+			dmg := s1.Power * mult
 			res.DamageToDefender += dmg
 			res.RoundLog = append(res.RoundLog, fmt.Sprintf("Слот %d: %s бьет в %s. Урон: %.1f", i+1, s1.Name, s2.Name, dmg))
 		} else if s2.Type == "attack" && s1.Type == "shield" {
 			mult := atkVsShield[idx2][idx1]
-			dmg := (float64(b.DefenderData.Strength) * s2.Power) * mult
+			// dmg := (float64(b.DefenderData.Strength) * s2.Power) * mult
+			dmg := s2.Power * mult
 			res.DamageToAttacker += dmg
 			res.RoundLog = append(res.RoundLog, fmt.Sprintf("Слот %d: %s отражает %s. Урон вам: %.1f", i+1, s1.Name, s2.Name, dmg))
 
@@ -632,8 +643,10 @@ func (h *Hub) calculateCombat(b *Battle) RoundCalculationResult {
 		} else if s1.Type == "attack" && s2.Type == "attack" {
 			mult1 := atkVsAtk[idx1][idx2]
 			mult2 := atkVsAtk[idx2][idx1]
-			dmgToDef := (float64(b.AttackerData.Strength) * s1.Power) * mult1
-			dmgToAtk := (float64(b.DefenderData.Strength) * s2.Power) * mult2
+			// dmgToDef := (float64(b.AttackerData.Strength) * s1.Power) * mult1
+			// dmgToAtk := (float64(b.DefenderData.Strength) * s2.Power) * mult2
+			dmgToDef := s1.Power * mult1
+			dmgToAtk := s2.Power * mult2
 			res.DamageToDefender += dmgToDef
 			res.DamageToAttacker += dmgToAtk
 			res.RoundLog = append(res.RoundLog, fmt.Sprintf("Слот %d: Встречная атака! %s vs %s. Вы нанесли %.1f, получили %.1f", i+1, s1.Name, s2.Name, dmgToDef, dmgToAtk))
@@ -677,4 +690,12 @@ func (h *Hub) sendBattleUpdates(b *Battle) {
 			"battle_info": defInfo,
 		})
 	}
+}
+
+func (h *Hub) broadcastStateUpdate(char *models.Character) {
+	h.BroadcastToRoomExcept(char.WorldID, char.LocationID, char.ID, map[string]interface{}{
+		"type":  "player_state_update",
+		"id":    char.ID,
+		"state": char.State,
+	})
 }

@@ -94,6 +94,7 @@ func handleMoveRequest(c *Client, h *Hub, data map[string]interface{}) {
 		TargetWorldName:    world.Name,
 		TargetLocationName: targetNode.Name,
 	}
+	c.Character.State = models.StatusMoving
 	h.mu.Unlock()
 
 	h.Send(c, map[string]interface{}{
@@ -103,6 +104,7 @@ func handleMoveRequest(c *Client, h *Hub, data map[string]interface{}) {
 		"duration":      duration.Seconds(),
 		"state":         h.GetFullStatus(charID),
 	})
+	h.broadcastStateUpdate(c.Character)
 
 	go func() {
 		time.Sleep(duration)
@@ -190,7 +192,6 @@ func handlePortalMoveRequest(c *Client, h *Hub, data map[string]interface{}) {
 	charID := c.Character.ID
 	oldWorldID := c.Character.WorldID
 	oldLocID := c.Character.LocationID
-
 	h.mu.Lock()
 	h.movingPlayers[charID] = &MoveData{
 		DestinationID:      "portal",
@@ -198,6 +199,7 @@ func handlePortalMoveRequest(c *Client, h *Hub, data map[string]interface{}) {
 		TargetLocationName: Universe[targetWorldID].Points["portal"].Name,
 		ArrivalTime:        time.Now().Add(portalDuration),
 	}
+	c.Character.State = models.StatusMoving
 	h.mu.Unlock()
 
 	// Сообщаем о начале долгого перехода
@@ -208,6 +210,8 @@ func handlePortalMoveRequest(c *Client, h *Hub, data map[string]interface{}) {
 		"duration":      int(portalDuration.Seconds()),
 		"state":         h.GetFullStatus(c.Character.ID),
 	})
+
+	h.broadcastStateUpdate(c.Character)
 
 	go func() {
 		time.Sleep(portalDuration)

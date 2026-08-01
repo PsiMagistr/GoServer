@@ -41,16 +41,17 @@ export const socket_events = {
         // 1. Синхронизируем состояние
         gameState.player = msg.player;
         gameState.world = msg.world;
-        gameState.isInitialized = false;
-        // 2. Обновляем списки
+        gameState.isInitialized = false; 
+        console.log("Игроки") 
+        console.log(msg.players)            
+        // 2. Обновляем списки        
         ui.renderList(
             '#players-list',
-            msg.players,
+             msg.players,
             "player",
             'player-link',
             (p) => `
-            <span class="p-name">${p.name}</span>`
-
+            <span>${p.name}</span>`
         );
         ui.renderList("#worlds-list", msg.worlds, "world", "world-link", (w) => w.name);
         if (msg.challenges) {
@@ -136,8 +137,8 @@ export const socket_events = {
 
 
     // Вызывается при старте любого перемещения (и при реконнекте после world_sync)
-    move_starting(msg) {
-        gameState.player.state = msg.state;
+    move_starting(msg) {        
+        gameState.player.state = msg.state;        
         const overlay = document.getElementById('move-overlay');
         if (!overlay) return;
         overlay.style.display = 'flex';
@@ -173,10 +174,9 @@ export const socket_events = {
         ui.removeItemFromUI("player", msg.player.id);
     },
 
-    player_joined(msg) {
+    player_joined(msg) {               
         ui.addItemToList("#players-list", msg.player, "player", "player-link", (p) => p.name);
     },
-
     chat_msg(msg) {
         const chatContainer = document.getElementById('chat-messages');
         if (!chatContainer) return;
@@ -270,6 +270,14 @@ export const socket_events = {
     battle_end(msg){        
         battleController.end(msg);
         gameState.gameState = 0;                
-    }
+    },
+    player_state_update(msg){        
+        const element = document.querySelector(`#player-${msg.id}`);
+        if(!element){            
+            return
+        }        
+        element.classList.add("in-busy");
+    },
+
 }
 

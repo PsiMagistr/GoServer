@@ -27,3 +27,24 @@ type Character struct {
 	LocationID   string       `db:"location_id" json:"location_id"`
 	Spells       []Spell      `db:"-" json:"spells"`
 }
+
+func (c *Character) ClampStats() {
+	if c.HP < 0 {
+		c.HP = 0
+	}
+	if c.Mana < 0 {
+		c.Mana = 0
+	}
+	if c.Exp < 0 {
+		c.Exp = 0
+	}
+	if c.HP > c.MaxHP {
+		c.HP = c.MaxHP
+	}
+	if c.Mana > c.MaxMana {
+		c.Mana = c.MaxMana
+	}
+	if c.Exp > c.MaxExp {
+		c.Exp = c.MaxExp
+	}
+}

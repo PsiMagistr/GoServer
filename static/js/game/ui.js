@@ -1,7 +1,7 @@
 import { utils } from "../utils/utils_functions.js";
 
 export const ui = {
-    renderList(containerSelector, items, idPrefix, className, labelGenerator){
+    renderList(containerSelector, items, idPrefix, className, labelGenerator) {
         const container = document.querySelector(containerSelector);
         if (!container) return;
         container.innerHTML = ""; // Очищаем список
@@ -10,13 +10,13 @@ export const ui = {
             container.innerHTML = '<li class="empty">Пусто</li>';
             return;
         }
-        for(const item of items){
+        for (const item of items) {
             this.addItemToList(containerSelector, item, idPrefix, className, labelGenerator);
         }
     },
-    addItemToList(containerSelector, item, idPrefix, className, labelGenerator){
+    addItemToList(containerSelector, item, idPrefix, classNamesString, labelGenerator) {        
         const container = document.querySelector(containerSelector);
-        if(!container) return
+        if (!container) return        
         const itemId = `${idPrefix}-${item.id}`;
         const empty = container.querySelector('.empty');
         if (empty) empty.remove();
@@ -24,23 +24,26 @@ export const ui = {
         li.id = itemId;
         li.dataset.id = item.id;
         li.dataset.name = item.name;
-        li.className = className;
+        li.classList.add(classNamesString);
+        if(item.state != 0){
+            li.classList.add("in-busy")                       
+        }
         li.innerHTML = labelGenerator(item);
         container.appendChild(li);
     },
-    removeItemFromUI(idPrefix, id){        
+    removeItemFromUI(idPrefix, id) {
         const el = document.querySelector(`#${idPrefix}-${id}`);
         const parent = el.parentElement;
-        if(el) {
+        if (el) {
             el.remove()
-            if(parent.childElementCount === 0){
+            if (parent.childElementCount === 0) {
                 parent.innerHTML = `<li class="empty">Пусто</li>`
             }
-        } 
-        else{
-            console/log("Нет элемента")
+        }
+        else {
+            console / log("Нет элемента")
             console.log(idPrefix)
             console.log(id)
-        }   
+        }
     }
 }
