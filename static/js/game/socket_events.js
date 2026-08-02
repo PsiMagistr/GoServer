@@ -275,8 +275,14 @@ export const socket_events = {
         const element = document.querySelector(`#player-${msg.id}`);
         if(!element){            
             return
+        }
+        if(msg.state > 0){
+            element.classList.add("in-busy");
+        }
+        else{
+            element.classList.remove("in-busy");
         }        
-        element.classList.add("in-busy");
+        
     },
 
 }

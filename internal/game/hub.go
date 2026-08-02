@@ -609,6 +609,8 @@ func (h *Hub) finishBattle(b *Battle, reason string) {
 	}
 	h.Send(attacker, endMsg)
 	h.Send(defender, endMsg)
+	h.broadcastStateUpdate(attacker.Character)
+	h.broadcastStateUpdate(defender.Character)
 }
 
 func (h *Hub) calculateCombat(b *Battle) RoundCalculationResult {

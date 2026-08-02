@@ -497,6 +497,8 @@ func executeBattleStart(h *Hub, attacker *Client, defender *Client) {
 	h.mu.Unlock()
 	h.Send(attacker, map[string]interface{}{"type": "battle_start", "battle_info": atkInfo})
 	h.Send(defender, map[string]interface{}{"type": "battle_start", "battle_info": defInfo})
+	h.broadcastStateUpdate(attacker.Character)
+	h.broadcastStateUpdate(defender.Character)
 	go h.battleTimerGuard(newBattle.ID, newBattle.Round)
 }
 

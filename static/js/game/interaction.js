@@ -87,6 +87,10 @@ export const interaction = {
         }
         const playerLink = event.target.closest(".player-link")
         if (playerLink) {
+            if (playerLink.classList.contains('in-busy')) {
+                console.log("Персонаж занят, взаимодействие невозможно");
+                return; 
+            }
             this.showContextMenu(event, playerLink)
             return
         }
