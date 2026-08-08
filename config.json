@@ -1,7 +1,7 @@
 {
     "server":{
         "ip":"0.0.0.0",
-        "host":"8080",
+        "port":"8080",
         "limiter_r":10, 
         "limiter_b":15
     },
@@ -15,8 +15,8 @@
     },
     "jwt":{
         "jwt_secret":"my_super_secret_rpg_key_12345",
-        "access_token_time":"1m",
-        "refresh_token_time":"10m"
+        "access_token_time":"1h",
+        "refresh_token_time":"10h"
     },
     "game":{
         "min_char_len":3,

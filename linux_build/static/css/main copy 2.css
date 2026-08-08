@@ -1,0 +1,422 @@
+/* --- Сброс и Базовые настройки --- */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background: #050505; /* Глубокий темный фон */
+    color: #ccc;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    
+    /* ИДЕАЛЬНОЕ ЦЕНТРИРОВАНИЕ */
+    display: flex;
+    justify-content: center; /* Центр по горизонтали */
+    align-items: center;     /* Центр по вертикали */
+    
+    min-height: 100vh;       /* На всю высоту окна */
+    width: 100vw;
+    overflow: auto;          /* Полосы прокрутки появятся, если контент не влезет */
+    padding: 20px;
+}
+
+/* --- ОБЩИЕ ЭЛЕМЕНТЫ УПРАВЛЕНИЯ --- */
+h1, h2, h3 {
+    color: #f1c40f; /* Желто-золотой заголовок */
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 25px;    
+    font-size: 40px;
+    font-weight: bolder;
+}
+
+input {
+    background: #0d0d0d;
+    border: 1px solid #333;
+    border-radius: 4px;
+    height: 50px; /* Увеличенная высота полей ввода */
+    padding: 0 15px;
+    color: #fff;
+    font-size: 16px;
+    width: 100%;
+    transition: all 0.3s ease;
+}
+
+input:focus {
+    outline: none;
+    border-color: #f1c40f;
+    box-shadow: 0 0 12px rgba(241, 196, 15, 0.1);
+}
+
+/* --- ТЕ САМЫЕ ЖЕЛТЫЕ КНОПКИ --- */
+button {
+    cursor: pointer;
+    text-transform: uppercase;
+    font-weight: 800;
+    letter-spacing: 1px;
+    border-radius: 4px;
+    transition: all 0.1s ease;
+    border: none;
+}
+
+/* Основной стиль желтой кнопки */
+.btn-yellow, #submitBtn, .btn-hero {
+    background: #f1c40f;
+    color: #000;
+    height: 55px; /* Увеличенная высота */
+    width: 100%;
+    font-size: 16px;
+    position: relative;
+    top: 0;
+    box-shadow: 0 4px 0 #b7950b; /* Эффект объема */
+}
+
+.btn-yellow:hover, #submitBtn:hover, .btn-hero:hover {
+    background: #ffdb1f;
+    transform: translateY(-1px);
+    box-shadow: 0 5px 0 #b7950b;
+}
+
+.btn-yellow:active, #submitBtn:active, .btn-hero:active {
+    top: 3px; /* Эффект физического нажатия */
+    box-shadow: 0 1px 0 #b7950b;
+}
+
+/* --- КОНТЕЙНЕРЫ АВТОРИЗАЦИИ (Login/Reg) --- */
+.auth-container {
+    background: #141414;
+    padding: 50px 40px;
+    border-radius: 12px;
+    border: 1px solid #222;
+    text-align: center;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.9);
+    width: 100%;
+    max-width: 400px; /* Компактная ширина для логина */
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Расстояние между инпутами */
+}
+
+#toggleMode {
+    margin-top: 30px;
+    color: #666;
+    font-size: 12px;
+    text-decoration: underline;
+    display: inline-block;
+}
+
+#toggleMode:hover { 
+    color: #f1c40f;
+    cursor: pointer;
+}
+
+/* --- КОНТЕЙНЕР СОЗДАНИЯ ПЕРСОНАЖА --- */
+.creation-container {
+    background: #141414;
+    padding: 30px;
+    border-radius: 12px;
+    border: 1px solid #222;
+    text-align: center;
+    width: 520px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+}
+
+.gender-toggle {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.gender-toggle button {
+    flex: 1;
+    height: 45px;
+    background: #1d1d1d;
+    color: #555;
+    border: 1px solid #333;
+}
+
+.gender-toggle button.active {
+    background: #2b251a;
+    color: #f1c40f;
+    border-color: #f1c40f;
+}
+
+.avatar-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 100px);
+    gap: 10px;
+    justify-content: center;
+    padding: 15px;
+    background: #1a1a1a;
+    border-radius: 8px;
+    margin: 15px auto;
+    width: fit-content;
+}
+
+.avatar-item {
+    width: 100px;
+    height: 100px;
+    border: 2px solid #2a2a2a;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.avatar-item.selected { border-color: #f1c40f; transform: scale(1.05); }
+.avatar-item img { width: 100%; height: 100%; object-fit: cover; }
+
+/* --- ГЛАВНЫЙ МАКЕТ ИГРЫ --- */
+.game-layout {
+    display: flex;
+    /*width: 780px;*/ 
+    min-height: 750px; 
+    background: #111;
+    border: 1px solid #222;
+    box-shadow: 0 0 50px #000;
+}
+
+.side-panel {
+    width: 180px;
+    flex-shrink: 0;
+    background: #161616;
+    border-right: 1px solid #222;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    /**/
+    height: 620px;
+    overflow: hidden;
+}
+
+.panel-section {
+   display: flex;
+    flex-direction: column;
+    background: #1a1a1a;
+    border: 1px solid #282828;
+    border-radius: 4px;
+    max-height: 180px;
+    min-height: 50px; /* Чтобы пустая секция не схлопывалась совсем */
+    justify-content: flex-start; /* Выравнивание детей (h3 и ul) по верхнему краю */
+    overflow: hidden;
+}
+.panel-section h3 {
+   background: #222;
+    color: #d4af37;
+    font-size: 11px;
+    padding: 6px 10px;
+    text-transform: uppercase;
+    border-bottom: 1px solid #282828;
+    /* Чтобы заголовок всегда был сверху и не двигался */
+    flex-shrink: 0; 
+}
+
+
+.game-list::-webkit-scrollbar {
+    width: 5px;
+}
+
+.game-list::-webkit-scrollbar-track {
+    background: #111;
+}
+
+.game-list::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 10px;
+}
+
+.game-list::-webkit-scrollbar-thumb:hover {
+    background: #d4af37; /* Золотой при наведении */
+}
+
+
+/* СПИСКИ (Без точек, с ховером) */
+.game-list {
+    list-style: none;
+    margin: 0 !important; /* Убираем внешние отступы браузера */
+    padding: 5px 0 !important; /* Внутренние отступы сверху/снизу */
+    overflow-y: auto;
+    
+    /* Эти строки гарантируют, что список не будет растягиваться "пружиной" */
+    display: block;
+    flex-direction: column;
+    justify-content: flex-start; 
+    flex-grow: 1; /* Список занимает всё оставшееся место, но... */
+    align-items: stretch;
+}
+.game-list li {
+    /* ГЛАВНОЕ: убеждаемся, что нет автоматического отступа сверху */
+    margin-top: 0 !important; 
+    margin-bottom: 2px;
+    padding: 4px 12px;
+    text-align: left; /* Прижимаем текст влево */
+}
+
+
+
+.char-name-label{
+    font-size: 20px;
+}
+.location-label{
+    font-size: 20px;    
+}
+
+.game-list li:hover {
+    background: #1d1d1d;
+    color: #f1c40f;
+    padding-left: 12px;
+}
+
+.game-list li.player-link{
+    color:#F5DEB3;
+}
+
+.game-list li.player-link:hover{
+     color: #f1c40f;
+}
+
+.game-list li.empty { color: #444; font-style: italic; cursor: default; }
+
+/* ЦЕНТРАЛЬНАЯ ЗОНА */
+.main-screen {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 15px;
+}
+
+.top-bar-simple {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    margin-bottom: 10px;
+    padding: 8px;
+    background: #161616;
+    border-radius: 4px;
+}
+
+.canvas-container {
+    background: #000;
+    border: 1px solid #333;
+    width: 602px; 
+    height: 402px;
+    flex-shrink: 0;
+}
+
+#gameCanvas { display: block; }
+
+/* ЧАТ */
+.chat-section {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    margin-top: 15px;
+    background: #050505;
+    border: 1px solid #222;
+    border-radius: 4px;
+}
+
+.chat-window {
+    flex-grow: 1;
+    padding: 10px;
+    overflow-y: auto;
+    font-size: 13px;
+    height: 150px;
+}
+
+.chat-controls {
+    display: flex;
+    border-top: 1px solid #222;
+}
+
+.chat-controls input {
+    background: transparent;
+    border: none;
+    height: 40px;
+}
+
+#chat-send-btn {
+    background: #1a1a1a;
+    color: #f1c40f;
+    padding: 0 20px;
+    height: 40px;
+}
+
+#chat-send-btn:hover { background: #222; color: #fff; }
+
+.sys-msg { color: #8a6d3b; font-style: italic; }
+.error-msg { color: #ff6b6b; font-size: 13px; margin-top: 5px; }
+
+#move-overlay {
+    /* Скрыт по умолчанию. Логика JS будет менять на flex */
+    display: none; 
+    
+    /* Фиксируем на весь экран */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    
+    /* Слои: должен быть выше всех остальных элементов */
+    z-index: 10000;
+    
+    /* Цвета и эффекты */
+    background: rgba(0, 0, 0, 0.85); /* Глубокий черный с прозрачностью */
+    backdrop-filter: blur(4px);      /* Размытие игрового мира на заднем фоне */
+    
+    /* Центрирование контента */
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    
+    /* Запрещаем выделение текста во время ожидания */
+    user-select: none;
+}
+
+/* Блок с текстом "Идем в..." */
+#move-overlay p {
+    color: #b0b0b0;
+    font-size: 1.2rem;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    margin-bottom: 10px;
+}
+
+/* Название локации */
+#move-overlay .target-name {
+    color: #d4af37; /* Наше фирменное золото */
+    font-weight: bold;
+    text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+}
+
+/* Большие тикающие цифры */
+#move-overlay .timer-count {
+    font-size: 80px;
+    font-weight: 300;
+    color: #ffffff;
+    font-family: 'Courier New', Courier, monospace; /* Моноширинный шрифт для стабильности цифр */
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+    
+    /* Анимация пульсации */
+    animation: pulse-timer 1s infinite;
+}
+
+/* Необязательный элемент: декоративная полоска под цифрами */
+#move-overlay::after {
+    content: '';
+    width: 200px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #d4af37, transparent);
+    margin-top: 20px;
+}
+
+/* Анимация, чтобы цифры мягко "бились" как сердце */
+@keyframes pulse-timer {
+    0% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.05); opacity: 1; }
+    100% { transform: scale(1); opacity: 0.8; }
+}

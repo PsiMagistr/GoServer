@@ -9,7 +9,7 @@ import (
 
 type Server struct {
 	IP        string  `json:"ip"`
-	HOST      string  `json:"host"`
+	PORT      string  `json:"port"`
 	LIMITER_R float64 `json:"limiter_r"`
 	LIMITER_B int     `json:"limiter_b"`
 }

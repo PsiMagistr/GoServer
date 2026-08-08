@@ -32,7 +32,7 @@ func main() {
 	if err != nil {
 		log.Fatal("Ошибка загрузки заклинаний:", err)
 	}
-	addr := fmt.Sprintf("%s:%s", config.Get().Server.IP, config.Get().Server.HOST)
+	addr := fmt.Sprintf("%s:%s", config.Get().Server.IP, config.Get().Server.PORT)
 	gameHub := game.NewHub()
 	go gameHub.Run()
 	defer func() {

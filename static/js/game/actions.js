@@ -31,13 +31,24 @@ export const gameActions = {
         };
         network.send(packet);
     },
-    sendPlayerStats(stats) {
-        const packet = {
-            type: "commit_stats",
-            stats: stats,
-        }
-        network.send(packet)
-    },
+    sendPlayerStats(draft) {
+    // Формируем "худой" пакет - только то, что сервер должен записать
+    const statsOnly = {
+        strength:  draft.strength,
+        agility:   draft.agility,
+        intuition: draft.intuition,
+        vitality:  draft.vitality,
+        charm:     draft.charm,
+        wisdom:    draft.wisdom
+    };
+
+    const packet = {
+        type: "commit_stats",
+        stats: statsOnly, // Теперь тут нет тяжелых массивов с магией
+    }      
+    network.send(packet);
+
+},
     sendBattleChallenge(id) {
         const packet = {
             type: "battle_challenge",

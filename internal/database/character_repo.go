@@ -7,11 +7,40 @@ import (
 	"GoServer/internal/models"
 )
 
-func CreateCharacter(char *models.Character) error {
+/*func CreateCharacter(char *models.Character) error {
 	query := `INSERT INTO characters (user_id, name, gender, avatar_id)
 	VALUES (?, ?, ?, ?)`
 	_, err := DB.Exec(query, char.UserID, char.Name, char.Gender, char.AvatarID)
 	return err
+}*/
+
+func CreateCharacter(char *models.Character) error {
+	tx, err := DB.Beginx()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+	queryChar := `INSERT INTO characters (user_id, name, gender, avatar_id)
+	VALUES (?, ?, ?, ?)`
+	result, err := tx.Exec(queryChar, char.UserID, char.Name, char.Gender, char.AvatarID)
+	if err != nil {
+		return err
+	}
+	lastID, err := result.LastInsertId()
+	if err != nil {
+		return err
+	}
+	char.ID = lastID
+	queryLinkSpells := `
+		INSERT INTO character_spells (character_id, spell_id)
+		SELECT ?, id FROM spells`
+
+	_, err = tx.Exec(queryLinkSpells, lastID)
+	if err != nil {
+		return err
+	}
+	// 5. Подтверждаем транзакцию
+	return tx.Commit()
 }
 
 func GetCharacterByUserID(userID int64) (*models.Character, error) {

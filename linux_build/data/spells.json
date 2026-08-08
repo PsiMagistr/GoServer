@@ -1,0 +1,82 @@
+[
+    {
+    "id": 1,
+    "name": "Огненный шар",
+    "mana_cost": 15,
+    "min_level": 1,
+    "element": "fire",
+    "type": "attack",
+    "power": 5.0,
+    "description": "Классический сгусток пламени"    
+  },
+  {
+    "id": 2,
+    "name": "Дрожь земли",
+    "mana_cost": 15,
+    "min_level": 1,
+    "element": "earth",
+    "type": "attack",
+    "power": 5.0,
+    "description": "Землетрясение"
+  },
+  {
+    "id": 3,
+    "name": "Буря",
+    "mana_cost": 15,
+    "min_level": 1,
+    "element": "air",
+    "type": "attack",
+    "power": 5.0,
+    "description": "Буран"
+  },
+  {
+    "id": 4,
+    "name": "Водяной смерч",
+    "mana_cost": 15,
+    "min_level": 1,
+    "element": "water",
+    "type": "attack",
+    "power": 5.0,
+    "description": "Водяная шалость"
+  },
+  {
+    "id": 5,
+    "name": "Огненный щит",
+    "mana_cost": 15,
+    "min_level": 1,
+    "element": "fire",
+    "type": "shield",
+    "power": 1.0,
+    "description": "Плотная завеса воды, гасящая огонь"    
+  },
+  {
+    "id": 6,
+    "name": "Щит земли",
+    "mana_cost": 15,
+    "min_level": 1,
+    "element": "earth",
+    "type": "shield",
+    "power": 1.0,
+    "description": "Щит земли"    
+  },
+  {
+    "id": 7,
+    "name": "Щит воздуха",
+    "mana_cost": 15,
+    "min_level": 1,
+    "element": "air",
+    "type": "shield",
+    "power": 1.0,
+    "description": "Щит воздуха"    
+  },
+  {
+    "id": 8,
+    "name": "Щит воды",
+    "mana_cost": 15,
+    "min_level": 1,
+    "element": "water",
+    "type": "shield",
+    "power": 1.0,
+    "description": "Щит воды"    
+  }
+]

@@ -6,7 +6,7 @@
     "min_level": 1,
     "element": "fire",
     "type": "attack",
-    "power": 1.0,
+    "power": 5.0,
     "description": "Классический сгусток пламени"    
   },
   {
@@ -16,7 +16,7 @@
     "min_level": 1,
     "element": "earth",
     "type": "attack",
-    "power": 1.0,
+    "power": 5.0,
     "description": "Землетрясение"
   },
   {
@@ -26,7 +26,7 @@
     "min_level": 1,
     "element": "air",
     "type": "attack",
-    "power": 1.0,
+    "power": 5.0,
     "description": "Буран"
   },
   {
@@ -36,7 +36,7 @@
     "min_level": 1,
     "element": "water",
     "type": "attack",
-    "power": 1.0,
+    "power": 5.0,
     "description": "Водяная шалость"
   },
   {

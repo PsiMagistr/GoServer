@@ -1,10 +1,13 @@
 package database
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 
 	"GoServer/internal/config"
+	"GoServer/internal/models"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
@@ -52,6 +55,36 @@ func createTables(queries []string) error {
 	return nil
 }
 
+func runInitialSeeds() {
+	data, err := os.ReadFile("data/spells.json")
+	if err != nil {
+		log.Printf("⚠️ Файл заклинаний не найден: %v", err)
+		return
+	}
+	var spells []models.Spell
+	err = json.Unmarshal(data, &spells)
+	if err != nil {
+		log.Printf("❌ Ошибка парсинга JSON: %v", err)
+		return
+	}
+	if len(spells) == 0 {
+		return
+	}
+	query := `INSERT INTO spells (id, name, mana_cost, min_level, element, type, power, description)
+	VALUES (:id, :name, :mana_cost, :min_level, :element, :type, :power, :description)
+	ON DUPLICATE KEY UPDATE 
+			name=VALUES(name), 
+			mana_cost=VALUES(mana_cost), 
+			power=VALUES(power),
+			description=VALUES(description)`
+	_, err = DB.NamedExec(query, spells)
+	if err != nil {
+		log.Printf("❌ Ошибка sqlx bulk insert: %v", err)
+		return
+	}
+	log.Printf("✅ Справочник магии синхронизирован через sqlx (%d записей)", len(spells))
+}
+
 func InitDB() error {
 	var err error
 	params := config.Get()
@@ -75,6 +108,7 @@ func InitDB() error {
 	if err != nil {
 		return err
 	}
+	runInitialSeeds()
 	log.Println("База данных успешно инициализирована")
 	return nil
 }

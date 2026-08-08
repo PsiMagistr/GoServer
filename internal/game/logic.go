@@ -287,14 +287,20 @@ func handleWhisperRequest(c *Client, h *Hub, data map[string]interface{}) {
 }
 
 func handleStatsCommitRequest(c *Client, h *Hub, data map[string]interface{}) {
+	fmt.Println("Статы")
 	statsData, ok := data["stats"]
 	if !ok {
 		log.Println("Ошибка нет ключа stats")
 		return
 	}
 	var req CommitStatsRequest
-	dataBytes, _ := json.Marshal(statsData)
-	err := json.Unmarshal(dataBytes, &req)
+	dataBytes, err := json.Marshal(statsData)
+	if err != nil {
+		log.Println("Ошибка маршалинга статов ", err)
+		return
+	}
+	fmt.Println(dataBytes)
+	err = json.Unmarshal(dataBytes, &req)
 	if err != nil {
 		log.Println("Ошибка демаршалинга статов")
 		return
@@ -351,6 +357,7 @@ func handleStatsCommitRequest(c *Client, h *Hub, data map[string]interface{}) {
 			})
 		}
 	}(updatedChar)
+	// fmt.Println("Статы", req)
 }
 
 func handleBattleChallenge(c *Client, h *Hub, data map[string]interface{}) { // Отправляем заявку на бой
