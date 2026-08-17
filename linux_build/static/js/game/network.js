@@ -2,8 +2,11 @@ import { socket_events } from "./socket_events.js";
 export const network = {
     socket:null,
     connect(){
-        const protocol = window.location.protocol === "https:" ? "wss:" : "ws:"
-        this.socket = new WebSocket(`${protocol}//${window.location.host}/ws`);
+        /*const protocol = window.location.protocol === "https:" ? "wss:" : "ws:"
+        console.log("База, базапуть")
+        console.log(basePath) //Есть.*/
+        const protocol = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}${basePath}/ws`;
+        this.socket = new WebSocket(protocol);
         this.socket.onopen = ()=>{
             console.log("Сетевой узел активен.");
         }

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
@@ -25,6 +26,10 @@ func main() {
 	if err != nil {
 		log.Fatal("Критическая ошибка: конфиг не найден!", err)
 	}
+	err = game.LoadUniverse("data/universe.json")
+	if err != nil {
+		log.Fatal("Критическая ошибка загрузки мира:", err)
+	}
 	if err = database.InitDB(); err != nil {
 		log.Fatal("Произошла ошибка ", err)
 	}
@@ -44,7 +49,32 @@ func main() {
 	fs := http.FileServer(http.Dir("static"))
 	apiMux := http.NewServeMux()
 	mainMux := http.NewServeMux()
-	mainMux.Handle("/", fs)
+	mainMux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		// Если это корень сайта, генерируем HTML с base_path
+		if r.URL.Path == "/" || r.URL.Path == "/index.html" {
+			tmpl, err := template.ParseFiles("static/index.html")
+			if err != nil {
+				http.Error(w, "Ошибка загрузки шаблона", http.StatusInternalServerError)
+				return
+			}
+			// Передаем BasePath из конфига в наш HTML
+			data := struct{ BasePath string }{
+				BasePath: config.Get().Server.BASE_PATH,
+			}
+			fmt.Println(data.BasePath)
+			err = tmpl.Execute(w, data)
+			if err != nil {
+				// Логируем ошибку на сервере, чтобы вы знали причину
+				log.Printf("Ошибка рендеринга шаблона index.html: %v", err)
+				// Если заголовки еще не были отправлены, можно вернуть 500 ошибку
+				// (Но учтите: если часть HTML уже ушла в браузер, http.Error может сработать некорректно)
+				return
+			}
+			return
+		}
+		// Если это другие файлы (например, css, js, картинки), отдаем их как обычно
+		fs.ServeHTTP(w, r)
+	})
 	apiMux.Handle("/api/me", auth.AuthMiddleware(http.HandlerFunc(handlers.MeHandler)))
 	apiMux.Handle("/api/character/me", auth.AuthMiddleware(http.HandlerFunc(handlers.CheckCharacterHandler)))
 	apiMux.Handle("/api/character/create", auth.AuthMiddleware(http.HandlerFunc(handlers.CreateCharacterHandler)))

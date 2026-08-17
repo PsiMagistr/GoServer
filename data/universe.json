@@ -1,0 +1,90 @@
+{
+  "main_city": {
+    "id": "main_city",
+    "name": "Благословенный край",
+    "points": {
+      "start_glade": {
+        "id": "start_glade",
+        "name": "Дом родной",
+        "x": 363, "y": 185,
+        "worlds": []
+      },
+      "tample":{
+        "id":"tample",
+        "name":"Храм",
+        "x":194, "y": 180,
+        "worlds":[]				
+      },
+      "tavern":{
+        "id":"tavern",
+        "name":"Таверна",
+        "x":195, "y": 269,
+        "worlds":[]				
+      },
+      "arena":{
+        "id":"arena",
+        "name":"Арена",
+        "x":243, "y": 128,
+        "worlds":[]				
+      },
+      "shop":{
+        "id":"shop",
+        "name":"Лавка",
+        "x":406, "y": 272,
+        "worlds":[]				
+      },
+      "bestiary":{
+        "id":"bestiary",
+        "name":"Бестиарий",
+        "x":193, "y": 99,
+        "worlds":[]				
+      },
+      "academy":{
+        "id":"academy",
+        "name":"Академия",
+        "x":284, "y": 241,
+        "worlds":[]				
+      },
+      "armory":{
+        "id":"armory",
+        "name":"Оружейная",
+        "x":323, "y": 101,
+        "worlds":[]				
+      },     
+      "portal": {
+        "id": "portal",
+        "name": "Портал",
+        "x": 449, "y": 125,
+        "worlds": [
+          {"id": "totlhaim", "name": "Тотльхайм"}
+        ]
+      }
+    }
+  },
+  "totlhaim": {
+    "id": "totlhaim",
+    "name": "Тотльхейм",
+    "points": {        
+      "portal": {
+        "id": "portal",
+        "name": "Портал Анхат",
+        "x": 406, "y": 135,
+        "worlds": [
+          {"id": "main_city", "name": "Благословенный край"}
+        ]
+      },
+      "thenan":{
+        "id": "thenan",
+        "name": "Озеро Тхенан",
+        "x": 284, "y": 241,
+        "worlds": []       
+      },
+       "test":{
+        "id": "test",
+        "name": "Test",
+        "x": 270, "y": 150,
+        "worlds": []       
+      }
+    }    
+  }
+}

@@ -12,10 +12,10 @@ export async function apiCall(url, method = "GET", body = null) {
     }
     let response = await fetch(url, config);
     if (response.status === 401) {
-        const refreshed = await fetch("/api/refresh", {method: "POST"});
+        const refreshed = await fetch(basePath + "/api/refresh", {method: "POST"});
         if (refreshed.ok) {
             // Если рефреш прошел, повторяем исходный запрос
-            return await fetch(url, config);
+            return await fetch(basePath + url, config);
         }        
     }
     else if(response.status === 429){ 

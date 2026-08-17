@@ -3,7 +3,7 @@ export const CreateCharacterTemplate = (state) => {
     // Цикл для создания сетки 3x3 (9 штук)
     for (let i = 1; i <= 9; i++) {
         // Путь теперь учитывает папку пола: /assets/avatars/male/1.png
-        const imagePath = `/assets/avatars/${state.gender}/${i}.png`;
+        const imagePath = `${basePath}/assets/avatars/${state.gender}/${i}.png`;
         const isSelected = state.selectedAvatar === i ? 'selected' : '';        
         avatars.push(`
             <div class="avatar-item ${isSelected}" data-id="${i}">

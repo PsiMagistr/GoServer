@@ -1,7 +1,7 @@
 import { apiCall } from "../api.js";
 export const authService = {
     async login(email, password){
-        const response = await fetch("./api/login", {
+        const response = await fetch(basePath + "./api/login", {
             method:"POST",
             headers: {
                 "Content-Type":"application/json",
@@ -15,7 +15,7 @@ export const authService = {
          throw new Error(await response.text());
     },
     async register(body){      
-        const response = await apiCall("/api/register", "POST", body);
+        const response = await apiCall(basePath + "/api/register", "POST", body);
         if (!response.ok) throw new Error(await response.text());
         return await response.json();
     }

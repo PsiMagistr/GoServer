@@ -1,5 +1,11 @@
 package game
 
+import (
+	"encoding/json"
+	"fmt"
+	"os"
+)
+
 type Element struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
@@ -21,7 +27,7 @@ type World struct {
 	Points WorldNodes `json:"points"`
 }
 
-var Universe = map[string]World{
+/*var Universe = map[string]World{
 	"main_city": {
 		ID:   "main_city",
 		Name: "Благословенный край",
@@ -100,4 +106,19 @@ var Universe = map[string]World{
 			},
 		},
 	},
+}*/
+
+var Universe = make(map[string]World)
+
+func LoadUniverse(path string) error {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return fmt.Errorf("ошибка чтения файла вселенной: %w", err)
+	}
+	err = json.Unmarshal(data, &Universe)
+	if err != nil {
+		return fmt.Errorf("ошибка парсинга JSON вселенной: %w", err)
+	}
+	fmt.Printf("✅ Вселенная загружена: %d миров в памяти\n", len(Universe))
+	return nil
 }

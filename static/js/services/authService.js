@@ -1,7 +1,7 @@
 import { apiCall } from "../api.js";
 export const authService = {
     async login(email, password){
-        const response = await fetch("./api/login", {
+        const response = await fetch(basePath + "/api/login", {
             method:"POST",
             headers: {
                 "Content-Type":"application/json",

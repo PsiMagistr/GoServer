@@ -68,12 +68,12 @@ export const battleController = {
     async setupGraphics() {
         const { you, opponent } = this.battleData;
         const assets = {
-            opponent: `/assets/avatars/${opponent.gender}/${opponent.avatar_id}.png`
+            opponent: `${basePath}/assets/avatars/${opponent.gender}/${opponent.avatar_id}.png`
         };
 
         // Если вдруг при F5 потеряли свою картинку
         if (!engine.images?.hero) {
-            assets.hero = `/assets/avatars/${you.gender}/${you.avatar_id}.png`;
+            assets.hero = `${basePath}/assets/avatars/${you.gender}/${you.avatar_id}.png`;
         }
 
         try {

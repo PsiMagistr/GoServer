@@ -2,7 +2,13 @@
 <html>
 <head>
     <title>RPG Project</title>
-    <link rel="stylesheet" href="/css/main.css">
+    <!-- Объявляем basePath в самом верху, чтобы он был доступен -->
+    <script>
+        const basePath = "{{.BasePath}}";
+    </script>
+    
+    <!-- Добавляем basePath к стилям -->
+    <link rel="stylesheet" href="{{.BasePath}}/css/main.css">
 </head>
 <body>
 <!-- Только основные контейнеры-якоря -->
@@ -10,6 +16,12 @@
     <!-- Сюда JS будет вставлять нужный экран: вход или игру -->
 </div>
 
-<script type="module" src="/js/main.js"></script>
+<!-- Добавляем basePath к главному скрипту -->
+<script type="module" src="{{.BasePath}}/js/main.js"></script>
+
+<script>
+    console.log("Базовый путь:");
+    console.log(basePath);
+</script>
 </body>
 </html>

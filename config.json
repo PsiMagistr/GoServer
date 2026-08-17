@@ -2,6 +2,7 @@
     "server":{
         "ip":"0.0.0.0",
         "port":"8080",
+        "base_path": "",
         "limiter_r":10, 
         "limiter_b":15
     },

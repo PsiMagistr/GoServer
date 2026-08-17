@@ -175,6 +175,11 @@ func (h *Hub) handleRegister(client *Client) {
 	h.mu.Lock()
 	// 1. Безопасность
 	if oldClient, ok := h.Clients[client.Character.ID]; ok {
+		h.Send(oldClient, map[string]interface{}{
+			"type": "connection_replaced",
+		})
+		// Принудительно рвем старую трубу
+		fmt.Printf("Персонаж %s вытеснен новой сессией.\n", client.Character.Name)
 		oldClient.Conn.Close()
 	}
 	// 2. Регистрация

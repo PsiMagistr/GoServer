@@ -12,6 +12,7 @@ type Server struct {
 	PORT      string  `json:"port"`
 	LIMITER_R float64 `json:"limiter_r"`
 	LIMITER_B int     `json:"limiter_b"`
+	BASE_PATH string  `json:"base_path"`
 }
 
 type DB struct {

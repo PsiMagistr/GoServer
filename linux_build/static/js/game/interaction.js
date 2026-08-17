@@ -20,7 +20,7 @@ const clickers = {
         statsController.open();
     },
     "save-stats-btn": (obj, event) => {
-        statsController.commit();
+        statsController.commit();        
     },
     "modal-close-btn": (obj, event) => {
         console.log("какой шаблон активен")
