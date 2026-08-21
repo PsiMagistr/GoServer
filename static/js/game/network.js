@@ -21,7 +21,7 @@ export const network = {
 
         // Собираем URL, используя твой basePath
         const protocol = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}${basePath}/ws`;
-        
+
         console.log("[Network] Попытка подключения к:", protocol);
         this.socket = new WebSocket(protocol);
 
@@ -39,12 +39,21 @@ export const network = {
                 const msg = JSON.parse(event.data);
 
                 // ОБРАБОТКА ВЫТЕСНЕНИЯ (Событие от сервера)
-                if (msg.type === "connection_replaced") {                   
+                if (msg.type === "connection_replaced") {
                     console.error("[Network] Сессия прервана: открыта новая вкладка.");
-                    this.isDisplaced = true; 
+                    this.isDisplaced = true;
                     this.socket.close(); // Физически закрываем текущую трубу                    
                     // Показываем оверлей блокировки (нужно добавить в HTML/Templates)                   
-                    alert("Вкладка неактивна: обнаружено новое подключение к аккаунту.");                    
+                    //alert("Вкладка неактивна: обнаружено новое подключение к аккаунту.");
+                    if (typeof modalManager !== 'undefined') {
+                        modalManager.hide();
+                    }
+
+                    // 2. ОСТАНАВЛИВАЕМ ОСНОВНОЙ ЦИКЛ (на случай, если модалки не было)
+                    if (typeof engine !== 'undefined') {
+                        engine.stopMainLoop();
+                        engine.stopBattleLoop();
+                    }
                     return;
                 }
 
@@ -59,7 +68,7 @@ export const network = {
 
         this.socket.onclose = (event) => {
             this.isConnecting = false;
-            
+
             // Если нас вытеснил сервер — реконнект ЗАПРЕЩЕН
             if (this.isDisplaced) {
                 console.warn("[Network] Соединение закрыто из-за вытеснения другой вкладкой. Авто-реконнект отключен.");
@@ -111,7 +120,7 @@ export const network = {
     checkConnection() {
         // Если вытеснены или закрыли сами — не восстанавливаем автоматически
         if (this.isManuallyClosed || this.isDisplaced) return;
-        
+
         if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
             console.log("[Network] Проверка связи: требуется восстановление.");
             this.connect();

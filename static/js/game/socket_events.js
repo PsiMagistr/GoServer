@@ -3,6 +3,7 @@ import { gameState } from "./game.js";
 import { engine } from "./engine.js";
 import { statsController } from "./modal_controllers/statsController.js";
 import { battleController } from "./modal_controllers/battleController.js";
+import { moveController } from "./modal_controllers/moveController.js";
 import { utils } from '../utils/utils_functions.js'
 
 // Глобальная переменная для управления таймером внутри этого файла
@@ -41,13 +42,13 @@ export const socket_events = {
         // 1. Синхронизируем состояние
         gameState.player = msg.player;
         gameState.world = msg.world;
-        gameState.isInitialized = false; 
-        console.log("Игроки") 
-        console.log(msg.players)            
+        gameState.isInitialized = false;
+        console.log("Игроки")
+        console.log(msg.players)
         // 2. Обновляем списки        
         ui.renderList(
             '#players-list',
-             msg.players,
+            msg.players,
             "player",
             'player-link',
             (p) => `
@@ -100,7 +101,7 @@ export const socket_events = {
         console.log("world_sync")
         console.log(msg.player)
         console.log("Заклинания")
-        console.log(msg.player.spells)        
+        console.log(msg.player.spells)
         const assetsToLoad = {
             map: `./assets/maps/${msg.world_id}.png`,
             hero: `./assets/avatars/${msg.player.gender}/${msg.player.avatar_id}.png`
@@ -108,24 +109,18 @@ export const socket_events = {
         try {
             engine.images = await engine.loaderAssets(assetsToLoad);
             engine.init(document.getElementById('gameCanvas'));
-            gameState.isInitialized = true;           
+            gameState.isInitialized = true;
             // Здесь мы НЕ прячем оверлей, так как его должен спрятать только move_complete
             if (gameState.stopMovingTimer != null) gameState.stopMovingTimer()
             const state = msg.player.state;
-            if (state === 1 && msg.duration > 0) {
-                if (!overlay) return
-                overlay.style.display = 'flex';
-                overlay.querySelector('.target-name').innerText = `${msg.world_name}, ${msg.location_name}`;
-                let timeLeft = msg.duration;
-                const timerEl = overlay.querySelector('.timer-count');
-                timerEl.innerText = timeLeft;
-                gameState.stopMovingTimer = utils.createTimer(
-                    timeLeft,
-                    (sec) => {
-                        timerEl.innerText = sec;
-                    }, () => {
-                        console.log("Прыгнули через портал");                        
-                    })
+            moveController.hide();
+            if (state === 1 && msg.duration > 0) {               
+                moveController.open({
+                    world_name: msg.world_name,
+                    location_name: msg.location_name,
+                    duration: msg.duration,
+                    state: state
+                });
             }
             else if (state == 2) {
                 battleController.open(msg.battle_info)
@@ -137,8 +132,8 @@ export const socket_events = {
 
 
     // Вызывается при старте любого перемещения (и при реконнекте после world_sync)
-    move_starting(msg) {        
-        gameState.player.state = msg.state;        
+    move_starting(msg) {
+        /*gameState.player.state = msg.state;        
         const overlay = document.getElementById('move-overlay');
         if (!overlay) return;
         overlay.style.display = 'flex';
@@ -152,29 +147,32 @@ export const socket_events = {
         },
             () => {
                 timerEl.innerText = "Прибытие...";
-            });
+            });*/
+        moveController.open(msg,)
 
     },
     move_complete(msg) {
         if (gameState.stopMovingTimer) gameState.stopMovingTimer()
         gameState.player.state = msg.state;
         // Скрываем оверлей
-        const overlay = document.getElementById('move-overlay');
-        if (overlay) overlay.style.display = 'none';
+        //const overlay = document.getElementById('move-overlay');
+        //if (overlay) overlay.style.display = 'none';
         // Если это был прыжок между мирами, world_sync уже прилетел или прилетит,
         // но локацию обновим здесь для надежности
+
         gameState.player.location_id = msg.location_id;
         // Обновляем заголовок локации в UI
         changeLabel(msg)
         ui.renderList('#players-list', msg.players, "player", 'player-link', (p) => p.name);
         ui.renderList("#worlds-list", msg.worlds, "world", "world-link", (w) => w.name);
+        moveController.hide();
     },
 
     player_left(msg) {
         ui.removeItemFromUI("player", msg.player.id);
     },
 
-    player_joined(msg) {               
+    player_joined(msg) {
         ui.addItemToList("#players-list", msg.player, "player", "player-link", (p) => p.name);
     },
     chat_msg(msg) {
@@ -196,9 +194,9 @@ export const socket_events = {
         chatContainer.appendChild(div);
         chatContainer.scrollTop = chatContainer.scrollHeight;
     },
-    battle_log(msg){        
+    battle_log(msg) {
         const battleChatContainer = document.querySelector("#battle-log");
-        if (!battleChatContainer) return;       
+        if (!battleChatContainer) return;
         const div = document.createElement('div');
         div.innerHTML = `<span class="sys-msg">[СИСТЕМА]:</span><span class="chat-text"> ${msg.text}</span>`;
         battleChatContainer.appendChild(div);
@@ -260,29 +258,29 @@ export const socket_events = {
         )
         gameState.challengeTimers[ch.sender_id] = timerStop;
     },
-    battle_start(msg) {       
-        battleController.open(msg.battle_info)       
+    battle_start(msg) {
+        battleController.open(msg.battle_info)
     },
-    battle_update(msg){
-        battleController.open(msg.battle_info)        
-                
+    battle_update(msg) {
+        battleController.open(msg.battle_info)
+
     },
-    battle_end(msg){        
+    battle_end(msg) {
         battleController.end(msg);
-        gameState.gameState = 0;                
+        gameState.gameState = 0;
     },
-    player_state_update(msg){        
+    player_state_update(msg) {
         const element = document.querySelector(`#player-${msg.id}`);
-        if(!element){            
+        if (!element) {
             return
         }
-        if(msg.state > 0){
+        if (msg.state > 0) {
             element.classList.add("in-busy");
         }
-        else{
+        else {
             element.classList.remove("in-busy");
-        }        
-        
+        }
+
     },
 
 }

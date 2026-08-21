@@ -50,10 +50,10 @@ export const gameTemplate = (char) => {
                     </div>
                 </div>    
                     <div class="canvas-container">
-                        <div id="move-overlay">
+                        <!--<div id="move-overlay">
                             <p>Идем в <span class="target-name"></span>...</p>
                             <span class="timer-count">0</span>
-                        </div>                
+                        </div>-->                
                         <canvas id="gameCanvas" width="600" height="400"></canvas>
                     </div>
                     
