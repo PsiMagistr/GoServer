@@ -493,7 +493,7 @@ button {
 }
 
 /* Блок с текстом "Идем в..." */
-#move-overlay p {
+#move-content p {
     color: #b0b0b0;
     font-size: 1.2rem;
     text-transform: uppercase;
@@ -502,7 +502,7 @@ button {
 }
 
 /* Название локации */
-#move-overlay .target-name {
+#move-content .target-name {
     color: #d4af37;
     /* Наше фирменное золото */
     font-weight: bold;
@@ -510,7 +510,7 @@ button {
 }
 
 /* Большие тикающие цифры */
-#move-overlay .timer-count {
+#move-content .timer-count {
     font-size: 80px;
     font-weight: 300;
     color: #ffffff;
@@ -523,7 +523,7 @@ button {
 }
 
 /* Необязательный элемент: декоративная полоска под цифрами */
-#move-overlay::after {
+#move-content::after {
     content: '';
     width: 200px;
     height: 2px;

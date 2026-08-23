@@ -1,4 +1,5 @@
 import { socket_events } from "./socket_events.js";
+import {criticalController} from "./modal_controllers/criticalController.js"
 
 export const network = {
     socket: null,
@@ -54,6 +55,7 @@ export const network = {
                         engine.stopMainLoop();
                         engine.stopBattleLoop();
                     }
+                    criticalController.open({})
                     return;
                 }
 
