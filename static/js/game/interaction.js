@@ -39,6 +39,9 @@ const clickers = {
             gameActions.surrender();
         }
     },
+    "main-btn":()=>{
+        window.location.reload();
+    },
 }
 const movers = {
     "gameCanvas": (obj, event) => {
