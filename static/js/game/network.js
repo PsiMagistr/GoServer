@@ -1,30 +1,43 @@
 import { socket_events } from "./socket_events.js";
-import {criticalController} from "./modal_controllers/criticalController.js"
+import { criticalController } from "./modal_controllers/criticalController.js";
+
+// Убедитесь, что basePath определен в вашем проекте (например, импортирован из конфига)
+const basePath = window.basePath || "";
 
 export const network = {
     socket: null,
-    reconnectInterval: 1000,      // Начальная задержка (1 секунда)
-    maxReconnectInterval: 30000, // Максимальная задержка (30 секунд)
+    reconnectInterval: 1000,       // Начальная задержка (1 секунда)
+    maxReconnectInterval: 30000,   // Максимальная задержка (30 секунд)
     reconnectTimer: null,
-    isManuallyClosed: false,     // Флаг намеренного закрытия (Logout)
-    isDisplaced: false,          // Флаг вытеснения новой вкладкой (защита от петли)
-    isConnecting: false,         // Флаг процесса подключения
+    isManuallyClosed: false,       // Флаг намеренного закрытия (Logout)
+    isDisplaced: false,            // Флаг вытеснения новой вкладкой
+    isConnecting: false,           // Флаг процесса подключения
 
     connect() {
-        // Если мы уже подключаемся или сокет открыт — выходим
-        if (this.isConnecting || (this.socket && this.socket.readyState === WebSocket.OPEN)) {
+        // Если уже в процессе подключения — выходим
+        if (this.isConnecting) return;
+
+        // Если сокет уже полностью открыт, повторно не коннектимся
+        if (this.socket && this.socket.readyState === WebSocket.OPEN) {
             return;
         }
 
         this.isConnecting = true;
         this.isManuallyClosed = false;
-        this.isDisplaced = false; // Сбрасываем флаг при новой попытке подключения
+        this.isDisplaced = false;
 
-        // Собираем URL, используя твой basePath
         const protocol = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}${basePath}/ws`;
 
         console.log("[Network] Попытка подключения к:", protocol);
-        this.socket = new WebSocket(protocol);
+        
+        try {
+            this.socket = new WebSocket(protocol);
+        } catch (e) {
+            this.isConnecting = false;
+            console.error("[Network] Ошибка создания WebSocket:", e);
+            this.scheduleReconnect();
+            return;
+        }
 
         this.socket.onopen = () => {
             console.log("[Network] Сетевой узел активен.");
@@ -33,7 +46,6 @@ export const network = {
         };
 
         this.socket.onmessage = (event) => {
-            // Если эта вкладка помечена как вытесненная, игнорируем любые сообщения
             if (this.isDisplaced) return;
 
             try {
@@ -43,19 +55,16 @@ export const network = {
                 if (msg.type === "connection_replaced") {
                     console.error("[Network] Сессия прервана: открыта новая вкладка.");
                     this.isDisplaced = true;
-                    this.socket.close(); // Физически закрываем текущую трубу                    
-                    // Показываем оверлей блокировки (нужно добавить в HTML/Templates)                   
-                    //alert("Вкладка неактивна: обнаружено новое подключение к аккаунту.");
+                    this.socket.close();
+                    
                     if (typeof modalManager !== 'undefined') {
                         modalManager.hide();
                     }
-
-                    // 2. ОСТАНАВЛИВАЕМ ОСНОВНОЙ ЦИКЛ (на случай, если модалки не было)
                     if (typeof engine !== 'undefined') {
                         engine.stopMainLoop();
                         engine.stopBattleLoop();
                     }
-                    criticalController.open({})
+                    criticalController.open({});
                     return;
                 }
 
@@ -71,7 +80,6 @@ export const network = {
         this.socket.onclose = (event) => {
             this.isConnecting = false;
 
-            // Если нас вытеснил сервер — реконнект ЗАПРЕЩЕН
             if (this.isDisplaced) {
                 console.warn("[Network] Соединение закрыто из-за вытеснения другой вкладкой. Авто-реконнект отключен.");
                 return;
@@ -79,7 +87,6 @@ export const network = {
 
             console.warn(`[Network] Связь с сервером потеряна (Код: ${event.code})`);
 
-            // Реконнект только если закрытие было аварийным
             if (!this.isManuallyClosed) {
                 this.scheduleReconnect();
             }
@@ -88,13 +95,14 @@ export const network = {
         this.socket.onerror = (error) => {
             this.isConnecting = false;
             console.error("[Network] Ошибка сокета:", error);
+            // Событие onerror всегда сопровождается вызовом onclose, поэтому реконнект сработает там
         };
     },
 
     scheduleReconnect() {
-        if (this.reconnectTimer || this.isDisplaced) return;
+        if (this.reconnectTimer || this.isDisplaced || this.isManuallyClosed) return;
 
-        console.log(`[Network] Переподключение через ${this.reconnectInterval}ms...`);
+        console.log(`[Network] Переподключение через ${Math.round(this.reconnectInterval)}ms...`);
 
         this.reconnectTimer = setTimeout(() => {
             this.reconnectTimer = null;
@@ -110,21 +118,24 @@ export const network = {
 
     send(data = {}) {
         if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-            this.socket.send(JSON.stringify(data));
+            this.socket.send(typeof data === "string" ? data : JSON.stringify(data));
         } else {
             console.warn("[Network] Попытка отправки сообщения при закрытом сокете.");
         }
     },
 
     /**
-     * Метод для внешней проверки и восстановления связи
+     * Метод для внешней проверки и восстановления связи (при разблокировке экрана / возврате сети)
      */
     checkConnection() {
-        // Если вытеснены или закрыли сами — не восстанавливаем автоматически
         if (this.isManuallyClosed || this.isDisplaced) return;
 
+        // Если сокет не открыт или завис в состоянии CONNECTING — принудительно сбрасываем и переподключаем
         if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
-            console.log("[Network] Проверка связи: требуется восстановление.");
+            console.log("[Network] Проверка связи: сокет неактивен, принудительное восстановление.");
+            if (this.socket) {
+                try { this.socket.close(); } catch (e) {}
+            }
             this.connect();
         }
     },
@@ -151,7 +162,7 @@ document.addEventListener("visibilitychange", () => {
     }
 });
 
-// Обработка восстановления системного интернета
+// Обработка восстановления системного интернета (Wi-Fi / 4G)
 window.addEventListener("online", () => {
     network.checkConnection();
 });

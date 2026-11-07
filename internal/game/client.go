@@ -98,7 +98,7 @@ func (c *Client) AddMana(amount float64) bool {
 		c.Character.Mana = c.Character.MaxMana
 	}
 	if c.Character.Mana < 0 {
-		c.Character.MaxMana = 0
+		c.Character.Mana = 0
 	}
 	return oldMana != c.Character.Mana
 }
