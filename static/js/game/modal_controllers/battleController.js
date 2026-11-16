@@ -4,6 +4,7 @@ import { engine } from "../engine.js";
 import { utils } from "../../utils/utils_functions.js";
 import { ui } from '../ui.js';
 import { gameState } from "../game.js";
+import { socket_events } from "../socket_events.js";
 
 export const battleController = {
     battleData: null,
@@ -178,18 +179,25 @@ export const battleController = {
         return { shields, attacks, totalMana }
     },
     pickSpell(spellId) {
+        console.log("===PicSpell===")
         const spell = gameState.player.spells.find(s => s.id == spellId)
         const stats = this.getStats();
         if (spell.type == "shield" && stats.shields >= 2) {
-            alert("Нельзя повесть больше двух щитов");
+            //alert("Нельзя повесть больше двух щитов");
+            socket_events.battle_log({text:"Нельзя повесть больше двух щитов."});
             return;
         }
         if (spell.type == "attack" && stats.attacks >= 3) {
-            alert("Нельзя повесить больше 3 атакующих заклов.");
+            //alert("Нельзя повесить больше 3 атакующих заклов.");
+            socket_events.battle_log({text:"Нельзя повесить больше 3 атакующих заклов."});
             return;
         }
-        if (stats.totalMana + spell.mana_cost > gameState.player.mana) {
-            alert("Недостаточно маны для такой комбинации!");
+        console.log("===Mana===")
+        console.log(this.battleData.you)
+        console.log("===Mana===")
+        if (stats.totalMana + spell.mana_cost > this.battleData.you.mana) {
+            //alert("Недостаточно маны для такой комбинации! ");
+            socket_events.battle_log({text:"Недостаточно маны для такой комбинации!"});
             return;
         }
         const freeIndex = this.slots.indexOf(null)
@@ -241,7 +249,9 @@ export const battleController = {
         if (log) {
             log.innerHTML += `<div class="log-entry result"><b>ИТОГ: ${msg.reason}</b></div>`;
             log.scrollTop = log.scrollHeight;
-        }
+        }        
+        gameState.player.hp = this.battleData.you.hp;
+        gameState.player.mp = this.battleData.you.mp;
         // 4. САМОЕ ГЛАВНОЕ: Показываем крестик закрытия через менеджер
         modalManager.setClosable(true);
         this.setLock(true)

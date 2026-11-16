@@ -28,3 +28,5 @@ export function initGame(char) {
     network.connect();
 }
 
+window.network = network;
+

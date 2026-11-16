@@ -43,6 +43,11 @@ export const network = {
             console.log("[Network] Сетевой узел активен.");
             this.isConnecting = false;
             this.reconnectInterval = 1000; // Сбрасываем таймер задержки при успехе
+            const msg = {
+                text:"Сетевой узел активен."
+            }
+            socket_events.sys_msg(msg)
+            socket_events.battle_log(msg)
         };
 
         this.socket.onmessage = (event) => {
@@ -101,8 +106,13 @@ export const network = {
 
     scheduleReconnect() {
         if (this.reconnectTimer || this.isDisplaced || this.isManuallyClosed) return;
-
         console.log(`[Network] Переподключение через ${Math.round(this.reconnectInterval)}ms...`);
+        const t = `Переподключение через ${Math.round(this.reconnectInterval)}ms...`
+        const msg = {
+            text:t
+        }
+        socket_events.sys_msg(msg);
+        socket_events.battle_log(msg);
 
         this.reconnectTimer = setTimeout(() => {
             this.reconnectTimer = null;
